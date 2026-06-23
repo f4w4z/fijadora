@@ -101,7 +101,7 @@ class MockJobsRepository implements JobsRepository {
     try {
       final box = Hive.box('cached_jobs');
       final list = box.get('jobs_list') as List<dynamic>?;
-      if (list != null && list.isNotEmpty) {
+      if (list != null && list.length >= 7) {
         _mockJobs.clear();
         for (final item in list) {
           if (item is Map) {
@@ -150,6 +150,52 @@ class MockJobsRepository implements JobsRepository {
         images: const [],
         customerId: 'mock-customer',
         createdAt: DateTime.now().subtract(const Duration(hours: 4)),
+      ),
+      MaintenanceJob(
+        id: 'job-4',
+        description: 'Water heater thermostat replacement. Unit is not heating water to correct temperature.',
+        tradeType: TradeType.plumbing,
+        status: JobStatus.workerEnRoute,
+        scheduleDateTime: DateTime.now().add(const Duration(hours: 2)),
+        address: 'Apartment 12C, Pineview Apartments, NY',
+        images: const [],
+        customerId: 'mock-customer',
+        workerId: 'mock-worker-alex',
+        createdAt: DateTime.now().subtract(const Duration(hours: 12)),
+      ),
+      MaintenanceJob(
+        id: 'job-5',
+        description: 'Repair broken drawer slide in master bedroom dresser. Screws stripped out of wood.',
+        tradeType: TradeType.generalRepairs,
+        status: JobStatus.completed,
+        scheduleDateTime: DateTime.now().subtract(const Duration(days: 1)),
+        address: 'Apartment 4B, Oakwood Heights, NY',
+        images: const [],
+        customerId: 'mock-customer',
+        workerId: 'mock-worker-alex',
+        createdAt: DateTime.now().subtract(const Duration(days: 1, hours: 4)),
+      ),
+      MaintenanceJob(
+        id: 'job-6',
+        description: 'Install smart ring doorbell and configure with home wifi network. Ring plate already mounted.',
+        tradeType: TradeType.electrical,
+        status: JobStatus.pending,
+        scheduleDateTime: DateTime.now().add(const Duration(days: 3)),
+        address: 'Apartment 8A, Oakwood Heights, NY',
+        images: const [],
+        customerId: 'mock-customer',
+        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
+      ),
+      MaintenanceJob(
+        id: 'job-7',
+        description: 'Annual maintenance service check for residential furnace system before winter season.',
+        tradeType: TradeType.hvac,
+        status: JobStatus.pending,
+        scheduleDateTime: DateTime.now().add(const Duration(days: 5)),
+        address: 'Apartment 15D, Pineview Apartments, NY',
+        images: const [],
+        customerId: 'mock-customer',
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
       ),
     ]);
     _saveToHive();

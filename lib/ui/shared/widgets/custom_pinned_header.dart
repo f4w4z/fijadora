@@ -16,53 +16,74 @@ class CustomPinnedHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor.withValues(alpha: 0.95),
-        border: Border(
-          bottom: BorderSide(
-            color: theme.brightness == Brightness.dark
-                ? const Color(0xFF1F1F1F)
-                : const Color(0xFFEEEEEE),
-            width: 1.0,
+    final bgColor = theme.scaffoldBackgroundColor;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Header background + content
+        Container(
+          decoration: BoxDecoration(
+            color: bgColor.withValues(alpha: 0.97),
           ),
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 12.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 12.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                  ),
                   Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: actions,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: actions,
+                      ),
+                    ],
                   ),
+                  if (bottomChild != null) ...[
+                    const SizedBox(height: 12.0),
+                    bottomChild!,
+                  ],
                 ],
               ),
-              if (bottomChild != null) ...[
-                const SizedBox(height: 12.0),
-                bottomChild!,
-              ],
-            ],
+            ),
           ),
         ),
-      ),
+        // Fade overlay that bleeds below the header
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: -20,
+          height: 20,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    bgColor.withValues(alpha: 0.97),
+                    bgColor.withValues(alpha: 0.0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -123,4 +144,92 @@ class HeaderActionButton extends StatelessWidget {
       ),
     );
   }
+}
+
+class GroupedHeaderActions extends StatelessWidget {
+  const GroupedHeaderActions({
+    super.key,
+    required this.actions,
+  });
+
+  final List<GroupedActionItem> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.only(left: 8.0),
+      height: 40,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF121212) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? const Color(0xFF222222) : const Color(0xFFE5E5E5),
+          width: 1.0,
+        ),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(actions.length, (index) {
+            final item = actions[index];
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedTapScale(
+                  onTap: item.onTap,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    color: Colors.transparent,
+                    child: Center(
+                      child: item.badgeCount > 0
+                          ? Badge(
+                              label: Text('${item.badgeCount}',
+                                  style: const TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold)),
+                              backgroundColor:
+                                  item.badgeColor ?? theme.colorScheme.primary,
+                              child: Icon(item.icon,
+                                  size: 20, color: theme.colorScheme.onSurface),
+                            )
+                          : Icon(item.icon,
+                              size: 20, color: theme.colorScheme.onSurface),
+                    ),
+                  ),
+                ),
+                if (index < actions.length - 1)
+                  VerticalDivider(
+                    width: 1,
+                    thickness: 1,
+                    color: isDark
+                        ? const Color(0xFF222222)
+                        : const Color(0xFFE5E5E5),
+                    indent: 8,
+                    endIndent: 8,
+                  ),
+              ],
+            );
+          }),
+        ),
+      ),
+    );
+  }
+}
+
+class GroupedActionItem {
+  const GroupedActionItem({
+    required this.icon,
+    required this.onTap,
+    this.badgeCount = 0,
+    this.badgeColor,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final int badgeCount;
+  final Color? badgeColor;
 }

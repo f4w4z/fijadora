@@ -123,24 +123,32 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
           CustomPinnedHeader(
             title: 'Services',
             actions: [
-              HeaderActionButton(
-                icon: CupertinoIcons.qrcode_viewfinder,
-                onTap: () => _showQrScannerSim(context),
-              ),
-              HeaderActionButton(
-                icon: CupertinoIcons.mic_fill,
-                onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => const VoiceAssistantSheet(),
-                  );
-                },
-              ),
-              HeaderActionButton(
-                icon: CupertinoIcons.refresh,
-                onTap: () => ref.invalidate(jobsViewModelProvider),
+              GroupedHeaderActions(
+                actions: [
+                  GroupedActionItem(
+                    icon: CupertinoIcons.add,
+                    onTap: () => _showNewRequestSheet(context),
+                  ),
+                  GroupedActionItem(
+                    icon: CupertinoIcons.qrcode_viewfinder,
+                    onTap: () => _showQrScannerSim(context),
+                  ),
+                  GroupedActionItem(
+                    icon: CupertinoIcons.mic_fill,
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => const VoiceAssistantSheet(),
+                      );
+                    },
+                  ),
+                  GroupedActionItem(
+                    icon: CupertinoIcons.refresh,
+                    onTap: () => ref.invalidate(jobsViewModelProvider),
+                  ),
+                ],
               ),
             ],
             bottomChild: CupertinoSearchTextField(
@@ -159,27 +167,13 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
           ),
         ],
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 100),
-        child: FloatingActionButton.extended(
-          onPressed: () => _showNewRequestSheet(context),
-          label: const Text('Request Service'),
-          icon: const Icon(CupertinoIcons.add),
-          backgroundColor: theme.colorScheme.primary,
-          foregroundColor: theme.colorScheme.onPrimary,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-      ),
     );
   }
 
   Widget _buildBody(BuildContext context, JobsViewModel vm) {
     if (vm.isLoading && vm.jobs.isEmpty) {
       return const ShimmerListPlaceholder(
-        padding: EdgeInsets.fromLTRB(24, 16, 24, 120),
+        padding: EdgeInsets.fromLTRB(24, 16, 24, 96),
       );
     }
 
@@ -266,7 +260,7 @@ class _JobList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 96),
       itemCount: jobs.length,
       separatorBuilder: (_, _) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
@@ -386,6 +380,7 @@ class _JobCard extends StatelessWidget {
   void _showDetailsSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -394,115 +389,117 @@ class _JobCard extends StatelessWidget {
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      job.tradeType.displayName,
-                      style: theme.textTheme.displaySmall?.copyWith(fontSize: 20),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: job.status.color(context).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        job.status.displayName,
-                        style: TextStyle(
-                          color: job.status.color(context),
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Description',
-                  style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
-                ),
-                const SizedBox(height: 6),
-                Text(job.description, style: theme.textTheme.bodyLarge),
-                const SizedBox(height: 16),
-                Text(
-                  'Address / Location',
-                  style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
-                ),
-                const SizedBox(height: 6),
-                Text(job.address, style: theme.textTheme.bodyMedium),
-                const SizedBox(height: 16),
-                Text(
-                  'Scheduled Time',
-                  style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
-                ),
-                const SizedBox(height: 6),
-                Text(_formatDate(job.scheduleDateTime), style: theme.textTheme.bodyMedium),
-                if (job.status == JobStatus.waitingApproval) ...[
-                  _CustomerReviewPanel(jobId: job.id),
-                ],
-                const SizedBox(height: 24),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.brightness == Brightness.dark
-                        ? const Color(0xFF1A1A1A)
-                        : const Color(0xFFF9F9F9),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: theme.brightness == Brightness.dark
-                          ? const Color(0xFF333333)
-                          : const Color(0xFFE5E5E5),
-                    ),
-                  ),
-                  child: Row(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(CupertinoIcons.videocam_fill, size: 16, color: theme.colorScheme.onSurfaceVariant),
-                      const SizedBox(width: 8),
-                      Expanded(
+                      Text(
+                        job.tradeType.displayName,
+                        style: theme.textTheme.displaySmall?.copyWith(fontSize: 20),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: job.status.color(context).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         child: Text(
-                          '🎥 Body cam active. Footage stored 6 months. Under T&Cs, claims cannot be made after 6 months.',
-                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 10, height: 1.4),
+                          job.status.displayName,
+                          style: TextStyle(
+                            color: job.status.color(context),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 24),
-                if (job.status == JobStatus.workerEnRoute || job.status == JobStatus.workerArrived) ...[
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => LiveTrackingView(
-                            jobId: job.id,
-                            address: job.address,
+                  const SizedBox(height: 16),
+                  Text(
+                    'Description',
+                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(job.description, style: theme.textTheme.bodyLarge),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Address / Location',
+                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(job.address, style: theme.textTheme.bodyMedium),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Scheduled Time',
+                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(_formatDate(job.scheduleDateTime), style: theme.textTheme.bodyMedium),
+                  if (job.status == JobStatus.waitingApproval) ...[
+                    _CustomerReviewPanel(jobId: job.id),
+                  ],
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.brightness == Brightness.dark
+                          ? const Color(0xFF1A1A1A)
+                          : const Color(0xFFF9F9F9),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: theme.brightness == Brightness.dark
+                            ? const Color(0xFF333333)
+                            : const Color(0xFFE5E5E5),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(CupertinoIcons.videocam_fill, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '🎥 Body cam active. Footage stored 6 months. Under T&Cs, claims cannot be made after 6 months.',
+                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 10, height: 1.4),
                           ),
                         ),
-                      );
-                    },
-                    icon: const Icon(CupertinoIcons.map_pin_ellipse),
-                    label: const Text('Track Technician', style: TextStyle(fontWeight: FontWeight.bold)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: theme.colorScheme.onPrimary,
-                      elevation: 0,
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+                  if (job.status == JobStatus.workerEnRoute || job.status == JobStatus.workerArrived) ...[
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => LiveTrackingView(
+                              jobId: job.id,
+                              address: job.address,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(CupertinoIcons.map_pin_ellipse),
+                      label: const Text('Track Technician', style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                        elevation: 0,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Close'),
+                  ),
                 ],
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Close'),
-                ),
-              ],
+              ),
             ),
           ),
         );

@@ -13,6 +13,9 @@ class ProfileTabView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final user = ref.watch(authViewModelProvider).user;
+    final screenHeight = MediaQuery.of(context).size.height;
+    // Adaptive spacing: ~1.5% of screen height, clamped between 10–20px
+    final gap = (screenHeight * 0.015).clamp(10.0, 20.0);
 
     return Scaffold(
       body: Column(
@@ -30,7 +33,7 @@ class ProfileTabView extends ConsumerWidget {
           ),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
+              padding: EdgeInsets.fromLTRB(24, gap, 24, 120),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -90,7 +93,13 @@ class ProfileTabView extends ConsumerWidget {
                 ),
               ),
               
-            const SizedBox(height: 32.0),
+            Divider(
+              height: gap * 2,
+              thickness: 1,
+              color: theme.brightness == Brightness.dark
+                  ? const Color(0xFF222222)
+                  : const Color(0xFFE5E5E5),
+            ),
 
             // Predictive Reminders Card (Rehaul)
             Container(
@@ -130,24 +139,34 @@ class ProfileTabView extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 32.0),
+            Divider(
+              height: gap * 2,
+              thickness: 1,
+              color: theme.brightness == Brightness.dark
+                  ? const Color(0xFF222222)
+                  : const Color(0xFFE5E5E5),
+            ),
 
             // Digital Home Record Section
             Text(
               'Digital Home Record',
-              style: theme.textTheme.headlineMedium?.copyWith(fontSize: 18),
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            const SizedBox(height: 16.0),
+            const SizedBox(height: 16),
 
             // Main features grid list
             GridView(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 crossAxisSpacing: 16.0,
                 mainAxisSpacing: 16.0,
-                childAspectRatio: 1.4,
+                childAspectRatio: 1.3,
               ),
               children: [
                 _buildRecordCard('Rooms', '6 Rooms', CupertinoIcons.square_grid_2x2, theme, () {
@@ -173,7 +192,13 @@ class ProfileTabView extends ConsumerWidget {
               ],
             ),
 
-            const SizedBox(height: 32.0),
+            Divider(
+              height: gap * 2,
+              thickness: 1,
+              color: theme.brightness == Brightness.dark
+                  ? const Color(0xFF222222)
+                  : const Color(0xFFE5E5E5),
+            ),
 
             // Maintenance History Trigger
             AnimatedTapScale(

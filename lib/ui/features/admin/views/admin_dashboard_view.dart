@@ -210,12 +210,16 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                isUnassigned ? 'Unassigned' : 'Assigned to: ${job.workerId}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: isUnassigned ? FontWeight.bold : FontWeight.normal,
-                                  color: isUnassigned ? Colors.orange : theme.colorScheme.onSurfaceVariant,
+                              Flexible(
+                                child: Text(
+                                  isUnassigned ? 'Unassigned' : 'Assigned to: ${job.workerId}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: isUnassigned ? FontWeight.bold : FontWeight.normal,
+                                    color: isUnassigned ? Colors.orange : theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ),
                               if (isUnassigned && job.status == JobStatus.pending)
@@ -238,6 +242,8 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> {
                                   ),
                                 )
                               else if (!isUnassigned)
+                                const SizedBox(width: 8),
+                              if (!isUnassigned)
                                 Text(
                                   'Worker Dispatched',
                                   style: TextStyle(

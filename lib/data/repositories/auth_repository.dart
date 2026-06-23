@@ -143,6 +143,13 @@ class SupabaseAuthRepository implements AuthRepository {
 // 2. Mock Auth Repository Implementation (for testing & fallback)
 class MockAuthRepository implements AuthRepository {
   MockAuthRepository() {
+    // Pre-populate demo worker
+    _mockUsers['alex.worker@phoebe.com'] = const AppUser(
+      id: 'mock-worker-alex',
+      email: 'alex.worker@phoebe.com',
+      name: 'Alex Worker',
+      role: UserRole.worker,
+    );
     // Add initial null state
     _controller.add(null);
   }

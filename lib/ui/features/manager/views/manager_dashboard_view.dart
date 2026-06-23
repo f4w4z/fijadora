@@ -354,166 +354,215 @@ class _PropertyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final units = property['units'] as List;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _PropertyHeader(
+          property: property,
+          alertCount: alertCount,
+          borderColor: borderColor,
+        ),
+        const SizedBox(height: 12),
+        ...units.map((unit) {
+          final unitKey = '$propId-${unit['number']}';
+          final isExpanded = expandedUnits.contains(unitKey);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _UnitCard(
+              unit: unit,
+              unitKey: unitKey,
+              isExpanded: isExpanded,
+              borderColor: borderColor,
+              onToggle: () => onUnitToggle(unitKey),
+              onAssetTap: onAssetTap,
+            ),
+          );
+        }),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+}
+
+class _PropertyHeader extends StatelessWidget {
+  const _PropertyHeader({
+    required this.property,
+    required this.alertCount,
+    required this.borderColor,
+  });
+
+  final Map<String, dynamic> property;
+  final int alertCount;
+  final Color borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Building icon pill
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: theme.brightness == Brightness.dark
+                  ? const Color(0xFF1A1A1A)
+                  : const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: borderColor),
+            ),
+            child: Icon(
+              CupertinoIcons.building_2_fill,
+              size: 18,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  property['name'] as String,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  property['address'] as String,
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (alertCount > 0)
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF3B30).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                    color: const Color(0xFFFF3B30).withValues(alpha: 0.2)),
+              ),
+              child: Text(
+                '$alertCount alert${alertCount > 1 ? 's' : ''}',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFFFF3B30),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UnitCard extends StatelessWidget {
+  const _UnitCard({
+    required this.unit,
+    required this.unitKey,
+    required this.isExpanded,
+    required this.borderColor,
+    required this.onToggle,
+    required this.onAssetTap,
+  });
+
+  final Map<String, dynamic> unit;
+  final String unitKey;
+  final bool isExpanded;
+  final Color borderColor;
+  final VoidCallback onToggle;
+  final void Function(String assetName) onAssetTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final rooms = unit['rooms'] as List;
 
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Property header ──
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Building icon pill
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: theme.brightness == Brightness.dark
-                        ? const Color(0xFF1A1A1A)
-                        : const Color(0xFFF5F5F5),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: borderColor),
-                  ),
-                  child: Icon(
-                    CupertinoIcons.building_2_fill,
-                    size: 18,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        property['name'] as String,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        property['address'] as String,
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (alertCount > 0)
+          AnimatedTapScale(
+            onTap: onToggle,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF3B30).withValues(alpha: 0.08),
+                      color: theme.brightness == Brightness.dark
+                          ? const Color(0xFF1A1A1A)
+                          : const Color(0xFFF5F5F5),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                          color: const Color(0xFFFF3B30).withValues(alpha: 0.2)),
+                      border: Border.all(color: borderColor),
                     ),
-                    child: Text(
-                      '$alertCount alert${alertCount > 1 ? 's' : ''}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFFFF3B30),
+                    child: Center(
+                      child: Text(
+                        unit['number'] as String,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-              ],
+                  const SizedBox(width: 12),
+                  Text(
+                    'Unit ${unit['number']}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const Spacer(),
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      CupertinoIcons.chevron_down,
+                      size: 16,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          // Divider
-          Divider(height: 1, color: borderColor),
-          // ── Units ──
-          ...List.generate(units.length, (uIdx) {
-            final unit = units[uIdx];
-            final unitKey = '$propId-${unit['number']}';
-            final isExpanded = expandedUnits.contains(unitKey);
-            final rooms = unit['rooms'] as List;
-
-            return Column(
-              children: [
-                // Unit row (tap to expand)
-                AnimatedTapScale(
-                  onTap: () => onUnitToggle(unitKey),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 13),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            color: theme.brightness == Brightness.dark
-                                ? const Color(0xFF1A1A1A)
-                                : const Color(0xFFF5F5F5),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: borderColor),
-                          ),
-                          child: Center(
-                            child: Text(
-                              unit['number'] as String,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Unit ${unit['number']}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const Spacer(),
-                        AnimatedRotation(
-                          turns: isExpanded ? 0.5 : 0,
-                          duration: const Duration(milliseconds: 200),
-                          child: Icon(
-                            CupertinoIcons.chevron_down,
-                            size: 14,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // Expanded content
-                AnimatedCrossFade(
-                  firstChild: const SizedBox.shrink(),
-                  secondChild: _UnitRoomsSection(
-                    rooms: rooms,
-                    borderColor: borderColor,
-                    onAssetTap: onAssetTap,
-                  ),
-                  crossFadeState: isExpanded
-                      ? CrossFadeState.showSecond
-                      : CrossFadeState.showFirst,
-                  duration: const Duration(milliseconds: 220),
-                  sizeCurve: Curves.easeInOut,
-                ),
-                if (uIdx < units.length - 1) Divider(height: 1, color: borderColor),
-              ],
-            );
-          }),
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: _UnitRoomsSection(
+              rooms: rooms,
+              borderColor: borderColor,
+              onAssetTap: onAssetTap,
+            ),
+            crossFadeState: isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 220),
+            sizeCurve: Curves.easeInOut,
+          ),
         ],
       ),
     );
@@ -537,6 +586,9 @@ class _UnitRoomsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final flatBgColor = theme.brightness == Brightness.dark
+        ? const Color(0xFF161616)
+        : const Color(0xFFF9F9F9);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
@@ -593,9 +645,8 @@ class _UnitRoomsSection extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surface,
+                            color: flatBgColor,
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: borderColor),
                           ),
                           child: Row(
                             children: [
