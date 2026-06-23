@@ -1,0 +1,221 @@
+import 'dart:async';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../domain/models/trade_type.dart';
+import '../view_models/jobs_view_model.dart';
+
+class VoiceAssistantSheet extends ConsumerStatefulWidget {
+  const VoiceAssistantSheet({super.key});
+
+  @override
+  ConsumerState<VoiceAssistantSheet> createState() => _VoiceAssistantSheetState();
+}
+
+class _VoiceAssistantSheetState extends ConsumerState<VoiceAssistantSheet> with SingleTickerProviderStateMixin {
+  late AnimationController _waveController;
+  String _assistantStateText = 'Listening... Say what needs fixing';
+  String _userSpeechMock = '';
+  bool _isListening = true;
+  bool _isProcessing = false;
+  Timer? _flowTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _waveController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..repeat(reverse: true);
+
+    _runSimulatedConversationFlow();
+  }
+
+  @override
+  void dispose() {
+    _waveController.dispose();
+    _flowTimer?.cancel();
+    super.dispose();
+  }
+
+  void _runSimulatedConversationFlow() {
+    // Step 1: User speaks after 3 seconds
+    _flowTimer = Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      setState(() {
+        _isListening = false;
+        _isProcessing = true;
+        _userSpeechMock = '"My kitchen sink is leaking from the pipe washer underneath."';
+        _assistantStateText = 'Analyzing voice input...';
+      });
+
+      // Step 2: AI processes and books request after 3 seconds
+      _flowTimer = Timer(const Duration(seconds: 3), () async {
+        if (!mounted) return;
+        setState(() {
+          _assistantStateText = 'Booking Plumbing Service...';
+        });
+
+        try {
+          // Raise job in VM
+          await ref.read(jobsViewModelProvider.notifier).raiseJob(
+                description: 'Kitchen sink pipe is leaking from the washer underneath. Booked via Voice Assistant.',
+                tradeType: TradeType.plumbing,
+                schedule: DateTime.now().add(const Duration(days: 1, hours: 2)),
+                address: 'Apartment 4B, Oakwood Heights, NY',
+                images: const [],
+              );
+
+          if (mounted) {
+            setState(() {
+              _isProcessing = false;
+              _assistantStateText = 'Plumbing service scheduled successfully for tomorrow!';
+            });
+
+            // Close sheet after 2 seconds
+            _flowTimer = Timer(const Duration(milliseconds: 2500), () {
+              if (mounted) {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Plumbing request booked by Voice Assistant!')),
+                );
+              }
+            });
+          }
+        } catch (e) {
+          if (mounted) {
+            setState(() {
+              _isProcessing = false;
+              _assistantStateText = 'Error booking service: $e';
+            });
+          }
+        }
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(CupertinoIcons.waveform, color: theme.colorScheme.primary, size: 20),
+                    const SizedBox(width: 8.0),
+                    const Text(
+                      'Phoebe Voice AI',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ],
+                ),
+                IconButton(
+                  icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.grey),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24.0),
+
+            // Assistant Status text
+            Text(
+              _assistantStateText,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 16.0),
+
+            // User speech mock
+            if (_userSpeechMock.isNotEmpty)
+              Text(
+                _userSpeechMock,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+
+            const SizedBox(height: 40.0),
+
+            // Pulsing Waveform Graphic
+            if (_isListening || _isProcessing)
+              Center(
+                child: SizedBox(
+                  height: 60,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(11, (index) {
+                      final scale = 1.0 + (index % 3 == 0 ? 1.5 : (index % 2 == 0 ? 0.8 : 1.2));
+                      return AnimatedBuilder(
+                        animation: _waveController,
+                        builder: (context, child) {
+                          final value = _waveController.value;
+                          final animatedHeight = 10.0 + (25.0 * value * scale);
+                          return Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 3.0),
+                            width: 3.5,
+                            height: animatedHeight,
+                            decoration: BoxDecoration(
+                              color: _isProcessing 
+                                  ? theme.colorScheme.secondary 
+                                  : theme.colorScheme.primary,
+                              borderRadius: BorderRadius.circular(2.0),
+                            ),
+                          );
+                        },
+                      );
+                    }),
+                  ),
+                ),
+              )
+            else
+              Center(
+                child: CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.green.withValues(alpha: 0.1),
+                  child: const Icon(CupertinoIcons.checkmark_alt, color: Colors.green, size: 36),
+                ),
+              ),
+
+            const SizedBox(height: 40.0),
+
+            // Close description
+            Text(
+              _isListening 
+                  ? 'Active Mic Connection' 
+                  : _isProcessing 
+                      ? 'Processing Audio Input...' 
+                      : 'Request Registered',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11,
+                color: theme.colorScheme.onSurfaceVariant,
+                letterSpacing: 0.5,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16.0),
+          ],
+        ),
+      ),
+    );
+  }
+}
