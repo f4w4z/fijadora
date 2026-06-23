@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/repositories/jobs_repository.dart';
 import '../../../../domain/models/job_status.dart';
 import '../../../../domain/models/maintenance_job.dart';
+import '../../../../domain/models/trade_type.dart';
 import '../../../../domain/models/user_role.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../../../data/services/notification_service.dart';
@@ -131,240 +132,14 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> {
                   itemCount: jobs.length,
                   itemBuilder: (context, index) {
                     final job = jobs[index];
-                    final isUnassigned = job.workerId == null || job.workerId!.isEmpty;
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 16.0),
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16.0),
-                        border: Border.all(
-                          color: theme.brightness == Brightness.dark
-                              ? const Color(0xFF222222)
-                              : const Color(0xFFE5E5E5),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  job.tradeType.displayName.toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.bold,
-                                    color: theme.colorScheme.onPrimaryContainer,
-                                  ),
-                                ),
-                              ),
-                              _buildStatusChip(job.status, theme),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            job.description,
-                            style: const TextStyle(fontSize: 14, height: 1.4),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Icon(CupertinoIcons.location, size: 14, color: theme.colorScheme.onSurfaceVariant),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  job.address,
-                                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(CupertinoIcons.calendar, size: 14, color: theme.colorScheme.onSurfaceVariant),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Scheduled: ${_formatDateTime(job.scheduleDateTime)}',
-                                style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Divider(
-                            color: theme.brightness == Brightness.dark
-                                ? const Color(0xFF222222)
-                                : const Color(0xFFE5E5E5),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  isUnassigned ? 'Unassigned' : 'Assigned to: ${job.workerId}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: isUnassigned ? FontWeight.bold : FontWeight.normal,
-                                    color: isUnassigned ? Colors.orange : theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                              ),
-                              if (isUnassigned && job.status == JobStatus.pending)
-                                AnimatedTapScale(
-                                  onTap: () => _showAssignWorkerSheet(context, job.id),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.primary,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      'Assign Worker',
-                                      style: TextStyle(
-                                        color: theme.colorScheme.onPrimary,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              else if (!isUnassigned)
-                                const SizedBox(width: 8),
-                              if (!isUnassigned)
-                                Text(
-                                  'Worker Dispatched',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: theme.colorScheme.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
+                    return MaintenanceJobCard(
+                      job: job,
+                      mockWorkers: _mockWorkers,
                     );
                   },
                 ),
         ),
       ],
-    );
-  }
-
-  Widget _buildStatusChip(JobStatus status, ThemeData theme) {
-    Color color;
-    switch (status) {
-      case JobStatus.pending:
-        color = Colors.orange;
-        break;
-      case JobStatus.assigned:
-      case JobStatus.workerEnRoute:
-      case JobStatus.workerArrived:
-      case JobStatus.inProgress:
-        color = Colors.blue;
-        break;
-      case JobStatus.waitingApproval:
-        color = Colors.purple;
-        break;
-      case JobStatus.completed:
-        color = Colors.green;
-        break;
-      case JobStatus.rejected:
-      case JobStatus.cancelled:
-        color = Colors.red;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Text(
-        status.displayName.toUpperCase(),
-        style: TextStyle(
-          fontSize: 9,
-          fontWeight: FontWeight.bold,
-          color: color,
-        ),
-      ),
-    );
-  }
-
-  void _showAssignWorkerSheet(BuildContext context, String jobId) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Assign Staff Member',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Select an available technician for this service job.',
-                style: TextStyle(fontSize: 13, color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-              ..._mockWorkers.map((worker) {
-                return ListTile(
-                  title: Text(worker['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                  leading: const Icon(CupertinoIcons.person),
-                  trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
-                  onTap: () async {
-                    Navigator.of(context).pop();
-                    try {
-                      await ref.read(jobsRepositoryProvider).assignWorker(
-                            jobId: jobId,
-                            workerId: worker['id'] ?? '',
-                          );
-                      ref.read(notificationServiceProvider).sendNotification(
-                            title: 'Worker Dispatched',
-                            body: 'Job has been assigned to ${worker['name']}.',
-                          );
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Job assigned to ${worker['name']}')),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error assigning job: $e')),
-                        );
-                      }
-                    }
-                  },
-                );
-              }),
-              const SizedBox(height: 24),
-            ],
-          ),
-        );
-      },
     );
   }
 
@@ -442,8 +217,528 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> {
       ),
     );
   }
+}
+
+class MaintenanceJobCard extends ConsumerStatefulWidget {
+  final MaintenanceJob job;
+  final List<Map<String, String>> mockWorkers;
+
+  const MaintenanceJobCard({
+    super.key,
+    required this.job,
+    required this.mockWorkers,
+  });
+
+  @override
+  ConsumerState<MaintenanceJobCard> createState() => _MaintenanceJobCardState();
+}
+
+class _MaintenanceJobCardState extends ConsumerState<MaintenanceJobCard> {
+  bool _isExpanded = false;
+  bool _isAssigning = false;
+  String? _assigningWorkerId;
+
+  List<Color> _getGradientForTrade(TradeType type) {
+    switch (type) {
+      case TradeType.plumbing:
+        return [const Color(0xFF1E88E5), const Color(0xFF0D47A1)];
+      case TradeType.electrical:
+        return [const Color(0xFFFFB300), const Color(0xFFFF6F00)];
+      case TradeType.carpentry:
+        return [const Color(0xFF8D6E63), const Color(0xFF4E342E)];
+      case TradeType.painting:
+        return [const Color(0xFFEC407A), const Color(0xFF880E4F)];
+      case TradeType.hvac:
+        return [const Color(0xFF00ACC1), const Color(0xFF006064)];
+      case TradeType.cleaning:
+        return [const Color(0xFF26A69A), const Color(0xFF004D40)];
+      case TradeType.generalRepairs:
+        return [const Color(0xFF78909C), const Color(0xFF37474F)];
+    }
+  }
 
   String _formatDateTime(DateTime dt) {
     return '${dt.day}/${dt.month}/${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _getInitials(String name) {
+    if (name.isEmpty) return '';
+    final parts = name.split(' ');
+    if (parts.length >= 2) {
+      final first = parts[0].isNotEmpty ? parts[0][0] : '';
+      final second = parts[1].isNotEmpty ? parts[1][0] : '';
+      return '$first$second';
+    }
+    return name[0];
+  }
+
+  Color _getAvatarColor(String name) {
+    if (name.contains('Plumbing') || name.contains('HVAC')) {
+      return const Color(0xFF1E88E5);
+    }
+    if (name.contains('Electrical')) {
+      return const Color(0xFFFFB300);
+    }
+    if (name.contains('Carpentry') || name.contains('Painting')) {
+      return const Color(0xFF8D6E63);
+    }
+    return const Color(0xFF26A69A);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final job = widget.job;
+    final isUnassigned = job.workerId == null || job.workerId!.isEmpty;
+    final gradientColors = _getGradientForTrade(job.tradeType);
+
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOutCubic,
+      alignment: Alignment.topCenter,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16.0),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(16.0),
+          boxShadow: [
+            BoxShadow(
+              color: theme.brightness == Brightness.dark
+                  ? Colors.black.withValues(alpha: 0.3)
+                  : Colors.grey.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+          border: Border.all(
+            color: theme.brightness == Brightness.dark
+                ? const Color(0xFF2D2D2D)
+                : const Color(0xFFE5E5E5),
+            width: 1,
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15.0),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    gradientColors[0].withValues(alpha: 0.15),
+                                    gradientColors[1].withValues(alpha: 0.15),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: gradientColors[0].withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    job.tradeType.icon,
+                                    size: 10,
+                                    color: gradientColors[0],
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    job.tradeType.displayName.toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      color: gradientColors[0],
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            _buildStatusChip(job.status, theme),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          job.description,
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.4,
+                            color: theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Icon(CupertinoIcons.location_fill, size: 13, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                job.address,
+                                style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Icon(CupertinoIcons.calendar_today, size: 13, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Scheduled: ${_formatDateTime(job.scheduleDateTime)}',
+                              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Divider(
+                          color: theme.brightness == Brightness.dark
+                              ? const Color(0xFF2C2C2C)
+                              : const Color(0xFFEEEEEE),
+                          thickness: 1,
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    isUnassigned ? CupertinoIcons.exclamationmark_circle_fill : CupertinoIcons.person_crop_circle_fill,
+                                    size: 14,
+                                    color: isUnassigned ? Colors.orange : theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text(
+                                      isUnassigned ? 'Unassigned' : 'Assigned to: ${job.workerId}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: isUnassigned ? FontWeight.w700 : FontWeight.w500,
+                                        color: isUnassigned ? Colors.orange : theme.colorScheme.onSurface,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (isUnassigned && job.status == JobStatus.pending)
+                              AnimatedTapScale(
+                                onTap: () {
+                                  setState(() {
+                                    _isExpanded = !_isExpanded;
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: _isExpanded
+                                        ? (theme.brightness == Brightness.dark
+                                            ? const Color(0xFF333333)
+                                            : const Color(0xFFEEEEEE))
+                                        : theme.colorScheme.primary,
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: _isExpanded
+                                        ? null
+                                        : [
+                                            BoxShadow(
+                                              color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 3),
+                                            )
+                                          ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        _isExpanded ? CupertinoIcons.xmark : CupertinoIcons.person_badge_plus_fill,
+                                        size: 13,
+                                        color: _isExpanded
+                                            ? theme.colorScheme.onSurface
+                                            : theme.colorScheme.onPrimary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        _isExpanded ? 'Cancel' : 'Assign Staff',
+                                        style: TextStyle(
+                                          color: _isExpanded
+                                              ? theme.colorScheme.onSurface
+                                              : theme.colorScheme.onPrimary,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            else if (!isUnassigned)
+                              const SizedBox(width: 8),
+                            if (!isUnassigned)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  'Worker Dispatched',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        if (_isExpanded && isUnassigned) ...[
+                          const SizedBox(height: 16),
+                          const Divider(height: 1),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Select Technician',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          ...widget.mockWorkers.map((worker) {
+                            final workerId = worker['id'] ?? '';
+                            final workerName = worker['name'] ?? '';
+                            final isThisWorkerAssigning = _isAssigning && _assigningWorkerId == workerId;
+                            final initials = _getInitials(workerName);
+                            final avatarBgColor = _getAvatarColor(workerName);
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: AnimatedTapScale(
+                                onTap: _isAssigning
+                                    ? () {}
+                                    : () => _assignWorker(workerId, workerName),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12.0),
+                                  decoration: BoxDecoration(
+                                    color: theme.brightness == Brightness.dark
+                                        ? const Color(0xFF1E1E1E)
+                                        : const Color(0xFFF7F8FA),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: theme.brightness == Brightness.dark
+                                          ? const Color(0xFF2C2C2C)
+                                          : const Color(0xFFEBEFF5),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 18,
+                                        backgroundColor: avatarBgColor.withValues(alpha: 0.15),
+                                        child: Text(
+                                          initials,
+                                          style: TextStyle(
+                                            color: avatarBgColor,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              workerName,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Row(
+                                              children: [
+                                                const Icon(CupertinoIcons.star_fill, size: 10, color: Colors.amber),
+                                                const SizedBox(width: 3),
+                                                Text(
+                                                  '4.9',
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    color: theme.colorScheme.onSurfaceVariant,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Container(
+                                                  width: 5,
+                                                  height: 5,
+                                                  decoration: const BoxDecoration(
+                                                    color: Colors.green,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                const Text(
+                                                  'Available Now',
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.green,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (isThisWorkerAssigning)
+                                        const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      else
+                                        Icon(
+                                          CupertinoIcons.chevron_right,
+                                          size: 14,
+                                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ],
+                      ],
+                    ),
+                  ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(JobStatus status, ThemeData theme) {
+    Color color;
+    switch (status) {
+      case JobStatus.pending:
+        color = Colors.orange;
+        break;
+      case JobStatus.assigned:
+      case JobStatus.workerEnRoute:
+      case JobStatus.workerArrived:
+      case JobStatus.inProgress:
+        color = Colors.blue;
+        break;
+      case JobStatus.waitingApproval:
+        color = Colors.purple;
+        break;
+      case JobStatus.completed:
+        color = Colors.green;
+        break;
+      case JobStatus.rejected:
+      case JobStatus.cancelled:
+        color = Colors.red;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        status.displayName.toUpperCase(),
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _assignWorker(String workerId, String workerName) async {
+    setState(() {
+      _isAssigning = true;
+      _assigningWorkerId = workerId;
+    });
+
+    try {
+      await ref.read(jobsRepositoryProvider).assignWorker(
+            jobId: widget.job.id,
+            workerId: workerId,
+          );
+      
+      ref.read(notificationServiceProvider).sendNotification(
+            title: 'Worker Dispatched',
+            body: 'Job has been assigned to $workerName.',
+          );
+
+      if (mounted) {
+        setState(() {
+          _isExpanded = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(CupertinoIcons.checkmark_circle_fill, color: Colors.greenAccent),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Job assigned to $workerName')),
+              ],
+            ),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(CupertinoIcons.exclamationmark_triangle_fill, color: Colors.redAccent),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error assigning job: $e')),
+              ],
+            ),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isAssigning = false;
+          _assigningWorkerId = null;
+        });
+      }
+    }
   }
 }
