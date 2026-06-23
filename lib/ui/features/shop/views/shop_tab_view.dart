@@ -9,6 +9,7 @@ import 'product_detail_view.dart';
 import 'wishlist_view.dart';
 import '../../../../ui/shared/widgets/animated_tap_scale.dart';
 import '../../../../ui/shared/widgets/custom_pinned_header.dart';
+import '../../../shared/utils/notification_helper.dart';
 
 
 class ShopTabView extends ConsumerStatefulWidget {
@@ -186,7 +187,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                               return AnimatedTapScale(
                                 onTap: () {
                                   Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (context) => ProductDetailView(product: bundle)),
+                                    MaterialPageRoute(builder: (context) => ProductDetailView(product: bundle, heroTag: 'bundle-img-${bundle.id}')),
                                   );
                                 },
                                 child: Container(
@@ -206,7 +207,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                       ClipRRect(
                                         borderRadius: const BorderRadius.horizontal(left: Radius.circular(11.0)),
                                         child: Hero(
-                                          tag: 'product-img-${bundle.id}',
+                                          tag: 'bundle-img-${bundle.id}',
                                           child: Image.network(
                                             bundle.imageUrl,
                                             width: 100,
@@ -384,11 +385,10 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                                     icon: const Icon(CupertinoIcons.add, size: 14, color: Colors.black),
                                                     onPressed: () {
                                                       ref.read(cartViewModelProvider.notifier).addToCart(product);
-                                                      ScaffoldMessenger.of(context).showSnackBar(
-                                                        SnackBar(
-                                                          content: Text('${product.name} added to cart'),
-                                                          duration: const Duration(seconds: 1),
-                                                        ),
+                                                      context.showSnackBar(
+                                                        '${product.name} added to cart',
+                                                        type: SnackBarType.success,
+                                                        duration: const Duration(seconds: 2),
                                                       );
                                                     },
                                                   ),

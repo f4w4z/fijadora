@@ -260,12 +260,26 @@ class CartView extends ConsumerWidget {
                         
                         if (context.mounted) {
                           Navigator.of(context).pop(); // dismiss loading
-                          showDialog(
+                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
+                              icon: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  CupertinoIcons.checkmark_seal_fill,
+                                  color: theme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                                  size: 40,
+                                ),
+                              ),
                               title: const Text('Reservation Placed'),
                               content: const Text(
-                                  'Your architectural furniture reservation has been successfully registered. View details on your orders page.'),
+                                  'Your architectural furniture reservation has been successfully registered. View details on your orders page.',
+                                  textAlign: TextAlign.center),
+                              actionsAlignment: MainAxisAlignment.center,
                               actions: [
                                 TextButton(
                                   onPressed: () {
@@ -290,6 +304,7 @@ class CartView extends ConsumerWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.colorScheme.primary,
                       foregroundColor: theme.colorScheme.onPrimary,
+                      padding: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

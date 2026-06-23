@@ -5,6 +5,7 @@ import '../../../../data/repositories/shop_repository.dart';
 import '../view_models/cart_view_model.dart';
 import '../view_models/wishlist_view_model.dart';
 import 'product_detail_view.dart';
+import '../../../shared/utils/notification_helper.dart';
 
 class WishlistView extends ConsumerWidget {
   const WishlistView({super.key});
@@ -138,9 +139,7 @@ class WishlistView extends ConsumerWidget {
                           onPressed: product.inventoryCount > 0
                               ? () {
                                   ref.read(cartViewModelProvider.notifier).addToCart(product);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Added ${product.name} to cart')),
-                                  );
+                                  context.showSnackBar('Added ${product.name} to cart', type: SnackBarType.success);
                                 }
                               : null,
                         ),

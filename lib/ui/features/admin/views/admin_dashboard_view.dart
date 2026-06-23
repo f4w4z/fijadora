@@ -307,7 +307,6 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        final theme = Theme.of(context);
         return Container(
           padding: const EdgeInsets.all(24.0),
           child: Column(

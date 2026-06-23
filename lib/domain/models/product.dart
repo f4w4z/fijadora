@@ -7,6 +7,7 @@ class Product {
   final String description;
   final double price;
   final String imageUrl;
+  final List<String> imageUrls;
   final String category;
   final int inventoryCount;
   final bool isReserved;
@@ -17,18 +18,25 @@ class Product {
     required this.description,
     required this.price,
     required this.imageUrl,
+    this.imageUrls = const [],
     required this.category,
     required this.inventoryCount,
     this.isReserved = false,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
+    final primaryImage = json['image_url'] as String? ?? '';
+    final rawUrls = json['image_urls'] as List<dynamic>?;
+    final imageUrls = rawUrls != null
+        ? rawUrls.where((e) => e != null).map((e) => e.toString()).toList()
+        : <String>[if (primaryImage.isNotEmpty) primaryImage];
     return Product(
       id: json['id'] as String,
       name: json['name'] as String? ?? '',
       description: json['description'] as String? ?? '',
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
-      imageUrl: json['image_url'] as String? ?? '',
+      imageUrl: primaryImage,
+      imageUrls: imageUrls,
       category: json['category'] as String? ?? '',
       inventoryCount: json['inventory_count'] as int? ?? 0,
       isReserved: json['is_reserved'] as bool? ?? false,
@@ -42,6 +50,7 @@ class Product {
       'description': description,
       'price': price,
       'image_url': imageUrl,
+      'image_urls': imageUrls,
       'category': category,
       'inventory_count': inventoryCount,
       'is_reserved': isReserved,
@@ -54,6 +63,7 @@ class Product {
     String? description,
     double? price,
     String? imageUrl,
+    List<String>? imageUrls,
     String? category,
     int? inventoryCount,
     bool? isReserved,
@@ -64,6 +74,7 @@ class Product {
       description: description ?? this.description,
       price: price ?? this.price,
       imageUrl: imageUrl ?? this.imageUrl,
+      imageUrls: imageUrls ?? this.imageUrls,
       category: category ?? this.category,
       inventoryCount: inventoryCount ?? this.inventoryCount,
       isReserved: isReserved ?? this.isReserved,

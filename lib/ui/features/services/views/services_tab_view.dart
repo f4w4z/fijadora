@@ -13,6 +13,8 @@ import '../../../../ui/features/services/views/voice_assistant_sheet.dart';
 import '../../profile/views/home_detail_list_view.dart';
 import '../../../../data/services/telemetry_service.dart';
 import '../../../../ui/shared/widgets/animated_tap_scale.dart';
+import '../../../../ui/core/theme.dart';
+
 
 class ServicesTabView extends ConsumerStatefulWidget {
   const ServicesTabView({super.key});
@@ -593,27 +595,160 @@ class _NewRequestSheetState extends ConsumerState<_NewRequestSheet> {
     }
   }
 
+  Future<void> _showTradePicker() async {
+    final selected = await showModalBottomSheet<TradeType>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        final innerTheme = Theme.of(ctx);
+        return Container(
+          decoration: BoxDecoration(
+            color: innerTheme.colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: innerTheme.colorScheme.onSurfaceVariant.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Text(
+                'Select Trade Type',
+                style: innerTheme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Choose the type of repair or service you need.',
+                style: innerTheme.textTheme.bodyMedium?.copyWith(
+                  color: innerTheme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...TradeType.values.map((trade) {
+                final isActive = trade == _selectedTrade;
+                return InkWell(
+                  onTap: () => Navigator.pop(ctx, trade),
+                  borderRadius: BorderRadius.circular(12),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? innerTheme.colorScheme.primary.withValues(alpha: 0.08)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isActive
+                            ? innerTheme.colorScheme.primary.withValues(alpha: 0.3)
+                            : innerTheme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
+                        width: isActive ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? innerTheme.colorScheme.primary.withValues(alpha: 0.12)
+                                : innerTheme.colorScheme.onSurfaceVariant.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            trade.icon,
+                            size: 16,
+                            color: isActive
+                                ? innerTheme.colorScheme.primary
+                                : innerTheme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            trade.displayName,
+                            style: innerTheme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                              color: isActive
+                                  ? innerTheme.colorScheme.onSurface
+                                  : innerTheme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        if (isActive)
+                          Icon(
+                            CupertinoIcons.checkmark_circle_fill,
+                            size: 18,
+                            color: innerTheme.colorScheme.primary,
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
+    if (selected != null) {
+      setState(() => _selectedTrade = selected);
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     final scheduledHour = _selectedTime.hour;
     if (scheduledHour < 13 || scheduledHour >= 22) {
-      final proceed = await showCupertinoDialog<bool>(
+      final proceed = await showDialog<bool>(
         context: context,
         builder: (context) {
-          return CupertinoAlertDialog(
+          final theme = Theme.of(context);
+          return AlertDialog(
+            icon: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                CupertinoIcons.clock_fill,
+                color: theme.colorScheme.error,
+                size: 40,
+              ),
+            ),
             title: const Text("We're Closed"),
             content: const Text(
               "Operating hours are 1 PM to 10 PM. Since your request is outside operations, we're closed and will handle it in the morning.",
+              textAlign: TextAlign.center,
             ),
+            actionsAlignment: MainAxisAlignment.spaceEvenly,
             actions: [
-              CupertinoDialogAction(
-                child: const Text("Cancel"),
+              TextButton(
+                child: const Text('Cancel'),
                 onPressed: () => Navigator.pop(context, false),
               ),
-              CupertinoDialogAction(
-                isDefaultAction: true,
-                child: const Text("Proceed"),
+              TextButton(
+                child: Text(
+                  'Proceed',
+                  style: TextStyle(
+                    color: theme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 onPressed: () => Navigator.pop(context, true),
               ),
             ],
@@ -695,27 +830,72 @@ class _NewRequestSheetState extends ConsumerState<_NewRequestSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      DropdownButtonFormField<TradeType>(
-                        initialValue: _selectedTrade,
-                        decoration: const InputDecoration(
-                          labelText: 'Trade Type',
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        ),
-                        items: TradeType.values.map((trade) {
-                          return DropdownMenuItem(
-                            value: trade,
-                            child: Row(
-                              children: [
-                                Icon(trade.icon, size: 18),
-                                const SizedBox(width: 8),
-                                Text(trade.displayName),
-                              ],
+                      // Trade type picker (tappable field → bottom sheet)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4, bottom: 6),
+                            child: Text(
+                              'Trade Type',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
                             ),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _selectedTrade = val);
-                        },
+                          ),
+                          InkWell(
+                            onTap: _showTradePicker,
+                            borderRadius: BorderRadius.circular(AppTheme.inputBorderRadius),
+                            child: InputDecorator(
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(AppTheme.inputBorderRadius),
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(AppTheme.inputBorderRadius),
+                                  borderSide: BorderSide.none,
+                                ),
+                                filled: true,
+                                fillColor: theme.brightness == Brightness.dark
+                                    ? const Color(0xFF1A1A1A)
+                                    : const Color(0xFFF5F5F5),
+                                suffixIcon: Icon(
+                                  CupertinoIcons.chevron_up_chevron_down,
+                                  size: 16,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      _selectedTrade.icon,
+                                      size: 16,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    _selectedTrade.displayName,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                      color: theme.colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 20),
                       Row(

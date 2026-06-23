@@ -137,6 +137,85 @@ class AppTheme {
           ),
         ),
       ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(Colors.white),
+          surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
+          elevation: WidgetStatePropertyAll(8),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(inputBorderRadius),
+              side: BorderSide(color: Color(0xFFE5E5E5), width: 1),
+            ),
+          ),
+          padding: WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 8)),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Color(0xFFF5F5F5),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(inputBorderRadius),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(inputBorderRadius),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(inputBorderRadius),
+            borderSide: BorderSide(color: Colors.black, width: 1.5),
+          ),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(inputBorderRadius),
+          side: BorderSide(color: Color(0xFFE5E5E5), width: 1),
+        ),
+        labelTextStyle: WidgetStatePropertyAll(
+          TextStyle(fontSize: 14, color: Colors.black),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: const Color(0xFF1E1E1E),
+        actionTextColor: Colors.white,
+        contentTextStyle: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.2,
+        ),
+        elevation: 6,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF2A2A2A), width: 1),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: Colors.white,
+        elevation: 8,
+        shadowColor: Colors.black.withValues(alpha: 0.08),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFFE5E5E5), width: 1),
+        ),
+        titleTextStyle: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+        contentTextStyle: const TextStyle(
+          fontSize: 14,
+          color: Color(0xFF444444),
+          height: 1.5,
+        ),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      ),
     );
   }
 
@@ -268,6 +347,85 @@ class AppTheme {
             fontWeight: FontWeight.w600,
           ),
         ),
+      ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(Color(0xFF1A1A1A)),
+          surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
+          elevation: WidgetStatePropertyAll(12),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(inputBorderRadius),
+              side: BorderSide(color: Color(0xFF333333), width: 1),
+            ),
+          ),
+          padding: WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 8)),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Color(0xFF121212),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(inputBorderRadius),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(inputBorderRadius),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(inputBorderRadius),
+            borderSide: BorderSide(color: Colors.white, width: 1.5),
+          ),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: const Color(0xFF1A1A1A),
+        surfaceTintColor: Colors.transparent,
+        elevation: 12,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(inputBorderRadius),
+          side: const BorderSide(color: Color(0xFF333333), width: 1),
+        ),
+        labelTextStyle: const WidgetStatePropertyAll(
+          TextStyle(fontSize: 14, color: Colors.white),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: const Color(0xFF2C2C2C),
+        actionTextColor: Colors.white,
+        contentTextStyle: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.2,
+        ),
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF3D3D3D), width: 1),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: const Color(0xFF1A1A1A),
+        elevation: 12,
+        shadowColor: Colors.black.withValues(alpha: 0.4),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFF2C2C2C), width: 1),
+        ),
+        titleTextStyle: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        contentTextStyle: const TextStyle(
+          fontSize: 14,
+          color: Color(0xFFCCCCCC),
+          height: 1.5,
+        ),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       ),
     );
   }

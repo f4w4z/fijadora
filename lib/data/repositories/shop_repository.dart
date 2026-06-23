@@ -131,7 +131,13 @@ class MockShopRepository implements ShopRepository {
         name: 'Noguchi Coffee Table',
         description: 'Designed by Isamu Noguchi, this table is a masterpiece of modern design, combining an organic wooden base with a thick glass top.',
         price: 780.0,
-        imageUrl: 'https://images.unsplash.com/photo-1581428982868-e410dd047a90?w=500&auto=format&fit=crop&q=60',
+        imageUrl: 'https://images.unsplash.com/photo-1581428982868-e410dd047a90?w=800&auto=format&fit=crop&q=80',
+        imageUrls: [
+          'https://images.unsplash.com/photo-1581428982868-e410dd047a90?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&auto=format&fit=crop&q=80',
+        ],
         category: 'Living Room',
         inventoryCount: 4,
         isReserved: false,
@@ -141,7 +147,12 @@ class MockShopRepository implements ShopRepository {
         name: 'Wassily Chair',
         description: 'Designed by Marcel Breuer, this iconic chair features a tubular steel frame with leather straps, offering a sleek modernist aesthetic.',
         price: 950.0,
-        imageUrl: 'https://images.unsplash.com/photo-1592078615290-033ee584e267?w=500&auto=format&fit=crop&q=60',
+        imageUrl: 'https://images.unsplash.com/photo-1592078615290-033ee584e267?w=800&auto=format&fit=crop&q=80',
+        imageUrls: [
+          'https://images.unsplash.com/photo-1592078615290-033ee584e267?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1616627981762-994a38ebf837?w=800&auto=format&fit=crop&q=80',
+        ],
         category: 'Chairs',
         inventoryCount: 2,
         isReserved: false,
@@ -151,7 +162,13 @@ class MockShopRepository implements ShopRepository {
         name: 'Minimalist Oak Bed Frame',
         description: 'Crafted from solid oak wood, this low-profile platform bed frame provides a minimalist, warm, and sturdy foundation for any bedroom.',
         price: 1200.0,
-        imageUrl: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=500&auto=format&fit=crop&q=60',
+        imageUrl: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800&auto=format&fit=crop&q=80',
+        imageUrls: [
+          'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&auto=format&fit=crop&q=80',
+        ],
         category: 'Bedroom',
         inventoryCount: 3,
         isReserved: false,
@@ -161,7 +178,12 @@ class MockShopRepository implements ShopRepository {
         name: 'Flos Arco Floor Lamp',
         description: 'A revolutionary design featuring a solid marble pedestal and an arched stainless steel stem, perfect for direct lighting over tables.',
         price: 450.0,
-        imageUrl: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&auto=format&fit=crop&q=60',
+        imageUrl: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800&auto=format&fit=crop&q=80',
+        imageUrls: [
+          'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800&auto=format&fit=crop&q=80',
+        ],
         category: 'Lighting',
         inventoryCount: 8,
         isReserved: false,
@@ -169,15 +191,22 @@ class MockShopRepository implements ShopRepository {
       const Product(
         id: 'prod-5',
         name: 'Nordic Styled Living Room Set',
-        description: 'Get the complete styled look in a single click. This bundle package includes our Noguchi Coffee Table, Wassily Chair, and the Flos Arco Floor Lamp. Designed to harmonize together perfectly to give a premium, minimalist architectural aesthetic.',
+        description: 'Get the complete styled look in a single click. This bundle package includes our Noguchi Coffee Table, Wassily Chair, and the Flos Arco Floor Lamp.',
         price: 2100.0,
-        imageUrl: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=500&auto=format&fit=crop&q=60',
+        imageUrl: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&auto=format&fit=crop&q=80',
+        imageUrls: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1560448204-61dc36dc98c8?w=800&auto=format&fit=crop&q=80',
+        ],
         category: 'Bundles',
         inventoryCount: 3,
         isReserved: false,
       ),
     ]);
   }
+
 
   void _notifyListeners() {
     _controller.add(List<Product>.from(_mockProducts));
