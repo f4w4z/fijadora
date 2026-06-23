@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../domain/models/user_role.dart';
 import '../view_models/auth_view_model.dart';
 
@@ -41,7 +42,6 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
         role: _selectedRole,
       );
       if (mounted) {
-        // GoRouter will redirect automatically if auth state updates
         context.go('/');
       }
     } catch (e) {
@@ -58,73 +58,100 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
     }
   }
 
-  Widget _buildRoleCard(String title, String description, UserRole role, IconData icon) {
+  Widget _buildRoleCard(String title, String description, UserRole role, IconData icon, Color activeColor) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isSelected = _selectedRole == role;
 
-    return GestureDetector(
+    final surfaceColor = isDark
+        ? (isSelected ? const Color(0xFF161616) : const Color(0xFF0F0F0F))
+        : (isSelected ? const Color(0xFFFFFFFF) : const Color(0xFFFFFFFF));
+    
+    final borderColor = isSelected
+        ? activeColor
+        : (isDark ? const Color(0xFF222222) : const Color(0xFFE5E5E5));
+
+    return _AnimatedPressable(
       onTap: () {
         setState(() {
           _selectedRole = role;
         });
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16.0),
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.all(12.0),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12.0),
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(20.0),
           border: Border.all(
-            color: isSelected ? theme.colorScheme.primary : const Color(0xFFE5E5E5),
+            color: borderColor,
             width: isSelected ? 2.0 : 1.0,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: activeColor.withValues(alpha: isDark ? 0.15 : 0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
                   )
                 ]
-              : null,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 24,
-              color: isSelected ? theme.colorScheme.primary : Colors.grey,
-            ),
-            const SizedBox(width: 16.0),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 2.0),
-                  Text(
-                    description,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: 12,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
                   ),
                 ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? activeColor.withValues(alpha: 0.12)
+                        : (isDark ? const Color(0xFF222222) : const Color(0xFFF5F5F5)),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 15,
+                    color: isSelected ? activeColor : Colors.grey,
+                  ),
+                ),
+                if (isSelected)
+                  Icon(
+                    CupertinoIcons.checkmark_circle_fill,
+                    color: activeColor,
+                    size: 16,
+                  ),
+              ],
+            ),
+            const Spacer(),
+            Text(
+              title,
+              style: GoogleFonts.outfit(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: isSelected ? activeColor : theme.colorScheme.onSurface,
+                letterSpacing: -0.2,
               ),
             ),
-            if (isSelected)
-              Icon(
-                CupertinoIcons.checkmark_circle_fill,
-                color: theme.colorScheme.primary,
-                size: 20,
+            const SizedBox(height: 2.0),
+            Text(
+              description,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontSize: 9.5,
+                height: 1.2,
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
       ),
@@ -138,15 +165,20 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(CupertinoIcons.back),
-          onPressed: () => context.pop(),
+        leading: _AnimatedPressable(
+          onTap: () => context.pop(),
+          child: const Padding(
+            padding: EdgeInsets.all(12.0),
+            child: Icon(CupertinoIcons.back),
+          ),
         ),
-        title: const Text('Create Account'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Form(
             key: _formKey,
             child: Column(
@@ -154,21 +186,33 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
               children: [
                 Text(
                   'Join Phoebe Homes',
-                  style: theme.textTheme.displaySmall,
+                  style: GoogleFonts.outfit(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1.0,
+                  ),
                 ),
-                const SizedBox(height: 8.0),
+                const SizedBox(height: 6.0),
                 Text(
-                  'Select your role and start your experience.',
+                  'Select your role and build your premium space.',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 24.0),
+                const SizedBox(height: 28.0),
 
                 // Name
-                Text(
-                  'Full Name',
-                  style: theme.textTheme.titleLarge?.copyWith(fontSize: 14),
+                Row(
+                  children: [
+                    Text(
+                      'Full Name',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.1,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8.0),
                 TextFormField(
@@ -186,12 +230,20 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 20.0),
+                const SizedBox(height: 18.0),
 
                 // Email
-                Text(
-                  'Email Address',
-                  style: theme.textTheme.titleLarge?.copyWith(fontSize: 14),
+                Row(
+                  children: [
+                    Text(
+                      'Email Address',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.1,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8.0),
                 TextFormField(
@@ -212,12 +264,20 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 20.0),
+                const SizedBox(height: 18.0),
 
                 // Password
-                Text(
-                  'Password',
-                  style: theme.textTheme.titleLarge?.copyWith(fontSize: 14),
+                Row(
+                  children: [
+                    Text(
+                      'Password',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.1,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8.0),
                 TextFormField(
@@ -252,58 +312,83 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                 const SizedBox(height: 28.0),
 
                 // Role Selection Heading
-                Text(
-                  'Who are you?',
-                  style: theme.textTheme.titleLarge?.copyWith(fontSize: 14),
+                Row(
+                  children: [
+                    Text(
+                      'Select Your Role',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.1,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12.0),
 
-                // Role Cards
-                _buildRoleCard(
-                  'Customer',
-                  'Request home maintenance & shop premium furniture.',
-                  UserRole.customer,
-                  CupertinoIcons.person_solid,
-                ),
-                const SizedBox(height: 12.0),
-                _buildRoleCard(
-                  'Service Worker',
-                  'Fulfill maintenance tasks & manage job schedule.',
-                  UserRole.worker,
-                  CupertinoIcons.hammer_fill,
-                ),
-                const SizedBox(height: 12.0),
-                _buildRoleCard(
-                  'Operations Admin',
-                  'Manage products, users, workers & view analytics.',
-                  UserRole.admin,
-                  CupertinoIcons.shield_fill,
-                ),
-                const SizedBox(height: 12.0),
-                _buildRoleCard(
-                  'Property Manager',
-                  'Oversee residential units & coordinate bookings.',
-                  UserRole.manager,
-                  CupertinoIcons.briefcase_fill,
+                // Role Grid (2x2 layout)
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  childAspectRatio: 1.15,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  children: [
+                    _buildRoleCard(
+                      'Customer',
+                      'Request services & shop furniture.',
+                      UserRole.customer,
+                      CupertinoIcons.person_solid,
+                      const Color(0xFF2F80ED),
+                    ),
+                    _buildRoleCard(
+                      'Worker',
+                      'Fulfill jobs & manage schedule.',
+                      UserRole.worker,
+                      CupertinoIcons.hammer_fill,
+                      const Color(0xFFF2994A),
+                    ),
+                    _buildRoleCard(
+                      'Admin',
+                      'Manage users & view analytics.',
+                      UserRole.admin,
+                      CupertinoIcons.shield_fill,
+                      const Color(0xFF9B51E0),
+                    ),
+                    _buildRoleCard(
+                      'Manager',
+                      'Oversee housing units & bookings.',
+                      UserRole.manager,
+                      CupertinoIcons.briefcase_fill,
+                      const Color(0xFF27AE60),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 36.0),
 
                 // Register Button
-                ElevatedButton(
-                  onPressed: viewModel.isLoading ? null : _handleRegister,
-                  child: viewModel.isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.0,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : const Text('Create Account'),
+                _AnimatedPressable(
+                  onTap: viewModel.isLoading ? () {} : _handleRegister,
+                  child: SizedBox(
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: viewModel.isLoading ? null : _handleRegister,
+                      child: viewModel.isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Text('Create Account'),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 24.0),
+                const SizedBox(height: 32.0),
               ],
             ),
           ),
@@ -312,3 +397,51 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
     );
   }
 }
+
+class _AnimatedPressable extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+
+  const _AnimatedPressable({required this.child, required this.onTap});
+
+  @override
+  State<_AnimatedPressable> createState() => _AnimatedPressableState();
+}
+
+class _AnimatedPressableState extends State<_AnimatedPressable> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) => _controller.reverse(),
+      onTapCancel: () => _controller.reverse(),
+      onTap: widget.onTap,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
