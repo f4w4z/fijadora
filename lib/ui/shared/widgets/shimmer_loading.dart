@@ -65,16 +65,21 @@ class _SkeletonBoxState extends State<SkeletonBox> with SingleTickerProviderStat
 }
 
 class ShimmerListPlaceholder extends StatelessWidget {
-  const ShimmerListPlaceholder({super.key, this.itemCount = 3});
+  const ShimmerListPlaceholder({
+    super.key,
+    this.itemCount = 3,
+    this.padding = const EdgeInsets.all(24.0),
+  });
 
   final int itemCount;
+  final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(24.0),
+      padding: padding,
       itemCount: itemCount,
       itemBuilder: (context, index) {
         return Container(

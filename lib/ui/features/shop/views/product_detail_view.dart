@@ -297,56 +297,49 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
               color: theme.brightness == Brightness.dark
                   ? const Color(0xFF222222)
                   : const Color(0xFFE5E5E5),
-              width: 0.5,
+              width: 1.0,
             ),
           ),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
         child: SafeArea(
-          child: Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: widget.product.inventoryCount > 0 && cartQty < widget.product.inventoryCount
-                        ? () {
-                            ref.read(cartViewModelProvider.notifier).addToCart(widget.product);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Added ${widget.product.name} to cart'),
-                                action: SnackBarAction(
-                                  label: 'View Cart',
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(builder: (context) => const CartView()),
-                                    );
-                                  },
-                                ),
-                              ),
-                            );
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: theme.colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      widget.product.inventoryCount <= 0
-                          ? 'Out of Stock'
-                          : cartQty >= widget.product.inventoryCount
-                              ? 'Max Stock Added'
-                              : 'Add to Cart',
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-                    ),
-                  ),
+          child: SizedBox(
+            height: 64,
+            child: ElevatedButton(
+              onPressed: widget.product.inventoryCount > 0 && cartQty < widget.product.inventoryCount
+                  ? () {
+                      ref.read(cartViewModelProvider.notifier).addToCart(widget.product);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Added ${widget.product.name} to cart'),
+                          action: SnackBarAction(
+                            label: 'View Cart',
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) => const CartView()),
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    }
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.zero,
                 ),
+                elevation: 0,
               ),
-            ],
+              child: Text(
+                widget.product.inventoryCount <= 0
+                    ? 'Out of Stock'
+                    : cartQty >= widget.product.inventoryCount
+                        ? 'Max Stock Added'
+                        : 'Add to Cart',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
           ),
         ),
       ),

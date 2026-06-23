@@ -7,6 +7,8 @@ import '../../../../domain/models/maintenance_job.dart';
 import '../../../../domain/models/user_role.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../../../data/services/notification_service.dart';
+import '../../../../ui/shared/widgets/custom_pinned_header.dart';
+import '../../../../ui/shared/widgets/animated_tap_scale.dart';
 import '../view_models/dispatch_provider.dart';
 
 class AdminDashboardView extends ConsumerStatefulWidget {
@@ -16,8 +18,8 @@ class AdminDashboardView extends ConsumerStatefulWidget {
   ConsumerState<AdminDashboardView> createState() => _AdminDashboardViewState();
 }
 
-class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> {
+  int _activeTab = 0;
 
   final List<Map<String, String>> _mockWorkers = [
     {'id': 'mock-worker-alex', 'name': 'Alex Johnson (Plumbing/HVAC)'},
@@ -26,65 +28,68 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> with Si
   ];
 
   @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final jobsRepo = ref.watch(jobsRepositoryProvider);
-    final authViewModel = ref.read(authViewModelProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Operations Portal', style: TextStyle(fontWeight: FontWeight.bold)),
-        actions: [
-          IconButton(
-            icon: const Icon(CupertinoIcons.square_arrow_right),
-            onPressed: () async {
-              await authViewModel.signOut();
-            },
+      body: Column(
+        children: [
+          CustomPinnedHeader(
+            title: 'Operations Portal',
+            actions: [
+              HeaderActionButton(
+                icon: CupertinoIcons.square_arrow_right,
+                onTap: () async {
+                  await ref.read(authViewModelProvider.notifier).signOut();
+                },
+              ),
+            ],
+            bottomChild: SizedBox(
+              width: double.infinity,
+              child: CupertinoSlidingSegmentedControl<int>(
+                groupValue: _activeTab,
+                children: const {
+                  0: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Text('Jobs Queue', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  ),
+                  1: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Text('Metrics', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  ),
+                },
+                onValueChanged: (val) {
+                  if (val != null) {
+                    setState(() => _activeTab = val);
+                  }
+                },
+              ),
+            ),
+          ),
+          Expanded(
+            child: StreamBuilder<List<MaintenanceJob>>(
+              stream: jobsRepo.streamJobs(userId: 'admin', role: UserRole.admin),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                final jobs = snapshot.data ?? [];
+
+                return AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  child: _activeTab == 0
+                      ? _buildJobsQueue(jobs, theme)
+                      : _buildMetricsTab(jobs, theme),
+                );
+              },
+            ),
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: theme.colorScheme.primary,
-          labelColor: theme.colorScheme.primary,
-          unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-          tabs: const [
-            Tab(text: 'Jobs Queue'),
-            Tab(text: 'Metrics'),
-          ],
-        ),
-      ),
-      body: StreamBuilder<List<MaintenanceJob>>(
-        stream: jobsRepo.streamJobs(userId: 'admin', role: UserRole.admin),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-
-          final jobs = snapshot.data ?? [];
-
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _buildJobsQueue(jobs, theme),
-              _buildMetricsTab(jobs, theme),
-            ],
-          );
-        },
       ),
     );
   }
@@ -133,7 +138,7 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> with Si
                       padding: const EdgeInsets.all(16.0),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(12.0),
+                        borderRadius: BorderRadius.circular(16.0),
                         border: Border.all(
                           color: theme.brightness == Brightness.dark
                               ? const Color(0xFF222222)
@@ -153,9 +158,9 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> with Si
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                  job.tradeType.name.toUpperCase(),
+                                  job.tradeType.displayName.toUpperCase(),
                                   style: TextStyle(
-                                    fontSize: 10,
+                                    fontSize: 9,
                                     fontWeight: FontWeight.bold,
                                     color: theme.colorScheme.onPrimaryContainer,
                                   ),
@@ -214,9 +219,23 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> with Si
                                 ),
                               ),
                               if (isUnassigned && job.status == JobStatus.pending)
-                                TextButton(
-                                  onPressed: () => _showAssignWorkerSheet(context, job.id),
-                                  child: const Text('Assign Worker', style: TextStyle(fontWeight: FontWeight.bold)),
+                                AnimatedTapScale(
+                                  onTap: () => _showAssignWorkerSheet(context, job.id),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.primary,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      'Assign Worker',
+                                      style: TextStyle(
+                                        color: theme.colorScheme.onPrimary,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
                                 )
                               else if (!isUnassigned)
                                 Text(
@@ -268,10 +287,10 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> with Si
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
-        status.name.toUpperCase(),
+        status.displayName.toUpperCase(),
         style: TextStyle(
           fontSize: 9,
           fontWeight: FontWeight.bold,
@@ -285,9 +304,10 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> with Si
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
+        final theme = Theme.of(context);
         return Container(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -306,7 +326,7 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> with Si
               const SizedBox(height: 16),
               ..._mockWorkers.map((worker) {
                 return ListTile(
-                  title: Text(worker['name'] ?? ''),
+                  title: Text(worker['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                   leading: const Icon(CupertinoIcons.person),
                   trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
                   onTap: () async {
@@ -366,14 +386,17 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> with Si
   }
 
   Widget _buildMetricCard(String title, String value, IconData icon, ThemeData theme, {Color? color}) {
+    final displayColor = color ?? theme.colorScheme.onSurfaceVariant;
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12.0),
+        color: theme.brightness == Brightness.dark
+            ? const Color(0xFF1E1E1E)
+            : const Color(0xFFF9F9F9),
+        borderRadius: BorderRadius.circular(16.0),
         border: Border.all(
           color: theme.brightness == Brightness.dark
-              ? const Color(0xFF222222)
+              ? const Color(0xFF333333)
               : const Color(0xFFE5E5E5),
         ),
       ),
@@ -388,18 +411,26 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> with Si
                 title,
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              Icon(icon, size: 20, color: color ?? theme.colorScheme.onSurfaceVariant),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: displayColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 16, color: displayColor),
+              ),
             ],
           ),
           Text(
             value,
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              color: color ?? theme.colorScheme.onSurface,
+              fontSize: 24,
+              color: theme.colorScheme.onSurface,
             ),
           ),
         ],

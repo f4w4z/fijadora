@@ -48,12 +48,47 @@ class _LoginViewState extends ConsumerState<LoginView> {
     }
   }
 
+  Widget _buildDemoButton(String label, String email, ThemeData theme) {
+    return Expanded(
+      child: OutlinedButton(
+        onPressed: () {
+          _emailController.text = email;
+          _passwordController.text = 'password123';
+          _handleLogin();
+        },
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          side: BorderSide(
+            color: theme.brightness == Brightness.dark
+                ? const Color(0xFF222222)
+                : const Color(0xFFE5E5E5),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = ref.watch(authViewModelProvider);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    // iOS Cupertino-style feel layout
+    final titleGradientColors = isDark
+        ? [Colors.white, const Color(0xFF888888)]
+        : [Colors.black, const Color(0xFF666666)];
+
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
@@ -72,17 +107,30 @@ class _LoginViewState extends ConsumerState<LoginView> {
                       children: [
                         const Spacer(flex: 2),
                         
-                        // Logo / Header
-                        Text(
-                          'Phoebe Homes',
-                          style: theme.textTheme.displayMedium,
-                          textAlign: TextAlign.center,
+                        // Typographic Gradient Header (Creative & Premium)
+                        ShaderMask(
+                          shaderCallback: (bounds) => LinearGradient(
+                            colors: titleGradientColors,
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ).createShader(bounds),
+                          child: Text(
+                            'Phoebe Homes',
+                            style: theme.textTheme.displayLarge?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -1.5,
+                              fontSize: 38,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                         const SizedBox(height: 8.0),
                         Text(
-                          'Home services, marketplace & management',
+                          'Zero-stress property management & marketplace',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
+                            letterSpacing: 0.2,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -92,7 +140,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         // Email Input
                         Text(
                           'Email Address',
-                          style: theme.textTheme.titleLarge?.copyWith(fontSize: 14),
+                          style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8.0),
                         TextFormField(
@@ -116,28 +164,9 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         const SizedBox(height: 20.0),
                         
                         // Password Input
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Password',
-                              style: theme.textTheme.titleLarge?.copyWith(fontSize: 14),
-                            ),
-                            GestureDetector(
-                              onTap: () {
-                                // For mock login convenience
-                                _emailController.text = 'customer@phoebe.com';
-                                _passwordController.text = 'password123';
-                              },
-                              child: Text(
-                                'Use Demo User',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
+                        Text(
+                          'Password',
+                          style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8.0),
                         TextFormField(
@@ -173,19 +202,71 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         
                         const SizedBox(height: 32.0),
                         
-                        // Login Button
-                        ElevatedButton(
-                          onPressed: viewModel.isLoading ? null : _handleLogin,
-                          child: viewModel.isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.0,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                  ),
-                                )
-                              : const Text('Sign In'),
+                        // Chunky Sign In Button (Corner-to-Corner height: 58)
+                        SizedBox(
+                          height: 58,
+                          child: ElevatedButton(
+                            onPressed: viewModel.isLoading ? null : _handleLogin,
+                            child: viewModel.isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.0,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : const Text('Sign In'),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 24.0),
+                        
+                        // Demo Accounts Matrix
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(0xFF0F0F0F)
+                                : const Color(0xFFF9F9F9),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isDark
+                                  ? const Color(0xFF222222)
+                                  : const Color(0xFFE5E5E5),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                'QUICK DEMO ACCESS',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  letterSpacing: 1.0,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  _buildDemoButton('Client', 'customer@phoebe.com', theme),
+                                  const SizedBox(width: 8),
+                                  _buildDemoButton('Worker', 'alex.worker@phoebe.com', theme),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  _buildDemoButton('Admin', 'phoebe.admin@phoebe.com', theme),
+                                  const SizedBox(width: 8),
+                                  _buildDemoButton('Manager', 'manager@phoebe.com', theme),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                         
                         const SizedBox(height: 24.0),
@@ -220,7 +301,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                           'Phoebe Homes • Premium Living',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: Colors.grey,
                             letterSpacing: 0.5,
                           ),

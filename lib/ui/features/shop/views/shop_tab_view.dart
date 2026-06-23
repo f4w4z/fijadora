@@ -1,13 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../data/repositories/shop_repository.dart';
 import '../../../../domain/models/product.dart';
 import '../view_models/cart_view_model.dart';
+import '../view_models/wishlist_view_model.dart';
 import 'cart_view.dart';
 import 'product_detail_view.dart';
 import 'wishlist_view.dart';
 import '../../../../ui/shared/widgets/animated_tap_scale.dart';
+import '../../../../ui/shared/widgets/custom_pinned_header.dart';
+
 
 class ShopTabView extends ConsumerStatefulWidget {
   const ShopTabView({super.key});
@@ -41,412 +43,389 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final shopRepo = ref.watch(shopRepositoryProvider);
     final totalCartItems = ref.watch(cartViewModelProvider.notifier).totalItems;
+    final productsAsync = ref.watch(productsStreamProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Shop Furniture', style: TextStyle(fontWeight: FontWeight.w600)),
-        actions: [
-          IconButton(
-            icon: const Icon(CupertinoIcons.heart),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const WishlistView()),
-              );
-            },
-          ),
-          IconButton(
-            icon: Badge(
-              label: Text('$totalCartItems'),
-              isLabelVisible: totalCartItems > 0,
-              backgroundColor: theme.colorScheme.primary,
-              child: const Icon(CupertinoIcons.shopping_cart),
+      body: Column(
+        children: [
+          CustomPinnedHeader(
+            title: 'Shop',
+            actions: [
+              HeaderActionButton(
+                icon: CupertinoIcons.heart,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const WishlistView()),
+                  );
+                },
+              ),
+              HeaderActionButton(
+                icon: CupertinoIcons.cart,
+                badgeCount: totalCartItems,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const CartView()),
+                  );
+                },
+              ),
+            ],
+            bottomChild: CupertinoSearchTextField(
+              placeholder: 'Search pieces...',
+              onChanged: (val) => setState(() => _searchQuery = val),
+              decoration: BoxDecoration(
+                color: theme.brightness == Brightness.dark
+                    ? const Color(0xFF1A1A1A)
+                    : const Color(0xFFF0F0F0),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const CartView()),
-              );
-            },
           ),
-        ],
-      ),
-      body: StreamBuilder<List<Product>>(
-        stream: shopRepo.streamProducts(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          final products = snapshot.data ?? [];
+          Expanded(
+            child: productsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Center(child: Text('Error: $error')),
+              data: (products) {
 
-          // Extract categories dynamically
-          final categories = ['All Products', ...products.map((p) => p.category).toSet()];
+                // Extract categories dynamically
+                final categories = ['All Products', ...products.map((p) => p.category).toSet()];
 
-          final bundleProducts = products.where((p) => p.category == 'Bundles').toList();
+                final bundleProducts = products.where((p) => p.category == 'Bundles').toList();
 
-          final filteredProducts = products.where((p) {
-            final matchesCategory = _selectedCategory == 'All Products' || p.category == _selectedCategory;
-            final matchesSearch = _searchQuery.isEmpty ||
-                p.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                p.description.toLowerCase().contains(_searchQuery.toLowerCase());
-            return matchesCategory && matchesSearch;
-          }).toList();
+                final filteredProducts = products.where((p) {
+                  final matchesCategory = _selectedCategory == 'All Products' || p.category == _selectedCategory;
+                  final matchesSearch = _searchQuery.isEmpty ||
+                      p.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                      p.description.toLowerCase().contains(_searchQuery.toLowerCase());
+                  return matchesCategory && matchesSearch;
+                }).toList();
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Search Input Box
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-                  child: CupertinoSearchTextField(
-                    placeholder: 'Search pieces...',
-                    onChanged: (val) {
-                      setState(() {
-                        _searchQuery = val;
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-                // Prominent Banner
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Container(
-                    padding: const EdgeInsets.all(24.0),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      borderRadius: BorderRadius.circular(16.0),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Phoebe Curated',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            color: theme.colorScheme.onPrimary,
-                            fontSize: 14,
-                            letterSpacing: 1.0,
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 120),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Prominent Banner
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 0),
+
+                        child: Container(
+                          padding: const EdgeInsets.all(24.0),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary,
+                            borderRadius: BorderRadius.circular(16.0),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Phoebe Curated',
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  color: theme.colorScheme.onPrimary,
+                                  fontSize: 14,
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                              const SizedBox(height: 8.0),
+                              Text(
+                                'Architectural furniture for modern living spaces.',
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  color: theme.colorScheme.onPrimary,
+                                  height: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 16.0),
+                              Row(
+                                children: [
+                                  ElevatedButton(
+                                    onPressed: () {},
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: theme.colorScheme.onPrimary,
+                                      foregroundColor: theme.colorScheme.primary,
+                                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                                      elevation: 0,
+                                    ),
+                                    child: const Text('View Collection', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  OutlinedButton.icon(
+                                    onPressed: () => _showAiConcierge(context, products),
+                                    icon: const Icon(CupertinoIcons.sparkles, size: 14),
+                                    label: const Text('AI Concierge', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: theme.colorScheme.onPrimary,
+                                      side: BorderSide(color: theme.colorScheme.onPrimary),
+                                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 8.0),
-                        Text(
-                          'Architectural furniture for modern living spaces.',
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            color: theme.colorScheme.onPrimary,
-                            height: 1.2,
+                      ),
+                      const SizedBox(height: 32.0),
+
+                      if (bundleProducts.isNotEmpty) ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                          child: Text(
+                            'Shop the Look (Styled Rooms)',
+                            style: theme.textTheme.headlineMedium?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                         ),
                         const SizedBox(height: 16.0),
-                        Row(
-                          children: [
-                            ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: theme.colorScheme.onPrimary,
-                                foregroundColor: theme.colorScheme.primary,
-                                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                                elevation: 0,
-                              ),
-                              child: const Text('View Collection', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                            ),
-                            const SizedBox(width: 12),
-                            OutlinedButton.icon(
-                              onPressed: () => _showAiConcierge(context, products),
-                              icon: const Icon(CupertinoIcons.sparkles, size: 14),
-                              label: const Text('AI Concierge', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: theme.colorScheme.onPrimary,
-                                side: BorderSide(color: theme.colorScheme.onPrimary),
-                                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 32.0),
-
-                // Categories list
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Text(
-                    'Browse Categories',
-                    style: theme.textTheme.headlineMedium?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-                SizedBox(
-                  height: 40.0,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    itemCount: categories.length,
-                    itemBuilder: (context, index) {
-                      final category = categories[index];
-                      final isSelected = category == _selectedCategory;
-                      return _buildCategoryChip(category, isSelected, theme);
-                    },
-                  ),
-                ),
-
-                const SizedBox(height: 32.0),
-
-                if (bundleProducts.isNotEmpty) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Text(
-                      'Shop the Look (Styled Rooms)',
-                      style: theme.textTheme.headlineMedium?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  SizedBox(
-                    height: 140.0,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      itemCount: bundleProducts.length,
-                      itemBuilder: (context, index) {
-                        final bundle = bundleProducts[index];
-                        return AnimatedTapScale(
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) => ProductDetailView(product: bundle)),
-                            );
-                          },
-                          child: Container(
-                            width: 280,
-                            margin: const EdgeInsets.only(right: 16.0),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surface,
-                              borderRadius: BorderRadius.circular(12.0),
-                              border: Border.all(
-                                color: theme.brightness == Brightness.dark
-                                    ? const Color(0xFF222222)
-                                    : const Color(0xFFE5E5E5),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: const BorderRadius.horizontal(left: Radius.circular(11.0)),
-                                  child: Hero(
-                                    tag: 'product-img-${bundle.id}',
-                                    child: Image.network(
-                                      bundle.imageUrl,
-                                      width: 100,
-                                      height: 140,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (c, e, s) => Container(
-                                        color: theme.colorScheme.surfaceContainerHighest,
-                                        width: 100,
-                                        child: const Icon(CupertinoIcons.photo),
-                                      ),
+                        SizedBox(
+                          height: 140.0,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                            itemCount: bundleProducts.length,
+                            itemBuilder: (context, index) {
+                              final bundle = bundleProducts[index];
+                              return AnimatedTapScale(
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (context) => ProductDetailView(product: bundle)),
+                                  );
+                                },
+                                child: Container(
+                                  width: 280,
+                                  margin: const EdgeInsets.only(right: 16.0),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(12.0),
+                                    border: Border.all(
+                                      color: theme.brightness == Brightness.dark
+                                          ? const Color(0xFF222222)
+                                          : const Color(0xFFE5E5E5),
                                     ),
                                   ),
-                                ),
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(12.0),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: theme.colorScheme.primaryContainer,
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: Text(
-                                            'ROOM BUNDLE',
-                                            style: TextStyle(
-                                              fontSize: 8,
-                                              fontWeight: FontWeight.bold,
-                                              color: theme.colorScheme.onPrimaryContainer,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          bundle.name,
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          '\$${bundle.price.toStringAsFixed(0)}',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: theme.colorScheme.primary,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 32.0),
-                ],
-
-                // Products Grid
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Featured Pieces',
-                        style: theme.textTheme.headlineMedium?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      TextButton(
-                        onPressed: () {},
-                        child: const Text('See All'),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12.0),
-                filteredProducts.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.all(32.0),
-                        child: Center(
-                          child: Text(
-                            'No pieces found in this category.',
-                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                          ),
-                        ),
-                      )
-                    : GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16.0,
-                          mainAxisSpacing: 24.0,
-                          childAspectRatio: 0.72,
-                        ),
-                        itemCount: filteredProducts.length,
-                        itemBuilder: (context, index) {
-                          final product = filteredProducts[index];
-                          return AnimatedTapScale(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => ProductDetailView(product: product),
-                                  ),
-                              );
-                            },
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Product image card
-                                Expanded(
-                                  child: Card(
-                                    clipBehavior: Clip.antiAlias,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                      side: BorderSide(
-                                        color: theme.brightness == Brightness.dark
-                                            ? const Color(0xFF222222)
-                                            : const Color(0xFFE5E5E5),
-                                      ),
-                                    ),
-                                    child: Stack(
-                                      fit: StackFit.expand,
-                                      children: [
-                                        Hero(
-                                          tag: 'product-img-${product.id}',
+                                  child: Row(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: const BorderRadius.horizontal(left: Radius.circular(11.0)),
+                                        child: Hero(
+                                          tag: 'product-img-${bundle.id}',
                                           child: Image.network(
-                                            product.imageUrl,
+                                            bundle.imageUrl,
+                                            width: 100,
+                                            height: 140,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (context, error, stackTrace) => Container(
+                                            errorBuilder: (c, e, s) => Container(
                                               color: theme.colorScheme.surfaceContainerHighest,
+                                              width: 100,
                                               child: const Icon(CupertinoIcons.photo),
                                             ),
                                           ),
                                         ),
-                                        Positioned(
-                                          top: 8,
-                                          right: 8,
-                                          child: CircleAvatar(
-                                            radius: 16,
-                                            backgroundColor: Colors.white.withValues(alpha: 0.8),
-                                            child: IconButton(
-                                              padding: EdgeInsets.zero,
-                                              icon: const Icon(CupertinoIcons.heart, size: 16, color: Colors.black),
-                                              onPressed: () {},
-                                            ),
+                                      ),
+                                      Expanded(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(12.0),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: theme.colorScheme.primaryContainer,
+                                                  borderRadius: BorderRadius.circular(4),
+                                                ),
+                                                child: Text(
+                                                  'ROOM BUNDLE',
+                                                  style: TextStyle(
+                                                    fontSize: 8,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: theme.colorScheme.onPrimaryContainer,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                bundle.name,
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                '\$${bundle.price.toStringAsFixed(0)}',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: theme.colorScheme.primary,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                        if (product.inventoryCount <= 0)
-                                          Container(
-                                            color: Colors.black.withValues(alpha: 0.4),
-                                            alignment: Alignment.center,
-                                            child: const Text(
-                                              'OUT OF STOCK',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 10,
-                                              ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 32.0),
+                      ],
+
+                      // Categories list
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Text(
+                          'Browse Categories',
+                          style: theme.textTheme.headlineMedium?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 16.0),
+                      SizedBox(
+                        height: 40.0,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                          itemCount: categories.length,
+                          itemBuilder: (context, index) {
+                            final category = categories[index];
+                            final isSelected = category == _selectedCategory;
+                            return _buildCategoryChip(category, isSelected, theme);
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 32.0),
+
+                      // Products Grid
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Featured Pieces',
+                              style: theme.textTheme.headlineMedium?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            TextButton(
+                              onPressed: () {},
+                              child: const Text('See All'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12.0),
+                      filteredProducts.isEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.all(32.0),
+                              child: Center(
+                                child: Text(
+                                  'No pieces found in this category.',
+                                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                                ),
+                              ),
+                            )
+                          : GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 16.0,
+                                mainAxisSpacing: 24.0,
+                                childAspectRatio: 0.72,
+                              ),
+                              itemCount: filteredProducts.length,
+                              itemBuilder: (context, index) {
+                                final product = filteredProducts[index];
+                                return AnimatedTapScale(
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (context) => ProductDetailView(product: product),
+                                        ),
+                                    );
+                                  },
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Product image card
+                                      Expanded(
+                                        child: Card(
+                                          clipBehavior: Clip.antiAlias,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                            side: BorderSide(
+                                              color: theme.brightness == Brightness.dark
+                                                  ? const Color(0xFF222222)
+                                                  : const Color(0xFFE5E5E5),
                                             ),
                                           ),
-                                      ],
-                                    ),
+                                          child: Stack(
+                                            fit: StackFit.expand,
+                                            children: [
+                                              Hero(
+                                                tag: 'product-img-${product.id}',
+                                                child: Image.network(
+                                                  product.imageUrl,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (context, error, stackTrace) => Container(
+                                                    color: theme.colorScheme.surfaceContainerHighest,
+                                                    child: const Icon(CupertinoIcons.photo),
+                                                  ),
+                                                ),
+                                              ),
+                                              Positioned(
+                                                top: 8,
+                                                right: 8,
+                                                child: CircleAvatar(
+                                                  radius: 16,
+                                                  backgroundColor: Colors.white.withValues(alpha: 0.8),
+                                                  child: IconButton(
+                                                    icon: const Icon(CupertinoIcons.add, size: 14, color: Colors.black),
+                                                    onPressed: () {
+                                                      ref.read(cartViewModelProvider.notifier).addToCart(product);
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(
+                                                          content: Text('${product.name} added to cart'),
+                                                          duration: const Duration(seconds: 1),
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8.0),
+                                      Text(
+                                        product.name,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 4.0),
+                                      Text(
+                                        '\$${product.price.toStringAsFixed(0)}',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: theme.colorScheme.primary,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                const SizedBox(height: 8.0),
-                                Text(
-                                  product.category,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                const SizedBox(height: 2.0),
-                                Text(
-                                  product.name,
-                                  style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, fontWeight: FontWeight.w600),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 4.0),
-                                Text(
-                                  '\$${product.price.toStringAsFixed(0)}',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                              ],
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-              ],
+                    ],
+                  ),
+                );
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }

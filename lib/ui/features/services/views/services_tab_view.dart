@@ -7,6 +7,7 @@ import '../../../../domain/models/job_status.dart';
 import '../view_models/jobs_view_model.dart';
 import '../../../../data/services/gemini_service.dart';
 import '../../../../ui/shared/widgets/shimmer_loading.dart';
+import '../../../../ui/shared/widgets/custom_pinned_header.dart';
 import '../../../../ui/features/services/views/live_tracking_view.dart';
 import '../../../../ui/features/services/views/voice_assistant_sheet.dart';
 import '../../profile/views/home_detail_list_view.dart';
@@ -115,48 +116,59 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
     final jobsViewModel = ref.watch(jobsViewModelProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Maintenance & Repair'),
-        actions: [
-          IconButton(
-            icon: const Icon(CupertinoIcons.qrcode_viewfinder),
-            tooltip: 'Scan Room QR',
-            onPressed: () {
-              _showQrScannerSim(context);
-            },
+      body: Column(
+        children: [
+          CustomPinnedHeader(
+            title: 'Services',
+            actions: [
+              HeaderActionButton(
+                icon: CupertinoIcons.qrcode_viewfinder,
+                onTap: () => _showQrScannerSim(context),
+              ),
+              HeaderActionButton(
+                icon: CupertinoIcons.mic_fill,
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => const VoiceAssistantSheet(),
+                  );
+                },
+              ),
+              HeaderActionButton(
+                icon: CupertinoIcons.refresh,
+                onTap: () => ref.invalidate(jobsViewModelProvider),
+              ),
+            ],
+            bottomChild: CupertinoSearchTextField(
+              placeholder: 'Search requests...',
+              onChanged: (val) => setState(() => _searchQuery = val),
+              decoration: BoxDecoration(
+                color: theme.brightness == Brightness.dark
+                    ? const Color(0xFF1A1A1A)
+                    : const Color(0xFFF0F0F0),
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
           ),
-          IconButton(
-            icon: const Icon(CupertinoIcons.mic_fill),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (context) => const VoiceAssistantSheet(),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(CupertinoIcons.refresh),
-            onPressed: () {
-              // Re-initializes VM to get latest jobs
-              ref.invalidate(jobsViewModelProvider);
-            },
+          Expanded(
+            child: _buildBody(context, jobsViewModel),
           ),
         ],
       ),
-      body: SafeArea(
-        child: _buildBody(context, jobsViewModel),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showNewRequestSheet(context),
-        label: const Text('Request Service'),
-        icon: const Icon(CupertinoIcons.add),
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: theme.colorScheme.onPrimary,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 100),
+        child: FloatingActionButton.extended(
+          onPressed: () => _showNewRequestSheet(context),
+          label: const Text('Request Service'),
+          icon: const Icon(CupertinoIcons.add),
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: theme.colorScheme.onPrimary,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
       ),
     );
@@ -164,7 +176,9 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
 
   Widget _buildBody(BuildContext context, JobsViewModel vm) {
     if (vm.isLoading && vm.jobs.isEmpty) {
-      return const ShimmerListPlaceholder();
+      return const ShimmerListPlaceholder(
+        padding: EdgeInsets.fromLTRB(24, 16, 24, 120),
+      );
     }
 
     if (vm.errorMessage != null && vm.jobs.isEmpty) {
@@ -230,24 +244,7 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
           job.tradeType.displayName.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-          child: CupertinoSearchTextField(
-            placeholder: 'Search requests...',
-            onChanged: (val) {
-              setState(() {
-                _searchQuery = val;
-              });
-            },
-          ),
-        ),
-        Expanded(
-          child: _JobList(jobs: filteredJobs),
-        ),
-      ],
-    );
+    return _JobList(jobs: filteredJobs);
   }
 
   void _showNewRequestSheet(BuildContext context) {
@@ -267,7 +264,7 @@ class _JobList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 88),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
       itemCount: jobs.length,
       separatorBuilder: (_, _) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
@@ -658,6 +655,7 @@ class _NewRequestSheetState extends ConsumerState<_NewRequestSheet> {
     final isCreating = ref.watch(jobsViewModelProvider).isCreating;
 
     return Container(
+      height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -666,140 +664,188 @@ class _NewRequestSheetState extends ConsumerState<_NewRequestSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Request a Service',
-                  style: theme.textTheme.displaySmall?.copyWith(fontSize: 20),
-                ),
-                const SizedBox(height: 20),
-                DropdownButtonFormField<TradeType>(
-                  initialValue: _selectedTrade,
-                  decoration: const InputDecoration(
-                    labelText: 'Trade Type',
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  ),
-                  items: TradeType.values.map((trade) {
-                    return DropdownMenuItem(
-                      value: trade,
-                      child: Row(
-                        children: [
-                          Icon(trade.icon, size: 18),
-                          const SizedBox(width: 8),
-                          Text(trade.displayName),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (val) {
-                    if (val != null) setState(() => _selectedTrade = val);
-                  },
-                ),
-                const SizedBox(height: 16),
-                Row(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header Row
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'AI Diagnosis Assistant',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
+                      'Request a Service',
+                      style: theme.textTheme.displaySmall?.copyWith(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                    TextButton.icon(
-                      onPressed: _isAiDiagnosing ? null : _runAiDiagnosis,
-                      icon: _isAiDiagnosing
-                          ? const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(strokeWidth: 1.5),
-                            )
-                          : const Icon(CupertinoIcons.sparkles, size: 14),
-                      label: Text(_isAiDiagnosing ? 'Diagnosing...' : 'Scan Photo'),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        visualDensity: VisualDensity.compact,
-                      ),
+                    IconButton(
+                      icon: const Icon(CupertinoIcons.clear),
+                      onPressed: () => Navigator.pop(context),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _descriptionController,
-                  maxLines: 5,
-                  decoration: const InputDecoration(
-                    labelText: 'Problem Description',
-                    hintText: 'Describe what needs fixing, or scan a photo above...',
+              ),
+              const Divider(height: 1),
+
+              // Scrollable Forms
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      DropdownButtonFormField<TradeType>(
+                        initialValue: _selectedTrade,
+                        decoration: const InputDecoration(
+                          labelText: 'Trade Type',
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        ),
+                        items: TradeType.values.map((trade) {
+                          return DropdownMenuItem(
+                            value: trade,
+                            child: Row(
+                              children: [
+                                Icon(trade.icon, size: 18),
+                                const SizedBox(width: 8),
+                                Text(trade.displayName),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) setState(() => _selectedTrade = val);
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'AI Diagnosis Assistant',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                          TextButton.icon(
+                            onPressed: _isAiDiagnosing ? null : _runAiDiagnosis,
+                            icon: _isAiDiagnosing
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(strokeWidth: 1.5),
+                                  )
+                                : const Icon(CupertinoIcons.sparkles, size: 14),
+                            label: Text(_isAiDiagnosing ? 'Diagnosing...' : 'Scan Photo'),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _descriptionController,
+                        maxLines: 4,
+                        decoration: const InputDecoration(
+                          labelText: 'Problem Description',
+                          hintText: 'Describe what needs fixing, or scan a photo...',
+                        ),
+                        validator: (val) {
+                          if (val == null || val.trim().isEmpty) {
+                            return 'Please describe the problem';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        controller: _addressController,
+                        decoration: const InputDecoration(
+                          labelText: 'Service Address',
+                          hintText: 'Where should the technician go?',
+                        ),
+                        validator: (val) {
+                          if (val == null || val.trim().isEmpty) {
+                            return 'Please enter an address';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: _selectDate,
+                              borderRadius: BorderRadius.circular(12),
+                              child: InputDecorator(
+                                decoration: const InputDecoration(labelText: 'Date'),
+                                child: Text(_formatDate(_selectedDate)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: InkWell(
+                              onTap: _selectTime,
+                              borderRadius: BorderRadius.circular(12),
+                              child: InputDecorator(
+                                decoration: const InputDecoration(labelText: 'Time'),
+                                child: Text(_selectedTime.format(context)),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  validator: (val) {
-                    if (val == null || val.trim().isEmpty) {
-                      return 'Please describe the problem';
-                    }
-                    return null;
-                  },
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _addressController,
-                  decoration: const InputDecoration(
-                    labelText: 'Service Address',
-                    hintText: 'Where should the technician go?',
+              ),
+
+              // Bottom Full-Bleed Corner-to-Corner CTA Button (Uber Style)
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  border: Border(
+                    top: BorderSide(
+                      color: theme.brightness == Brightness.dark
+                          ? const Color(0xFF222222)
+                          : const Color(0xFFE5E5E5),
+                      width: 1.0,
+                    ),
                   ),
-                  validator: (val) {
-                    if (val == null || val.trim().isEmpty) {
-                      return 'Please enter an address';
-                    }
-                    return null;
-                  },
                 ),
-                const SizedBox(height: 16),
-                Row(
+                child: Row(
                   children: [
                     Expanded(
-                      child: InkWell(
-                        onTap: _selectDate,
-                        borderRadius: BorderRadius.circular(12),
-                        child: InputDecorator(
-                          decoration: const InputDecoration(labelText: 'Date'),
-                          child: Text(_formatDate(_selectedDate)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: InkWell(
-                        onTap: _selectTime,
-                        borderRadius: BorderRadius.circular(12),
-                        child: InputDecorator(
-                          decoration: const InputDecoration(labelText: 'Time'),
-                          child: Text(_selectedTime.format(context)),
+                      child: SizedBox(
+                        height: 64,
+                        child: ElevatedButton(
+                          onPressed: isCreating ? null : _submit,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.colorScheme.primary,
+                            foregroundColor: theme.colorScheme.onPrimary,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.zero,
+                            ),
+                          ),
+                          child: isCreating
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Text('Submit Request', style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: isCreating ? null : _submit,
-                    child: isCreating
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Text('Submit Request'),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -930,36 +976,33 @@ class _CustomerReviewPanelState extends ConsumerState<_CustomerReviewPanel> {
           if (_isSubmitting)
             const Center(child: CircularProgressIndicator())
           else
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: SizedBox(
-                    height: 56,
-                    child: OutlinedButton(
-                      onPressed: () => _submitReview(JobStatus.rejected),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: const BorderSide(color: Colors.red),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      child: const Text('Reject & Complain'),
+                SizedBox(
+                  height: 58,
+                  child: ElevatedButton(
+                    onPressed: () => _submitReview(JobStatus.completed),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
                     ),
+                    child: const Text('Approve & Sign Off', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SizedBox(
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: () => _submitReview(JobStatus.completed),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: theme.colorScheme.onPrimary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        elevation: 0,
-                      ),
-                      child: const Text('Approve & Sign Off'),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 58,
+                  child: OutlinedButton(
+                    onPressed: () => _submitReview(JobStatus.rejected),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
+                    child: const Text('Reject & Complain', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],

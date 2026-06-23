@@ -13,12 +13,17 @@ class AppTheme {
     return base.copyWith(
       colorScheme: ColorScheme.fromSeed(
         seedColor: Colors.black,
+        brightness: Brightness.light,
         primary: Colors.black,
         onPrimary: Colors.white,
         secondary: const Color(0xFF666666),
         onSecondary: Colors.white,
         surface: Colors.white,
         onSurface: Colors.black,
+        surfaceContainerLowest: Colors.white,
+        surfaceContainerLow: const Color(0xFFFAFAFA),
+        surfaceContainer: const Color(0xFFF5F5F5),
+        surfaceContainerHigh: const Color(0xFFECECEC),
         surfaceContainerHighest: const Color(0xFFF0F0F0),
         onSurfaceVariant: const Color(0xFF666666),
         error: const Color(0xFFD32F2F),
@@ -71,12 +76,13 @@ class AppTheme {
         ),
         margin: EdgeInsets.zero,
       ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
+      appBarTheme: AppBarTheme(
+        backgroundColor: const Color(0xFFFAFAFA),
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        iconTheme: IconThemeData(color: Colors.black),
-        titleTextStyle: TextStyle(
+        iconTheme: const IconThemeData(color: Colors.black),
+        titleTextStyle: const TextStyle(
           color: Colors.black,
           fontSize: 18,
           fontWeight: FontWeight.w600,
@@ -112,7 +118,7 @@ class AppTheme {
           backgroundColor: Colors.black,
           foregroundColor: Colors.white,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(vertical: 18),
+          padding: const EdgeInsets.symmetric(vertical: 20),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(inputBorderRadius),
           ),
@@ -139,13 +145,18 @@ class AppTheme {
     return base.copyWith(
       colorScheme: ColorScheme.fromSeed(
         seedColor: Colors.white,
+        brightness: Brightness.dark,
         primary: Colors.white,
         onPrimary: Colors.black,
         secondary: const Color(0xFF999999),
         onSecondary: Colors.black,
         surface: const Color(0xFF121212),
         onSurface: Colors.white,
-        surfaceContainerHighest: const Color(0xFF1E1E1E),
+        surfaceContainerLowest: const Color(0xFF000000),
+        surfaceContainerLow: const Color(0xFF0F0F0F),
+        surfaceContainer: const Color(0xFF121212),
+        surfaceContainerHigh: const Color(0xFF1E1E1E),
+        surfaceContainerHighest: const Color(0xFF2C2C2C),
         onSurfaceVariant: const Color(0xFF999999),
         error: const Color(0xFFEF5350),
         onError: Colors.black,
@@ -197,12 +208,13 @@ class AppTheme {
         ),
         margin: EdgeInsets.zero,
       ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.black,
+      appBarTheme: AppBarTheme(
+        backgroundColor: const Color(0xFF000000),
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
-        titleTextStyle: TextStyle(
+        iconTheme: const IconThemeData(color: Colors.white),
+        titleTextStyle: const TextStyle(
           color: Colors.white,
           fontSize: 18,
           fontWeight: FontWeight.w600,
@@ -238,7 +250,7 @@ class AppTheme {
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(vertical: 18),
+          padding: const EdgeInsets.symmetric(vertical: 20),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(inputBorderRadius),
           ),
