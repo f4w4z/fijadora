@@ -376,8 +376,7 @@ class _PremiumLogo extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'Phoebe Homes',
-            style: TextStyle(fontFamily: 'Instrument Serif', 
-              fontSize: 36,
+            style: TextStyle(fontSize: 36,
               fontWeight: FontWeight.bold,
               letterSpacing: -0.5,
               color: color,

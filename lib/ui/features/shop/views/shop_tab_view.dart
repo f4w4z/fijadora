@@ -142,8 +142,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                 children: [
                                   Text(
                                     'PHOEBE CURATED',
-                                    style: TextStyle(fontFamily: 'Inter', 
-                                      color: theme.colorScheme.primary,
+                                    style: TextStyle(color: theme.colorScheme.primary,
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
                                       letterSpacing: 2.0,
@@ -152,8 +151,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                   const SizedBox(height: 6.0),
                                   Text(
                                     'Architectural furniture for modern living spaces.',
-                                    style: TextStyle(fontFamily: 'Instrument Serif', 
-                                      color: theme.colorScheme.onSurface,
+                                    style: TextStyle(color: theme.colorScheme.onSurface,
                                       fontSize: 20,
                                       height: 1.1,
                                     ),
@@ -359,8 +357,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                     const SizedBox(height: 10.0),
                                     Text(
                                       product.name,
-                                      style: TextStyle(fontFamily: 'Instrument Serif', 
-                                        fontSize: 16,
+                                      style: TextStyle(fontSize: 16,
                                         height: 1.1,
                                         color: theme.colorScheme.onSurface,
                                       ),
@@ -370,8 +367,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                     const SizedBox(height: 4.0),
                                     Text(
                                       '\$${product.price.toStringAsFixed(0)}',
-                                      style: TextStyle(fontFamily: 'Inter', 
-                                        fontWeight: FontWeight.w500,
+                                      style: TextStyle(fontWeight: FontWeight.w500,
                                         fontSize: 12,
                                         color: theme.colorScheme.primary,
                                       ),
@@ -417,8 +413,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
         child: Center(
           child: Text(
             label.toUpperCase(),
-            style: TextStyle(fontFamily: 'Inter', 
-              color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+            style: TextStyle(color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
               fontSize: 10,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               letterSpacing: 1.0,

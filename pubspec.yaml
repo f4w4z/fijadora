@@ -69,16 +69,6 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  fonts:
-    - family: Inter
-      fonts:
-        - asset: assets/fonts/InterVariable.ttf
-          weight: 400
-    - family: Instrument Serif
-      fonts:
-        - asset: assets/fonts/InstrumentSerif-Regular.ttf
-          weight: 400
-
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

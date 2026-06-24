@@ -10,73 +10,66 @@ class AppTheme {
   static const Color onPrimary = Colors.white;
   static const Color secondary = Color(0xFFD4815A);
   static const Color onSecondary = Colors.white;
-  static const Color scaffold = Color(0xFF0C1F20);
-  static const Color surface = Color(0xFF142E30);
-  static const Color onSurface = Color(0xFFF0F7F7);
-  static const Color cardBorder = Color(0xFF1F4447);
-  static const Color textSecondary = Color(0xFF8BA5A7);
-  static const Color inputFill = Color(0xFF081617);
+  static const Color scaffold = Colors.white;
+  static const Color surface = Colors.white;
+  static const Color onSurface = Color(0xFF1A1A1A);
+  static const Color cardBorder = Color(0xFFE8E8E8);
+  static const Color textSecondary = Color(0xFF8E8E93);
+  static const Color inputFill = Color(0xFFF5F5F5);
 
   static ThemeData get lightTheme {
-    final base = ThemeData.dark(useMaterial3: true);
+    final base = ThemeData.light(useMaterial3: true);
     return base.copyWith(
       colorScheme: ColorScheme.fromSeed(
         seedColor: primary,
-        brightness: Brightness.dark,
+        brightness: Brightness.light,
         primary: primary,
         onPrimary: onPrimary,
         secondary: secondary,
         onSecondary: onSecondary,
         surface: surface,
         onSurface: onSurface,
-        surfaceContainerLowest: surface,
-        surfaceContainerLow: const Color(0xFF0F2628),
-        surfaceContainer: const Color(0xFF142E30),
-        surfaceContainerHigh: const Color(0xFF19373A),
-        surfaceContainerHighest: const Color(0xFF1F4447),
+        surfaceContainerLowest: Colors.white,
+        surfaceContainerLow: const Color(0xFFF8F8F8),
+        surfaceContainer: const Color(0xFFF2F2F2),
+        surfaceContainerHigh: const Color(0xFFEBEBEB),
+        surfaceContainerHighest: const Color(0xFFE0E0E0),
         onSurfaceVariant: textSecondary,
-        error: const Color(0xFFCF6679),
-        onError: Colors.black,
+        error: const Color(0xFFD32F2F),
+        onError: Colors.white,
       ),
-      textTheme: base.textTheme.apply(fontFamily: 'Inter').copyWith(
+      textTheme: base.textTheme.apply().copyWith(
         displayLarge: const TextStyle(
-          fontFamily: 'Instrument Serif',
           fontSize: 36,
           fontWeight: FontWeight.bold,
           color: onSurface,
         ),
         displayMedium: const TextStyle(
-          fontFamily: 'Instrument Serif',
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: onSurface,
         ),
         displaySmall: const TextStyle(
-          fontFamily: 'Instrument Serif',
           fontSize: 28,
           fontWeight: FontWeight.bold,
           color: onSurface,
         ),
         headlineMedium: const TextStyle(
-          fontFamily: 'Instrument Serif',
           fontSize: 24,
           fontWeight: FontWeight.w600,
           color: onSurface,
         ),
         titleLarge: const TextStyle(
-          fontFamily: 'Inter',
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: onSurface,
         ),
         bodyLarge: const TextStyle(
-          fontFamily: 'Inter',
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: onSurface,
         ),
         bodyMedium: const TextStyle(
-          fontFamily: 'Inter',
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: textSecondary,

@@ -63,8 +63,7 @@ class ProfileTabView extends ConsumerWidget {
                             children: [
                               Text(
                                 'Family Home',
-                                style: TextStyle(fontFamily: 'Instrument Serif', 
-                                  fontSize: 20,
+                                style: TextStyle(fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: theme.colorScheme.onSurface,
                                 ),
@@ -72,8 +71,7 @@ class ProfileTabView extends ConsumerWidget {
                               const SizedBox(height: 2),
                               Text(
                                 '123 Main Street, Springfield',
-                                style: TextStyle(fontFamily: 'Inter', 
-                                  fontSize: 12,
+                                style: TextStyle(fontSize: 12,
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
                               ),
@@ -88,8 +86,7 @@ class ProfileTabView extends ConsumerWidget {
                           ),
                           child: Text(
                             'ALL GOOD',
-                            style: TextStyle(fontFamily: 'Inter', 
-                              fontSize: 9,
+                            style: TextStyle(fontSize: 9,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.0,
                               color: Colors.green,
@@ -140,8 +137,7 @@ class ProfileTabView extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text(
                         'Predictive Reminders',
-                        style: TextStyle(fontFamily: 'Instrument Serif', 
-                          fontSize: 18,
+                        style: TextStyle(fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.onSurface,
                         ),
@@ -185,8 +181,7 @@ class ProfileTabView extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text(
                         'Digital Home Record',
-                        style: TextStyle(fontFamily: 'Instrument Serif', 
-                          fontSize: 18,
+                        style: TextStyle(fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.onSurface,
                         ),
@@ -273,8 +268,7 @@ class ProfileTabView extends ConsumerWidget {
                               children: [
                                 Text(
                                   'Maintenance History',
-                                  style: TextStyle(fontFamily: 'Inter', 
-                                    fontSize: 14,
+                                  style: TextStyle(fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                     color: theme.colorScheme.onSurface,
                                   ),
@@ -282,8 +276,7 @@ class ProfileTabView extends ConsumerWidget {
                                 const SizedBox(height: 4),
                                 Text(
                                   'View past invoices, repairs, and receipts',
-                                  style: TextStyle(fontFamily: 'Inter', 
-                                    fontSize: 12,
+                                  style: TextStyle(fontSize: 12,
                                     color: theme.colorScheme.onSurfaceVariant,
                                   ),
                                 ),
@@ -325,8 +318,7 @@ class ProfileTabView extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 value,
-                style: TextStyle(fontFamily: 'Instrument Serif', 
-                  fontSize: 20,
+                style: TextStyle(fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onSurface,
                 ),
@@ -334,8 +326,7 @@ class ProfileTabView extends ConsumerWidget {
               const SizedBox(height: 2),
               Text(
                 label,
-                style: TextStyle(fontFamily: 'Inter', 
-                  fontSize: 10,
+                style: TextStyle(fontSize: 10,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
@@ -381,8 +372,7 @@ class ProfileTabView extends ConsumerWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontFamily: 'Inter', 
-                    fontWeight: FontWeight.bold,
+                  style: TextStyle(fontWeight: FontWeight.bold,
                     fontSize: 13,
                     color: theme.colorScheme.onSurface,
                   ),
@@ -390,8 +380,7 @@ class ProfileTabView extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(fontFamily: 'Inter', 
-                    color: theme.colorScheme.onSurfaceVariant,
+                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
                 ),
@@ -408,8 +397,7 @@ class ProfileTabView extends ConsumerWidget {
             ),
             child: Text(
               detail.toUpperCase(),
-              style: TextStyle(fontFamily: 'Inter', 
-                fontSize: 8,
+              style: TextStyle(fontSize: 8,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
                 color: isUrgent ? Colors.orange : theme.colorScheme.primary,
@@ -450,8 +438,7 @@ class ProfileTabView extends ConsumerWidget {
               children: [
                 Text(
                   item.title,
-                  style: TextStyle(fontFamily: 'Inter', 
-                    fontSize: 14,
+                  style: TextStyle(fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSurface,
                   ),
@@ -459,8 +446,7 @@ class ProfileTabView extends ConsumerWidget {
                 const SizedBox(height: 2),
                 Text(
                   item.subtitle,
-                  style: TextStyle(fontFamily: 'Inter', 
-                    fontSize: 11,
+                  style: TextStyle(fontSize: 11,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),

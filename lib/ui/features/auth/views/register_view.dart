@@ -134,8 +134,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
             const Spacer(),
             Text(
               title,
-              style: TextStyle(fontFamily: 'Inter', 
-                fontSize: 14,
+              style: TextStyle(fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: isSelected ? activeColor : theme.colorScheme.onSurface,
                 letterSpacing: -0.2,
@@ -186,8 +185,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
               children: [
                 Text(
                   'Join Phoebe Homes',
-                  style: TextStyle(fontFamily: 'Instrument Serif', 
-                    fontSize: 36,
+                  style: TextStyle(fontSize: 36,
                     fontWeight: FontWeight.bold,
                     letterSpacing: -0.5,
                   ),

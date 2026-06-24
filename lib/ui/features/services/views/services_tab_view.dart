@@ -225,8 +225,7 @@ class _JobCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   job.tradeType.displayName,
-                  style: TextStyle(fontFamily: 'Instrument Serif', 
-                    fontSize: 20,
+                  style: TextStyle(fontSize: 20,
                     height: 1.2,
                     color: theme.colorScheme.onSurface,
                   ),
@@ -234,8 +233,7 @@ class _JobCard extends StatelessWidget {
               ),
               Text(
                 job.status.displayName.toUpperCase(),
-                style: TextStyle(fontFamily: 'Inter', 
-                  color: statusColor,
+                style: TextStyle(color: statusColor,
                   fontSize: 9,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.0,
@@ -248,8 +246,7 @@ class _JobCard extends StatelessWidget {
             job.description,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontFamily: 'Inter', 
-              fontSize: 13,
+            style: TextStyle(fontSize: 13,
               height: 1.4,
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -261,8 +258,7 @@ class _JobCard extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 job.scheduleDateTime.formattedFull,
-                style: TextStyle(fontFamily: 'Inter', 
-                  fontSize: 11,
+                style: TextStyle(fontSize: 11,
                   color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                 ),
               ),
@@ -272,8 +268,7 @@ class _JobCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               '30-Day Workmanship Guarantee Active'.toUpperCase(),
-              style: TextStyle(fontFamily: 'Inter', 
-                fontSize: 8,
+              style: TextStyle(fontSize: 8,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
                 color: Colors.green,

@@ -161,9 +161,9 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      theme.scaffoldBackgroundColor.withValues(alpha: 0.0),
-                      theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
-                      theme.scaffoldBackgroundColor,
+                      Colors.transparent,
+                      Colors.white.withValues(alpha: 0.7),
+                      Colors.white,
                     ],
                   ),
                 ),
@@ -234,18 +234,18 @@ class _FloatingNavBar extends StatelessWidget {
       height: 68,
       decoration: BoxDecoration(
         color: isDark 
-            ? const Color(0xFF0F1718) // deep dark teal surface
-            : const Color(0xFF1E293B), // slate surface
+            ? const Color(0xFF0F1718)
+            : Colors.white,
         borderRadius: BorderRadius.circular(34),
         border: Border.all(
           color: isDark 
               ? theme.colorScheme.outlineVariant.withValues(alpha: 0.15) 
-              : Colors.white.withValues(alpha: 0.1),
+              : const Color(0xFFE8E8E8),
           width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
+            color: isDark ? Colors.black.withValues(alpha: 0.25) : Colors.black.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -261,7 +261,7 @@ class _FloatingNavBar extends StatelessWidget {
             bounceAnimation: bounceAnimations[i],
             onTap: () => onTap(i),
             theme: theme,
-            inactiveColor: Colors.white.withValues(alpha: 0.5),
+            inactiveColor: isDark ? Colors.white.withValues(alpha: 0.5) : const Color(0xFF8E8E93),
           );
         }),
       ),
@@ -302,8 +302,8 @@ class _NavItemWidget extends StatelessWidget {
         height: 52,
         decoration: BoxDecoration(
           color: isDark 
-              ? const Color(0xFF1F2E30) // subtle dark grey-teal
-              : const Color(0xFF334155), // subtle dark grey-slate
+              ? const Color(0xFF1F2E30)
+              : const Color(0xFFF5F5F5),
           borderRadius: BorderRadius.circular(26),
         ),
         padding: const EdgeInsets.all(6.0),
@@ -341,8 +341,8 @@ class _NavItemWidget extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 8.0, right: 4.0),
                   child: AnimatedDefaultTextStyle(
                     duration: const Duration(milliseconds: 200),
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),
