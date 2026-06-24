@@ -79,11 +79,21 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
             bottomChild: CupertinoSearchTextField(
               placeholder: 'Search pieces...',
               onChanged: (val) => setState(() => _searchQuery = val),
+              style: TextStyle(color: theme.colorScheme.onSurface),
+              placeholderStyle: TextStyle(
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+              ),
+              itemColor: theme.colorScheme.onSurfaceVariant,
               decoration: BoxDecoration(
                 color: theme.brightness == Brightness.dark
-                    ? const Color(0xFF1A1A1A)
+                    ? theme.inputDecorationTheme.fillColor
                     : const Color(0xFFF0F0F0),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.brightness == Brightness.dark
+                      ? theme.colorScheme.surfaceContainerHighest
+                      : const Color(0xFFE5E5E5),
+                ),
               ),
             ),
           ),
@@ -208,9 +218,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                         color: theme.colorScheme.surface,
                                         borderRadius: BorderRadius.circular(12.0),
                                         border: Border.all(
-                                          color: theme.brightness == Brightness.dark
-                                              ? const Color(0xFF222222)
-                                              : const Color(0xFFE5E5E5),
+                                          color: theme.colorScheme.surfaceContainerHighest,
                                         ),
                                       ),
                                       child: Row(
@@ -385,9 +393,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(12.0),
                                           side: BorderSide(
-                                            color: theme.brightness == Brightness.dark
-                                                ? const Color(0xFF222222)
-                                                : const Color(0xFFE5E5E5),
+                                            color: theme.colorScheme.surfaceContainerHighest,
                                           ),
                                         ),
                                         child: Stack(
@@ -594,14 +600,10 @@ class _AiConciergeSheetState extends State<_AiConciergeSheet> {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          color: widget.theme.brightness == Brightness.dark
-              ? const Color(0xFF1E1E1E)
-              : const Color(0xFFF9F9F9),
+          color: widget.theme.colorScheme.surfaceContainer,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: widget.theme.brightness == Brightness.dark
-                ? const Color(0xFF333333)
-                : const Color(0xFFE5E5E5),
+            color: widget.theme.colorScheme.surfaceContainerHighest,
           ),
         ),
         child: Column(
@@ -670,9 +672,7 @@ class _AiConciergeSheetState extends State<_AiConciergeSheet> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: widget.theme.brightness == Brightness.dark
-                          ? const Color(0xFF222222)
-                          : const Color(0xFFE5E5E5),
+                      color: widget.theme.colorScheme.surfaceContainerHighest,
                     ),
                   ),
                   child: Row(

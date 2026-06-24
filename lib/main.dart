@@ -56,10 +56,9 @@ class MyApp extends ConsumerWidget {
       title: 'Phoebe Homes',
       debugShowCheckedModeBanner: false,
       
-      // Minimalist themes supporting light and dark modes
+      // Light-only theme
       theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light,
 
       // Routing configuration
       routerConfig: router,

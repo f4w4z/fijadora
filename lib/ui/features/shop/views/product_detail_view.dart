@@ -140,7 +140,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                         Container(
                           decoration: BoxDecoration(
                             color: theme.brightness == Brightness.dark
-                                ? const Color(0xFF1E1E1E)
+                                ? theme.colorScheme.surfaceContainer
                                 : const Color(0xFFF5F5F5),
                             borderRadius: BorderRadius.circular(40),
                           ),
@@ -1184,12 +1184,12 @@ class _FeatureButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: theme.brightness == Brightness.dark
-              ? const Color(0xFF1E1E1E)
+              ? theme.colorScheme.surface
               : const Color(0xFFF5F5F5),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: theme.brightness == Brightness.dark
-                ? const Color(0xFF2A2A2A)
+                ? theme.colorScheme.surfaceContainerHighest
                 : const Color(0xFFE5E5E5),
           ),
         ),
@@ -1260,14 +1260,10 @@ class _ReviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? const Color(0xFF1A1A1A)
-            : Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.brightness == Brightness.dark
-              ? const Color(0xFF2A2A2A)
-              : const Color(0xFFEEEEEE),
+          color: theme.colorScheme.surfaceContainerHighest,
         ),
       ),
       child: Column(

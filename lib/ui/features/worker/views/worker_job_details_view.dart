@@ -158,14 +158,10 @@ class _WorkerJobDetailsViewState extends ConsumerState<WorkerJobDetailsView> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: theme.brightness == Brightness.dark
-                      ? const Color(0xFF1A1A1A)
-                      : const Color(0xFFF9F9F9),
+                  color: theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: theme.brightness == Brightness.dark
-                        ? const Color(0xFF333333)
-                        : const Color(0xFFE5E5E5),
+                    color: theme.colorScheme.surfaceContainerHighest,
                   ),
                 ),
                 child: Row(

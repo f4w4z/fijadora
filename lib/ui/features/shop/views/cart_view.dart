@@ -72,9 +72,7 @@ class CartView extends ConsumerWidget {
                             color: theme.colorScheme.surface,
                             borderRadius: BorderRadius.circular(12.0),
                             border: Border.all(
-                              color: theme.brightness == Brightness.dark
-                                  ? const Color(0xFF222222)
-                                  : const Color(0xFFE5E5E5),
+                              color: theme.colorScheme.surfaceContainerHighest,
                             ),
                           ),
                           child: Row(
@@ -198,9 +196,7 @@ class CartView extends ConsumerWidget {
                         ),
                         const SizedBox(height: 16),
                         Divider(
-                          color: theme.brightness == Brightness.dark
-                              ? const Color(0xFF222222)
-                              : const Color(0xFFE5E5E5),
+                          color: theme.colorScheme.surfaceContainerHighest,
                         ),
                         const SizedBox(height: 16),
                         Row(
@@ -234,9 +230,7 @@ class CartView extends ConsumerWidget {
                 color: theme.colorScheme.surface,
                 border: Border(
                   top: BorderSide(
-                    color: theme.brightness == Brightness.dark
-                        ? const Color(0xFF222222)
-                        : const Color(0xFFE5E5E5),
+                    color: theme.colorScheme.surfaceContainerHighest,
                     width: 0.5,
                   ),
                 ),

@@ -129,12 +129,12 @@ class HeaderActionButton extends StatelessWidget {
           height: 40,
           decoration: BoxDecoration(
             color: theme.brightness == Brightness.dark
-                ? const Color(0xFF121212)
+                ? theme.colorScheme.surfaceContainer
                 : Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: theme.brightness == Brightness.dark
-                  ? const Color(0xFF222222)
+                  ? theme.colorScheme.surfaceContainerHighest
                   : const Color(0xFFE5E5E5),
               width: 1.0,
             ),
@@ -163,10 +163,10 @@ class GroupedHeaderActions extends StatelessWidget {
       margin: const EdgeInsets.only(left: 8.0),
       height: 40,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF121212) : Colors.white,
+        color: isDark ? theme.colorScheme.surfaceContainer : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? const Color(0xFF222222) : const Color(0xFFE5E5E5),
+          color: isDark ? theme.colorScheme.surfaceContainerHighest : const Color(0xFFE5E5E5),
           width: 1.0,
         ),
       ),
@@ -206,7 +206,7 @@ class GroupedHeaderActions extends StatelessWidget {
                     width: 1,
                     thickness: 1,
                     color: isDark
-                        ? const Color(0xFF222222)
+                        ? theme.colorScheme.surfaceContainerHighest
                         : const Color(0xFFE5E5E5),
                     indent: 8,
                     endIndent: 8,

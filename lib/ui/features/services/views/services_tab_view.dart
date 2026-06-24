@@ -154,11 +154,21 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
             bottomChild: CupertinoSearchTextField(
               placeholder: 'Search requests...',
               onChanged: (val) => setState(() => _searchQuery = val),
+              style: TextStyle(color: theme.colorScheme.onSurface),
+              placeholderStyle: TextStyle(
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+              ),
+              itemColor: theme.colorScheme.onSurfaceVariant,
               decoration: BoxDecoration(
                 color: theme.brightness == Brightness.dark
-                    ? const Color(0xFF1A1A1A)
+                    ? theme.inputDecorationTheme.fillColor
                     : const Color(0xFFF0F0F0),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.brightness == Brightness.dark
+                      ? theme.colorScheme.surfaceContainerHighest
+                      : const Color(0xFFE5E5E5),
+                ),
               ),
             ),
           ),
@@ -446,14 +456,10 @@ class _JobCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: theme.brightness == Brightness.dark
-                          ? const Color(0xFF1A1A1A)
-                          : const Color(0xFFF9F9F9),
+                      color: theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: theme.brightness == Brightness.dark
-                            ? const Color(0xFF333333)
-                            : const Color(0xFFE5E5E5),
+                        color: theme.colorScheme.surfaceContainerHighest,
                       ),
                     ),
                     child: Row(
@@ -988,9 +994,7 @@ class _NewRequestSheetState extends ConsumerState<_NewRequestSheet> {
                   color: theme.colorScheme.surface,
                   border: Border(
                     top: BorderSide(
-                      color: theme.brightness == Brightness.dark
-                          ? const Color(0xFF222222)
-                          : const Color(0xFFE5E5E5),
+                      color: theme.colorScheme.surfaceContainerHighest,
                       width: 1.0,
                     ),
                   ),

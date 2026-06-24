@@ -170,14 +170,10 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> {
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? const Color(0xFF1E1E1E)
-            : const Color(0xFFF9F9F9),
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16.0),
         border: Border.all(
-          color: theme.brightness == Brightness.dark
-              ? const Color(0xFF333333)
-              : const Color(0xFFE5E5E5),
+          color: theme.colorScheme.surfaceContainerHighest,
         ),
       ),
       child: Column(
@@ -404,9 +400,7 @@ class _MaintenanceJobCardState extends ConsumerState<MaintenanceJobCard> {
                         ),
                         const SizedBox(height: 8),
                         Divider(
-                          color: theme.brightness == Brightness.dark
-                              ? const Color(0xFF2C2C2C)
-                              : const Color(0xFFEEEEEE),
+                          color: theme.colorScheme.surfaceContainerHighest,
                           thickness: 1,
                         ),
                         const SizedBox(height: 4),
@@ -539,12 +533,12 @@ class _MaintenanceJobCardState extends ConsumerState<MaintenanceJobCard> {
                                   padding: const EdgeInsets.all(12.0),
                                   decoration: BoxDecoration(
                                     color: theme.brightness == Brightness.dark
-                                        ? const Color(0xFF1E1E1E)
+                                        ? theme.colorScheme.surfaceContainerHigh
                                         : const Color(0xFFF7F8FA),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
                                       color: theme.brightness == Brightness.dark
-                                          ? const Color(0xFF2C2C2C)
+                                          ? theme.colorScheme.surfaceContainerHighest
                                           : const Color(0xFFEBEFF5),
                                     ),
                                   ),

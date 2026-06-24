@@ -134,9 +134,9 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
             const Spacer(),
             Text(
               title,
-              style: GoogleFonts.outfit(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
                 color: isSelected ? activeColor : theme.colorScheme.onSurface,
                 letterSpacing: -0.2,
               ),
@@ -186,10 +186,10 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
               children: [
                 Text(
                   'Join Phoebe Homes',
-                  style: GoogleFonts.outfit(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -1.0,
+                  style: GoogleFonts.instrumentSerif(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
                   ),
                 ),
                 const SizedBox(height: 6.0),

@@ -42,14 +42,10 @@ class ProfileTabView extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
-                  color: theme.brightness == Brightness.dark
-                      ? const Color(0xFF0F0F0F)
-                      : const Color(0xFFF9F9F9),
+                  color: theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(20.0),
                   border: Border.all(
-                    color: theme.brightness == Brightness.dark
-                        ? const Color(0xFF222222)
-                        : const Color(0xFFE5E5E5),
+                    color: theme.colorScheme.surfaceContainerHighest,
                   ),
                 ),
                 child: Row(
@@ -97,7 +93,7 @@ class ProfileTabView extends ConsumerWidget {
               height: gap * 2,
               thickness: 1,
               color: theme.brightness == Brightness.dark
-                  ? const Color(0xFF222222)
+                  ? theme.colorScheme.surfaceContainerHighest
                   : const Color(0xFFE5E5E5),
             ),
 
@@ -105,14 +101,10 @@ class ProfileTabView extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(20.0),
               decoration: BoxDecoration(
-                color: theme.brightness == Brightness.dark
-                    ? const Color(0xFF0F0F0F)
-                    : const Color(0xFFF9F9F9),
+                color: theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(20.0),
                 border: Border.all(
-                  color: theme.brightness == Brightness.dark
-                      ? const Color(0xFF222222)
-                      : const Color(0xFFE5E5E5),
+                  color: theme.colorScheme.surfaceContainerHighest,
                 ),
               ),
               child: Column(
@@ -143,7 +135,7 @@ class ProfileTabView extends ConsumerWidget {
               height: gap * 2,
               thickness: 1,
               color: theme.brightness == Brightness.dark
-                  ? const Color(0xFF222222)
+                  ? theme.colorScheme.surfaceContainerHighest
                   : const Color(0xFFE5E5E5),
             ),
 
@@ -196,7 +188,7 @@ class ProfileTabView extends ConsumerWidget {
               height: gap * 2,
               thickness: 1,
               color: theme.brightness == Brightness.dark
-                  ? const Color(0xFF222222)
+                  ? theme.colorScheme.surfaceContainerHighest
                   : const Color(0xFFE5E5E5),
             ),
 
@@ -210,14 +202,10 @@ class ProfileTabView extends ConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
-                  color: theme.brightness == Brightness.dark
-                      ? const Color(0xFF0F0F0F)
-                      : const Color(0xFFF9F9F9),
+                  color: theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(20.0),
                   border: Border.all(
-                    color: theme.brightness == Brightness.dark
-                        ? const Color(0xFF222222)
-                        : const Color(0xFFE5E5E5),
+                    color: theme.colorScheme.surfaceContainerHighest,
                   ),
                 ),
                 child: Row(
@@ -272,12 +260,12 @@ class ProfileTabView extends ConsumerWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: theme.brightness == Brightness.dark
-            ? const Color(0xFF1E1E1E)
+            ? theme.colorScheme.surfaceContainerHigh
             : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: theme.brightness == Brightness.dark
-              ? const Color(0xFF2C2C2C)
+              ? theme.colorScheme.surfaceContainerHighest
               : const Color(0xFFE5E5E5),
         ),
       ),
@@ -322,14 +310,10 @@ class ProfileTabView extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          color: theme.brightness == Brightness.dark
-              ? const Color(0xFF0F0F0F)
-              : const Color(0xFFF9F9F9),
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(20.0),
           border: Border.all(
-            color: theme.brightness == Brightness.dark
-                ? const Color(0xFF222222)
-                : const Color(0xFFE5E5E5),
+            color: theme.colorScheme.surfaceContainerHighest,
           ),
         ),
         child: Column(

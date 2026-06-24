@@ -238,10 +238,10 @@ class _FloatingNavBar extends StatelessWidget {
     return Container(
       height: 64,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF111111) : Colors.white,
+        color: isDark ? theme.colorScheme.surfaceContainer : Colors.white,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: isDark ? const Color(0xFF252525) : const Color(0xFFE8E8E8),
+          color: isDark ? theme.colorScheme.surfaceContainerHighest : const Color(0xFFE8E8E8),
         ),
         boxShadow: [
           BoxShadow(
