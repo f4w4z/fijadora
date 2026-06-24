@@ -130,7 +130,7 @@ class HomeView extends ConsumerWidget {
                     crossAxisCount: 2,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    childAspectRatio: 1.4,
+                    childAspectRatio: 1.3,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
@@ -294,55 +294,63 @@ class HomeView extends ConsumerWidget {
   }
 
   Widget _buildActionCard({required ThemeData theme, required _QuickActionItem item}) {
-    return AnimatedTapScale(
-      onTap: item.onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: const Color(0x1F8BA5A7),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(item.icon, size: 18, color: theme.colorScheme.primary),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.title,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  item.subtitle,
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+     return AnimatedTapScale(
+       onTap: item.onTap,
+       child: Container(
+         padding: const EdgeInsets.all(12),
+         decoration: BoxDecoration(
+           color: theme.colorScheme.surfaceContainerLow,
+           borderRadius: BorderRadius.circular(16),
+           border: Border.all(
+             color: const Color(0x1F8BA5A7),
+           ),
+         ),
+         child: Column(
+           crossAxisAlignment: CrossAxisAlignment.start,
+           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+           children: [
+             Container(
+               padding: const EdgeInsets.all(6),
+               decoration: BoxDecoration(
+                 color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                 borderRadius: BorderRadius.circular(10),
+               ),
+               child: Icon(item.icon, size: 18, color: theme.colorScheme.primary),
+             ),
+             const SizedBox(height: 8),
+             Expanded(
+               child: Column(
+                 crossAxisAlignment: CrossAxisAlignment.start,
+                 mainAxisAlignment: MainAxisAlignment.end,
+                 children: [
+                   Text(
+                     item.title,
+                     maxLines: 2,
+                     overflow: TextOverflow.ellipsis,
+                     style: GoogleFonts.inter(
+                       fontSize: 13,
+                       fontWeight: FontWeight.bold,
+                       color: theme.colorScheme.onSurface,
+                     ),
+                   ),
+                   const SizedBox(height: 2),
+                   Text(
+                     item.subtitle,
+                     maxLines: 1,
+                     overflow: TextOverflow.ellipsis,
+                     style: GoogleFonts.inter(
+                       fontSize: 10,
+                       color: theme.colorScheme.onSurfaceVariant,
+                     ),
+                   ),
+                 ],
+               ),
+             ),
+           ],
+         ),
+       ),
+     );
+   }
 
   Widget _buildSettingsRow({
     required ThemeData theme,

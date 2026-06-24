@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
+import 'appliance_detail_page.dart';
 
 class HomeDetailListView extends StatelessWidget {
   const HomeDetailListView({super.key, required this.type});
@@ -225,106 +226,17 @@ class HomeDetailListView extends StatelessWidget {
   }
 
   void _showApplianceDetail(BuildContext context, _DetailItem item) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        final theme = Theme.of(context);
-        final isNeedsService = item.statusText == 'Needs Service';
-        
-        return Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  IconButton(
-                    icon: const Icon(CupertinoIcons.clear),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: item.statusColor?.withValues(alpha: 0.1) ?? Colors.grey.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      item.statusText?.toUpperCase() ?? 'ACTIVE',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        color: item.statusColor ?? Colors.grey,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    item.subtitle.contains('|') ? item.subtitle.split('|').last.trim() : 'General',
-                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const Text('Specifications', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              const SizedBox(height: 8),
-              Text(
-                'Model Ref: ${item.subtitle.contains('|') ? item.subtitle.split('|').first.trim() : item.subtitle}\nPower consumption: Standard eco-mode\nEnrolled in: SmartHome Diagnostics',
-                style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13, height: 1.5),
-              ),
-              const SizedBox(height: 24),
-              const Text('Recent History', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(CupertinoIcons.clock, size: 14, color: Colors.grey),
-                  const SizedBox(width: 6),
-                  Text(
-                    isNeedsService ? 'No recent repairs. Needs checkup.' : 'Last service: 2 months ago (Routine)',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context); // Close details
-                  Navigator.pop(context); // Go back to Home Hub
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      behavior: SnackBarBehavior.floating,
-                      content: Text('Selected ${item.title}. Pre-filling diagnostic ticket...'),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isNeedsService ? Colors.orange : theme.colorScheme.primary,
-                  foregroundColor: isNeedsService ? Colors.white : theme.colorScheme.onPrimary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                ),
-                child: Text(
-                  isNeedsService ? 'Schedule Diagnostic Check' : 'Book Maintenance',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ApplianceDetailPage(
+          title: item.title,
+          subtitle: item.subtitle,
+          statusText: item.statusText,
+          statusColor: item.statusColor,
+          icon: item.icon,
+        ),
+      ),
     );
   }
 }

@@ -43,9 +43,6 @@ class _FloatingHeaderLayoutState extends State<FloatingHeaderLayout> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
-    // Remeasure if state changes or builds trigger updates
-    WidgetsBinding.instance.addPostFrameCallback((_) => _measureHeader());
 
     return Stack(
       fit: StackFit.expand,

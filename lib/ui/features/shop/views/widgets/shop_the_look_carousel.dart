@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,12 +18,20 @@ class ShopTheLookCarousel extends ConsumerStatefulWidget {
 class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
   late Map<int, int> _positions;
   late int _cardCount;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _cardCount = widget.bundles.length;
     _positions = {for (int i = 0; i < _cardCount; i++) i: i};
+    _startAutoFlip();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -33,12 +42,35 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
         _cardCount = widget.bundles.length;
         _positions = {for (int i = 0; i < _cardCount; i++) i: i};
       });
+      _timer?.cancel();
+      _startAutoFlip();
     }
   }
 
+  void _startAutoFlip() {
+    if (_cardCount < 2) return;
+    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted) return;
+      final frontIdx = _positions.entries.firstWhere((e) => e.value == 0).key;
+      _bringToFront(frontIdx);
+    });
+  }
+
   void _bringToFront(int index) {
+    _timer?.cancel();
+    _startAutoFlip();
+
     final currentPos = _positions[index]!;
-    if (currentPos == 0) return; // Already front
+    if (currentPos == 0) {
+      // Already front — cycle to next card
+      setState(() {
+        for (int i = 0; i < _cardCount; i++) {
+          final p = _positions[i]!;
+          _positions[i] = (p - 1 + _cardCount) % _cardCount;
+        }
+      });
+      return;
+    }
 
     setState(() {
       final shift = currentPos;
@@ -64,9 +96,13 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final parentWidth = constraints.maxWidth;
+        final cardWidth = (parentWidth * 0.75).clamp(240.0, 310.0);
+        final cardHeight = cardWidth;
+        final containerHeight = cardHeight + 60;
+        final stepOffset = cardWidth * 0.12;
 
         return Container(
-          height: 370,
+          height: containerHeight,
           margin: const EdgeInsets.symmetric(vertical: 8.0),
           child: Stack(
             alignment: Alignment.center,
@@ -91,14 +127,14 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                 isInteractive = true;
               } else if (_cardCount == 2) {
                 if (position == 0) {
-                  leftOffset = 25.0;
+                  leftOffset = stepOffset * 0.6;
                   topOffset = 0.0;
                   scale = 1.0;
                   rotation = 0.0;
                   opacity = 1.0;
                   isInteractive = true;
                 } else {
-                  leftOffset = -25.0;
+                  leftOffset = -stepOffset * 0.6;
                   topOffset = 12.0;
                   scale = 0.92;
                   rotation = -0.08;
@@ -108,7 +144,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
               } else {
                 // 3 or more cards
                 if (position == 0) {
-                  leftOffset = 40.0;
+                  leftOffset = stepOffset;
                   topOffset = 0.0;
                   scale = 1.0;
                   rotation = 0.0;
@@ -122,7 +158,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                   opacity = 1.0;
                   isInteractive = true;
                 } else if (position == 2) {
-                  leftOffset = -40.0;
+                  leftOffset = -stepOffset;
                   topOffset = 24.0;
                   scale = 0.88;
                   rotation = -0.12;
@@ -130,7 +166,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                   isInteractive = true;
                 } else {
                   // Hidden card
-                  leftOffset = -40.0;
+                  leftOffset = -stepOffset;
                   topOffset = 24.0;
                   scale = 0.0;
                   rotation = -0.12;
@@ -143,7 +179,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                 key: ValueKey(bundle.id),
                 duration: const Duration(milliseconds: 350),
                 curve: Curves.easeInOutCubic,
-                left: (parentWidth - 310) / 2 + leftOffset,
+                left: (parentWidth - cardWidth) / 2 + leftOffset,
                 top: topOffset,
                 child: IgnorePointer(
                   ignoring: !isInteractive,
@@ -162,7 +198,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                         child: GestureDetector(
                           onTap: () => _bringToFront(idx),
                           behavior: HitTestBehavior.opaque,
-                          child: _buildCard(bundle),
+                          child: _buildCard(bundle, cardWidth, cardHeight),
                         ),
                       ),
                     ),
@@ -176,10 +212,10 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
     );
   }
 
-  Widget _buildCard(Product bundle) {
+  Widget _buildCard(Product bundle, double width, double height) {
     return Container(
-      width: 310,
-      height: 310,
+      width: width,
+      height: height,
       decoration: BoxDecoration(
         color: Colors.grey.shade900,
         borderRadius: BorderRadius.circular(28.0),

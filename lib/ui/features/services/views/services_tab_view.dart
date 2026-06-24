@@ -3,19 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../domain/models/maintenance_job.dart';
-import '../../../../domain/models/trade_type.dart';
 import '../../../../domain/models/job_status.dart';
 import '../view_models/jobs_view_model.dart';
-import '../../../../data/services/gemini_service.dart';
 import '../../../../ui/shared/widgets/shimmer_loading.dart';
 import '../../../../ui/shared/widgets/custom_pinned_header.dart';
 import '../../../../ui/shared/widgets/floating_header_layout.dart';
+import '../../../../ui/features/services/views/voice_assistant_page.dart';
+import '../../../../ui/features/services/views/qr_scanner_page.dart';
+import '../../../../ui/features/services/views/new_request_page.dart';
+import '../../../../ui/features/services/views/job_details_page.dart';
 import '../../../../ui/features/services/views/live_tracking_view.dart';
-import '../../../../ui/features/services/views/voice_assistant_sheet.dart';
-import '../../profile/views/home_detail_list_view.dart';
-import '../../../../data/services/telemetry_service.dart';
+import '../../../../ui/shared/widgets/app_bottom_sheet.dart';
 import '../../../../ui/shared/widgets/animated_tap_scale.dart';
-import '../../../../ui/core/theme.dart';
 
 
 class ServicesTabView extends ConsumerStatefulWidget {
@@ -29,88 +28,9 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
   String _searchQuery = '';
 
   void _showQrScannerSim(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        final innerTheme = Theme.of(context);
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.75,
-          decoration: BoxDecoration(
-            color: innerTheme.colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('QR Code Scanner', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  IconButton(
-                    icon: const Icon(CupertinoIcons.clear),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Scan any Phoebe Homes QR tag found on wall plates, appliances, or manuals to load history instantly.',
-                style: TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-              const SizedBox(height: 32),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black87,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Center(
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: innerTheme.colorScheme.primary, width: 3),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Center(
-                        child: Icon(CupertinoIcons.qrcode, color: Colors.white38, size: 80),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const HomeDetailListView(type: 'appliances'),
-                    ),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('QR Code scanned: Loaded digital appliance record'),
-                    ),
-                  );
-                },
-                icon: const Icon(CupertinoIcons.barcode_viewfinder),
-                label: const Text('Simulate Appliance Tag Scan', style: TextStyle(fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: innerTheme.colorScheme.primary,
-                  foregroundColor: innerTheme.colorScheme.onPrimary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  elevation: 0,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const QrScannerPage()),
     );
   }
 
@@ -124,32 +44,16 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
         header: CustomPinnedHeader(
           title: 'Services',
           actions: [
-            GroupedHeaderActions(
-              actions: [
-                GroupedActionItem(
-                  icon: CupertinoIcons.add,
-                  onTap: () => _showNewRequestSheet(context),
-                ),
-                GroupedActionItem(
-                  icon: CupertinoIcons.qrcode_viewfinder,
-                  onTap: () => _showQrScannerSim(context),
-                ),
-                GroupedActionItem(
-                  icon: CupertinoIcons.mic_fill,
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) => const VoiceAssistantSheet(),
-                    );
-                  },
-                ),
-                GroupedActionItem(
-                  icon: CupertinoIcons.refresh,
-                  onTap: () => ref.invalidate(jobsViewModelProvider),
-                ),
-              ],
+            _ExpandableActions(
+              onNewRequest: () => _showNewRequestSheet(context),
+              onQrScanner: () => _showQrScannerSim(context),
+              onVoiceAssistant: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const VoiceAssistantPage()),
+                );
+              },
+              onRefresh: () => ref.invalidate(jobsViewModelProvider),
             ),
           ],
           bottomChild: CupertinoSearchTextField(
@@ -260,11 +164,9 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
   }
 
   void _showNewRequestSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const _NewRequestSheet(),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const NewRequestPage()),
     );
   }
 }
@@ -392,808 +294,240 @@ class _JobCard extends StatelessWidget {
   }
 
   void _showDetailsSheet(BuildContext context) {
-    showModalBottomSheet(
+    final canTrack = job.status == JobStatus.workerEnRoute || job.status == JobStatus.workerArrived;
+    showAppBottomSheet(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        final theme = Theme.of(context);
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        job.tradeType.displayName,
-                        style: theme.textTheme.displaySmall?.copyWith(fontSize: 20),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: job.status.color(context).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          job.status.displayName,
-                          style: TextStyle(
-                            color: job.status.color(context),
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Description',
-                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(job.description, style: theme.textTheme.bodyLarge),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Address / Location',
-                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(job.address, style: theme.textTheme.bodyMedium),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Scheduled Time',
-                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(_formatDate(job.scheduleDateTime), style: theme.textTheme.bodyMedium),
-                  if (job.status == JobStatus.waitingApproval) ...[
-                    _CustomerReviewPanel(jobId: job.id),
-                  ],
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: theme.colorScheme.surfaceContainerHighest,
+      child: _JobDetailsSheet(job: job),
+      bottomBar: canTrack
+          ? SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LiveTrackingView(
+                        jobId: job.id,
+                        address: job.address,
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Icon(CupertinoIcons.videocam_fill, size: 16, color: theme.colorScheme.onSurfaceVariant),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '🎥 Body cam active. Footage stored 6 months. Under T&Cs, claims cannot be made after 6 months.',
-                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 10, height: 1.4),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (job.status == JobStatus.workerEnRoute || job.status == JobStatus.workerArrived) ...[
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => LiveTrackingView(
-                              jobId: job.id,
-                              address: job.address,
-                            ),
-                          ),
-                        );
-                      },
-                      icon: const Icon(CupertinoIcons.map_pin_ellipse),
-                      label: const Text('Track Technician', style: TextStyle(fontWeight: FontWeight.bold)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: theme.colorScheme.onPrimary,
-                        elevation: 0,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Close'),
-                  ),
-                ],
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('Track Technician', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
-            ),
-          ),
-        );
-      },
+            )
+          : null,
     );
   }
 }
 
-class _NewRequestSheet extends ConsumerStatefulWidget {
-  const _NewRequestSheet();
+class _ExpandableActions extends StatefulWidget {
+  const _ExpandableActions({
+    required this.onNewRequest,
+    required this.onQrScanner,
+    required this.onVoiceAssistant,
+    required this.onRefresh,
+  });
+
+  final VoidCallback onNewRequest;
+  final VoidCallback onQrScanner;
+  final VoidCallback onVoiceAssistant;
+  final VoidCallback onRefresh;
 
   @override
-  ConsumerState<_NewRequestSheet> createState() => _NewRequestSheetState();
+  State<_ExpandableActions> createState() => _ExpandableActionsState();
 }
 
-class _NewRequestSheetState extends ConsumerState<_NewRequestSheet> {
-  final _formKey = GlobalKey<FormState>();
-  final _descriptionController = TextEditingController();
-  final _addressController = TextEditingController();
-  
-  TradeType _selectedTrade = TradeType.generalRepairs;
-  DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
-  TimeOfDay _selectedTime = const TimeOfDay(hour: 9, minute: 0);
-  bool _isAiDiagnosing = false;
+class _ExpandableActionsState extends State<_ExpandableActions> {
+  bool _expanded = false;
 
-  Future<void> _runAiDiagnosis() async {
-    setState(() => _isAiDiagnosing = true);
-    try {
-      final gemini = ref.read(geminiServiceProvider);
-      final diagnosis = await gemini.diagnoseImage(
-        imagePath: 'mock_photo.jpg',
-        tradeType: _selectedTrade,
-      );
-
-      setState(() {
-        _descriptionController.text =
-            'Summary: ${diagnosis.problemSummary}\n\n'
-            'Required Tools: ${diagnosis.requiredTools.join(", ")}\n'
-            'Suggested Parts: ${diagnosis.suggestedParts.join(", ")}\n'
-            'Priority: ${diagnosis.priority}\n'
-            'Est. Duration: ${diagnosis.estimatedDuration}';
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('AI diagnosis applied successfully!')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI diagnosis failed: $e')),
-        );
-      }
-    } finally {
-      setState(() => _isAiDiagnosing = false);
-    }
-  }
-
-  @override
-  void dispose() {
-    _descriptionController.dispose();
-    _addressController.dispose();
-    super.dispose();
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
-  }
-
-  Future<void> _selectDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 90)),
-    );
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-    }
-  }
-
-  Future<void> _selectTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime,
-    );
-    if (picked != null) {
-      setState(() => _selectedTime = picked);
-    }
-  }
-
-  Future<void> _showTradePicker() async {
-    final selected = await showModalBottomSheet<TradeType>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) {
-        final innerTheme = Theme.of(ctx);
-        return Container(
-          decoration: BoxDecoration(
-            color: innerTheme.colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle bar
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: innerTheme.colorScheme.onSurfaceVariant.withValues(alpha: 0.25),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              Text(
-                'Select Trade Type',
-                style: innerTheme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Choose the type of repair or service you need.',
-                style: innerTheme.textTheme.bodyMedium?.copyWith(
-                  color: innerTheme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ...TradeType.values.map((trade) {
-                final isActive = trade == _selectedTrade;
-                return InkWell(
-                  onTap: () => Navigator.pop(ctx, trade),
-                  borderRadius: BorderRadius.circular(12),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? innerTheme.colorScheme.primary.withValues(alpha: 0.08)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isActive
-                            ? innerTheme.colorScheme.primary.withValues(alpha: 0.3)
-                            : innerTheme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
-                        width: isActive ? 1.5 : 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(7),
-                          decoration: BoxDecoration(
-                            color: isActive
-                                ? innerTheme.colorScheme.primary.withValues(alpha: 0.12)
-                                : innerTheme.colorScheme.onSurfaceVariant.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            trade.icon,
-                            size: 16,
-                            color: isActive
-                                ? innerTheme.colorScheme.primary
-                                : innerTheme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            trade.displayName,
-                            style: innerTheme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                              color: isActive
-                                  ? innerTheme.colorScheme.onSurface
-                                  : innerTheme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                        if (isActive)
-                          Icon(
-                            CupertinoIcons.checkmark_circle_fill,
-                            size: 18,
-                            color: innerTheme.colorScheme.primary,
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ],
-          ),
-        );
-      },
-    );
-    if (selected != null) {
-      setState(() => _selectedTrade = selected);
-    }
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final scheduledHour = _selectedTime.hour;
-    if (scheduledHour < 13 || scheduledHour >= 22) {
-      final proceed = await showDialog<bool>(
-        context: context,
-        builder: (context) {
-          final theme = Theme.of(context);
-          return AlertDialog(
-            icon: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.error.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                CupertinoIcons.clock_fill,
-                color: theme.colorScheme.error,
-                size: 40,
-              ),
-            ),
-            title: const Text("We're Closed"),
-            content: const Text(
-              "Operating hours are 1 PM to 10 PM. Since your request is outside operations, we're closed and will handle it in the morning.",
-              textAlign: TextAlign.center,
-            ),
-            actionsAlignment: MainAxisAlignment.spaceEvenly,
-            actions: [
-              TextButton(
-                child: const Text('Cancel'),
-                onPressed: () => Navigator.pop(context, false),
-              ),
-              TextButton(
-                child: Text(
-                  'Proceed',
-                  style: TextStyle(
-                    color: theme.brightness == Brightness.dark ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                onPressed: () => Navigator.pop(context, true),
-              ),
-            ],
-          );
-        },
-      );
-      if (proceed != true) return;
-    }
-
-    final schedule = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      _selectedTime.hour,
-      _selectedTime.minute,
-    );
-
-    try {
-      await ref.read(jobsViewModelProvider).raiseJob(
-        description: _descriptionController.text.trim(),
-        tradeType: _selectedTrade,
-        schedule: schedule,
-        address: _addressController.text.trim(),
-        images: const [],
-      );
-      if (mounted) Navigator.pop(context);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error raising request: $e')),
-        );
-      }
-    }
+  void _close() {
+    if (_expanded) setState(() => _expanded = false);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isCreating = ref.watch(jobsViewModelProvider).isCreating;
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    final items = [
+      (icon: CupertinoIcons.add, onTap: () { _close(); widget.onNewRequest(); }),
+      (icon: CupertinoIcons.qrcode_viewfinder, onTap: () { _close(); widget.onQrScanner(); }),
+      (icon: CupertinoIcons.mic_fill, onTap: () { _close(); widget.onVoiceAssistant(); }),
+      (icon: CupertinoIcons.refresh, onTap: () { _close(); widget.onRefresh(); }),
+    ];
+
+    return GestureDetector(
+      onTap: _expanded ? null : () => setState(() => _expanded = true),
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOutCubic,
+        alignment: Alignment.centerRight,
+        clipBehavior: Clip.none,
+        child: Container(
+          height: 40,
+          decoration: BoxDecoration(
+            color: isDark ? theme.colorScheme.surfaceContainer : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDark ? theme.colorScheme.surfaceContainerHighest : const Color(0xFFE5E5E5),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Header Row
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Request a Service',
-                      style: theme.textTheme.displaySmall?.copyWith(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    IconButton(
-                      icon: const Icon(CupertinoIcons.clear),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-
-              // Scrollable Forms
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+              if (!_expanded)
+                _buildIcon(CupertinoIcons.add, () => setState(() => _expanded = true))
+              else
+                ...items.asMap().entries.map((entry) {
+                  final idx = entry.key;
+                  final item = entry.value;
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Trade type picker (tappable field → bottom sheet)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 4, bottom: 6),
-                            child: Text(
-                              'Trade Type',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                          InkWell(
-                            onTap: _showTradePicker,
-                            borderRadius: BorderRadius.circular(AppTheme.inputBorderRadius),
-                            child: InputDecorator(
-                              decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(AppTheme.inputBorderRadius),
-                                  borderSide: BorderSide.none,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(AppTheme.inputBorderRadius),
-                                  borderSide: BorderSide.none,
-                                ),
-                                filled: true,
-                                fillColor: theme.brightness == Brightness.dark
-                                    ? const Color(0xFF1A1A1A)
-                                    : const Color(0xFFF5F5F5),
-                                suffixIcon: Icon(
-                                  CupertinoIcons.chevron_up_chevron_down,
-                                  size: 16,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Icon(
-                                      _selectedTrade.icon,
-                                      size: 16,
-                                      color: theme.colorScheme.primary,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    _selectedTrade.displayName,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w500,
-                                      color: theme.colorScheme.onSurface,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'AI Diagnosis Assistant',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                          TextButton.icon(
-                            onPressed: _isAiDiagnosing ? null : _runAiDiagnosis,
-                            icon: _isAiDiagnosing
-                                ? const SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(strokeWidth: 1.5),
-                                  )
-                                : const Icon(CupertinoIcons.sparkles, size: 14),
-                            label: Text(_isAiDiagnosing ? 'Diagnosing...' : 'Scan Photo'),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _descriptionController,
-                        maxLines: 4,
-                        decoration: const InputDecoration(
-                          labelText: 'Problem Description',
-                          hintText: 'Describe what needs fixing, or scan a photo...',
+                      _buildIcon(item.icon, item.onTap),
+                      if (idx < items.length - 1)
+                        VerticalDivider(
+                          width: 1,
+                          thickness: 1,
+                          color: isDark ? theme.colorScheme.surfaceContainerHighest : const Color(0xFFE5E5E5),
+                          indent: 8,
+                          endIndent: 8,
                         ),
-                        validator: (val) {
-                          if (val == null || val.trim().isEmpty) {
-                            return 'Please describe the problem';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _addressController,
-                        decoration: const InputDecoration(
-                          labelText: 'Service Address',
-                          hintText: 'Where should the technician go?',
-                        ),
-                        validator: (val) {
-                          if (val == null || val.trim().isEmpty) {
-                            return 'Please enter an address';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: InkWell(
-                              onTap: _selectDate,
-                              borderRadius: BorderRadius.circular(12),
-                              child: InputDecorator(
-                                decoration: const InputDecoration(labelText: 'Date'),
-                                child: Text(_formatDate(_selectedDate)),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: InkWell(
-                              onTap: _selectTime,
-                              borderRadius: BorderRadius.circular(12),
-                              child: InputDecorator(
-                                decoration: const InputDecoration(labelText: 'Time'),
-                                child: Text(_selectedTime.format(context)),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
                     ],
-                  ),
-                ),
-              ),
-
-              // Bottom Full-Bleed Corner-to-Corner CTA Button (Uber Style)
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  border: Border(
-                    top: BorderSide(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      width: 1.0,
-                    ),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 64,
-                        child: ElevatedButton(
-                          onPressed: isCreating ? null : _submit,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primary,
-                            foregroundColor: theme.colorScheme.onPrimary,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.zero,
-                            ),
-                          ),
-                          child: isCreating
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                )
-                              : const Text('Submit Request', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                  );
+                }),
             ],
           ),
         ),
       ),
     );
   }
-}
 
-class _CustomerReviewPanel extends ConsumerStatefulWidget {
-  const _CustomerReviewPanel({required this.jobId});
-  final String jobId;
-
-  @override
-  ConsumerState<_CustomerReviewPanel> createState() => _CustomerReviewPanelState();
-}
-
-class _CustomerReviewPanelState extends ConsumerState<_CustomerReviewPanel> {
-  final _commentController = TextEditingController();
-  final _signatureController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  double _rating = 5.0;
-  bool _isSubmitting = false;
-
-  @override
-  void dispose() {
-    _commentController.dispose();
-    _signatureController.dispose();
-    super.dispose();
+  Widget _buildIcon(IconData icon, VoidCallback onTap) {
+    final theme = Theme.of(context);
+    return AnimatedTapScale(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        color: Colors.transparent,
+        child: Center(
+          child: Icon(icon, size: 20, color: theme.colorScheme.onSurface),
+        ),
+      ),
+    );
   }
+}
 
-  Future<void> _submitReview(JobStatus targetStatus) async {
-    if (targetStatus == JobStatus.completed && !_formKey.currentState!.validate()) {
-      return;
-    }
+class _JobDetailsSheet extends ConsumerStatefulWidget {
+  const _JobDetailsSheet({required this.job});
+  final MaintenanceJob job;
 
-    setState(() => _isSubmitting = true);
-    try {
-      await ref.read(jobsViewModelProvider).updateStatus(widget.jobId, targetStatus);
-      
-      ref.read(telemetryServiceProvider).logEvent('worker_rating', {
-        'job_id': widget.jobId,
-        'rating': _rating,
-        'status': targetStatus.name,
-        'comment': _commentController.text.trim(),
-      });
+  @override
+  ConsumerState<_JobDetailsSheet> createState() => _JobDetailsSheetState();
+}
 
-      if (mounted) {
-        Navigator.pop(context); // Close details sheet
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(targetStatus == JobStatus.completed
-                ? 'Job approved and signed off successfully!'
-                : 'Job status: Complaint submitted.'),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error submitting review: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
-    }
+class _JobDetailsSheetState extends ConsumerState<_JobDetailsSheet> {
+  String _formatDate(DateTime dt) {
+    final day = dt.day.toString().padLeft(2, '0');
+    final month = dt.month.toString().padLeft(2, '0');
+    final year = dt.year;
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '$day/$month/$year at $hour:$minute';
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final job = widget.job;
 
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Divider(),
-          const SizedBox(height: 16),
-          Text(
-            'Review Completed Work',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Technician has completed repairs. Rate their service and sign off.',
-            style: TextStyle(color: Colors.grey, fontSize: 12),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(5, (index) {
-              final starVal = index + 1;
-              return IconButton(
-                icon: Icon(
-                  starVal <= _rating ? CupertinoIcons.star_fill : CupertinoIcons.star,
-                  color: Colors.amber,
-                  size: 28,
-                ),
-                onPressed: () {
-                  setState(() => _rating = starVal.toDouble());
-                },
-              );
-            }),
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _commentController,
-            maxLines: 2,
-            decoration: const InputDecoration(
-              labelText: 'Feedback / Comments',
-              hintText: 'Share any notes about the service...',
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                job.tradeType.displayName,
+                style: theme.textTheme.displaySmall?.copyWith(fontSize: 20),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _signatureController,
-            decoration: const InputDecoration(
-              labelText: 'Digital Signature (Type Full Name)',
-              hintText: 'Your name is required to sign off',
-            ),
-            validator: (val) {
-              if (val == null || val.trim().isEmpty) {
-                return 'Please sign to approve the work';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 20),
-          if (_isSubmitting)
-            const Center(child: CircularProgressIndicator())
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(
-                  height: 58,
-                  child: ElevatedButton(
-                    onPressed: () => _submitReview(JobStatus.completed),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: theme.colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 0,
-                    ),
-                    child: const Text('Approve & Sign Off', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: job.status.color(context).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                job.status.displayName,
+                style: TextStyle(
+                  color: job.status.color(context),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 58,
-                  child: OutlinedButton(
-                    onPressed: () => _submitReview(JobStatus.rejected),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                    child: const Text('Reject & Complain', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ],
+              ),
             ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'Description',
+          style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: 6),
+        Text(job.description, style: theme.textTheme.bodyLarge),
+        const SizedBox(height: 16),
+        Text(
+          'Address / Location',
+          style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: 6),
+        Text(job.address, style: theme.textTheme.bodyMedium),
+        const SizedBox(height: 16),
+        Text(
+          'Scheduled Time',
+          style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: 6),
+        Text(_formatDate(job.scheduleDateTime), style: theme.textTheme.bodyMedium),
+        if (job.status == JobStatus.waitingApproval) ...[
+          CustomerReviewPanel(jobId: job.id),
         ],
-      ),
+        const SizedBox(height: 24),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: theme.colorScheme.surfaceContainerHighest,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(CupertinoIcons.videocam_fill, size: 16, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '🎥 Body cam active. Footage stored 6 months. Under T&Cs, claims cannot be made after 6 months.',
+                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 10, height: 1.4),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

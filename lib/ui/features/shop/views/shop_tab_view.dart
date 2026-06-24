@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../domain/models/product.dart';
 import '../view_models/cart_view_model.dart';
 import '../view_models/wishlist_view_model.dart';
+import 'ai_concierge_page.dart';
 import 'cart_view.dart';
 import 'product_detail_view.dart';
 import 'wishlist_view.dart';
@@ -28,20 +29,14 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
   String _searchQuery = '';
 
   void _showAiConcierge(BuildContext context, List<Product> catalog) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        final innerTheme = Theme.of(context);
-        final recommendedIds = ['prod-1', 'prod-2'];
-        final recommended = catalog.where((p) => recommendedIds.contains(p.id)).toList();
-        
-        return _AiConciergeSheet(
-          theme: innerTheme,
-          recommended: recommended,
-        );
-      },
+    final recommendedIds = ['prod-1', 'prod-2'];
+    final recommended = catalog.where((p) => recommendedIds.contains(p.id)).toList();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AiConciergePage(recommended: recommended),
+      ),
     );
   }
 
@@ -134,7 +129,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                           Padding(
                             padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 0),
                             child: Container(
-                              padding: const EdgeInsets.all(24.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
                               decoration: BoxDecoration(
                                 color: theme.colorScheme.surfaceContainerLow,
                                 borderRadius: BorderRadius.circular(16.0),
@@ -155,56 +150,50 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                       letterSpacing: 2.0,
                                     ),
                                   ),
-                                  const SizedBox(height: 12.0),
+                                  const SizedBox(height: 6.0),
                                   Text(
                                     'Architectural furniture for modern living spaces.',
                                     style: GoogleFonts.instrumentSerif(
                                       color: theme.colorScheme.onSurface,
-                                      fontSize: 24,
+                                      fontSize: 20,
                                       height: 1.1,
                                     ),
                                   ),
-                                  const SizedBox(height: 20.0),
+                                  const SizedBox(height: 12.0),
                                   Row(
                                     children: [
                                       Flexible(
-                                        child: ElevatedButton(
-                                          onPressed: () {},
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: theme.colorScheme.primary,
-                                            foregroundColor: theme.colorScheme.onPrimary,
-                                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-                                            elevation: 0,
-                                          ),
-                                          child: Text(
-                                            'VIEW COLLECTION',
-                                            style: GoogleFonts.inter(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 1.0,
+                                        child: SizedBox(
+                                          height: 32,
+                                          child: ElevatedButton(
+                                            onPressed: () {},
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: theme.colorScheme.primary,
+                                              foregroundColor: theme.colorScheme.onPrimary,
+                                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                                              elevation: 0,
+                                              textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0),
                                             ),
+                                            child: const Text('VIEW COLLECTION'),
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(width: 16),
+                                      const SizedBox(width: 10),
                                       Flexible(
-                                        child: OutlinedButton.icon(
-                                          onPressed: () => _showAiConcierge(context, products),
-                                          icon: const Icon(CupertinoIcons.sparkles, size: 12),
-                                          label: Text(
-                                            'AI CONCIERGE',
-                                            style: GoogleFonts.inter(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 1.0,
+                                        child: SizedBox(
+                                          height: 32,
+                                          child: OutlinedButton.icon(
+                                            onPressed: () => _showAiConcierge(context, products),
+                                            icon: const Icon(CupertinoIcons.sparkles, size: 10),
+                                            label: const Text('AI CONCIERGE'),
+                                            style: OutlinedButton.styleFrom(
+                                              foregroundColor: theme.colorScheme.onSurface,
+                                              side: const BorderSide(color: Color(0x1F8BA5A7)),
+                                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                                              textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0),
                                             ),
-                                          ),
-                                          style: OutlinedButton.styleFrom(
-                                            foregroundColor: theme.colorScheme.onSurface,
-                                            side: const BorderSide(color: Color(0x1F8BA5A7)),
-                                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
                                           ),
                                         ),
                                       ),
@@ -442,206 +431,6 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
   }
 }
 
-class _AiConciergeSheet extends StatefulWidget {
-  const _AiConciergeSheet({
-    required this.theme,
-    required this.recommended,
-  });
 
-  final ThemeData theme;
-  final List<Product> recommended;
-
-  @override
-  State<_AiConciergeSheet> createState() => _AiConciergeSheetState();
-}
-
-class _AiConciergeSheetState extends State<_AiConciergeSheet> {
-  bool _uploaded = false;
-  bool _analyzing = false;
-
-  Future<void> _uploadAndAnalyze() async {
-    setState(() => _analyzing = true);
-    await Future.delayed(const Duration(milliseconds: 1800));
-    if (mounted) {
-      setState(() {
-        _uploaded = true;
-        _analyzing = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
-      decoration: BoxDecoration(
-        color: widget.theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Row(
-                children: [
-                  Icon(CupertinoIcons.sparkles, color: Colors.indigo, size: 20),
-                  SizedBox(width: 8),
-                  Text('AI Design Concierge', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                ],
-              ),
-              IconButton(
-                icon: const Icon(CupertinoIcons.clear),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Upload a room photo to get recommendations matching your space layout and aesthetic.',
-            style: TextStyle(color: Colors.grey, fontSize: 12),
-          ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: _analyzing
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(strokeWidth: 2),
-                        SizedBox(height: 16),
-                        Text('Analyzing room geometry & lighting...', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      ],
-                    ),
-                  )
-                : _uploaded
-                    ? _buildRecommendations(context)
-                    : _buildUploadTrigger(context),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUploadTrigger(BuildContext context) {
-    return InkWell(
-      onTap: _uploadAndAnalyze,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: widget.theme.colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: widget.theme.colorScheme.surfaceContainerHighest,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(CupertinoIcons.photo_on_rectangle, size: 48, color: widget.theme.colorScheme.primary.withValues(alpha: 0.5)),
-            const SizedBox(height: 16),
-            const Text('Upload Living / Bedroom Photo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            const SizedBox(height: 6),
-            const Text('Supports JPG, PNG up to 10MB', style: TextStyle(color: Colors.grey, fontSize: 11)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecommendations(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: CachedNetworkImage(
-            imageUrl: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&auto=format&fit=crop&q=60',
-            height: 140,
-            width: double.infinity,
-            memCacheWidth: 400,
-            fit: BoxFit.cover,
-            placeholder: (c, u) => Container(color: widget.theme.colorScheme.surfaceContainerHighest, height: 140),
-            errorWidget: (c, u, e) => Container(color: widget.theme.colorScheme.surfaceContainerHighest, height: 140, child: const Icon(CupertinoIcons.photo)),
-          ),
-        ),
-        const SizedBox(height: 16),
-        const Row(
-          children: [
-            Icon(CupertinoIcons.checkmark_seal_fill, color: Colors.green, size: 16),
-            SizedBox(width: 8),
-            Text(
-              'Aesthetic Style: Warm Minimalist Modern',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.green),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'Matching Pieces in Shop',
-          style: widget.theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        Expanded(
-          child: ListView.separated(
-            itemCount: widget.recommended.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final product = widget.recommended[index];
-              return InkWell(
-                onTap: () {
-                  Navigator.pop(context); // Close AI concierge
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ProductDetailView(product: product)),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: widget.theme.colorScheme.surfaceContainerHighest,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: CachedNetworkImage(
-                          imageUrl: product.imageUrl,
-                          width: 48,
-                          height: 48,
-                          memCacheWidth: 100,
-                          fit: BoxFit.cover,
-                          placeholder: (c, u) => Container(color: widget.theme.colorScheme.surfaceContainerHighest, width: 48, height: 48),
-                          errorWidget: (c, u, e) => Container(color: widget.theme.colorScheme.surfaceContainerHighest, width: 48, height: 48, child: const Icon(CupertinoIcons.photo)),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                            const SizedBox(height: 4),
-                            Text('\$${product.price.toStringAsFixed(0)}', style: TextStyle(color: widget.theme.colorScheme.primary, fontSize: 11, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ),
-                      const Icon(CupertinoIcons.chevron_right, size: 14, color: Colors.grey),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 

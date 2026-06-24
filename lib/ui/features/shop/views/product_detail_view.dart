@@ -5,8 +5,11 @@ import '../../../../data/repositories/shop_repository.dart';
 import '../../../../domain/models/product.dart';
 import '../view_models/cart_view_model.dart';
 import '../view_models/wishlist_view_model.dart';
+import 'ar_view_page.dart';
+import 'product_3d_view_page.dart';
 import 'cart_view.dart';
 import '../../../shared/utils/notification_helper.dart';
+import '../../../shared/widgets/app_bottom_sheet.dart';
 
 class ProductDetailView extends ConsumerStatefulWidget {
   const ProductDetailView({
@@ -410,308 +413,146 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
   // Modals (unchanged logic, improved presentation is in the sheet itself)
   // ---------------------------------------------------------------------------
   void _simulateARView(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.black,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return SizedBox(
-          height: MediaQuery.of(context).size.height * 0.85,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                child: Opacity(
-                  opacity: 0.3,
-                  child: Image.network(
-                    'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&auto=format&fit=crop&q=60',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              // Grid overlay
-              CustomPaint(painter: _GridPainter()),
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-                      ),
-                      child: const Icon(CupertinoIcons.eye_solid, color: Colors.white, size: 36),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'AR Room View',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Move device slowly to align with floor...',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
-              Positioned(
-                top: 20,
-                right: 20,
-                child: GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(CupertinoIcons.xmark, color: Colors.white, size: 18),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ArViewPage()),
     );
   }
 
   void _simulate3DView(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        final innerTheme = Theme.of(context);
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.72,
-          decoration: BoxDecoration(
-            color: innerTheme.colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Container(
-                  width: 36, height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: innerTheme.colorScheme.onSurfaceVariant.withValues(alpha: 0.25),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '3D Room Placement',
-                    style: innerTheme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: innerTheme.colorScheme.surfaceContainerHigh,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(CupertinoIcons.xmark, size: 14, color: innerTheme.colorScheme.onSurface),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Placed in your digital Home Profile (Living Room)',
-                style: TextStyle(color: innerTheme.colorScheme.onSurfaceVariant, fontSize: 12),
-              ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: innerTheme.brightness == Brightness.dark
-                          ? [const Color(0xFF1A1A1A), const Color(0xFF0F0F0F)]
-                          : [const Color(0xFFF8F8F8), const Color(0xFFEEEEEE)],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: innerTheme.brightness == Brightness.dark
-                          ? const Color(0xFF2A2A2A)
-                          : const Color(0xFFE0E0E0),
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        CupertinoIcons.cube_box_fill,
-                        color: innerTheme.colorScheme.primary,
-                        size: 56,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        '3D Spatial Model Loaded',
-                        style: innerTheme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Fits with 1.4m clearance around walls',
-                        style: TextStyle(color: innerTheme.colorScheme.onSurfaceVariant, fontSize: 12),
-                      ),
-                      const SizedBox(height: 20),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(CupertinoIcons.checkmark_circle_fill, color: Colors.green, size: 14),
-                            SizedBox(width: 6),
-                            Text('Space Compatible', style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: innerTheme.colorScheme.primary,
-                  foregroundColor: innerTheme.colorScheme.onPrimary,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: const Text('Save to Room Record', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-        );
-      },
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const Product3DViewPage()),
     );
   }
 
   void _showWriteReviewSheet(BuildContext context) {
-    final reviewController = TextEditingController();
-    double selectedRating = 5;
-
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        final modalTheme = Theme.of(context);
-        return StatefulBuilder(
-          builder: (context, setStateModal) {
-            return Container(
-              decoration: BoxDecoration(
-                color: modalTheme.colorScheme.surface,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              padding: EdgeInsets.only(
-                left: 24, right: 24, top: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 36, height: 4,
-                      margin: const EdgeInsets.only(bottom: 20),
-                      decoration: BoxDecoration(
-                        color: modalTheme.colorScheme.onSurfaceVariant.withValues(alpha: 0.25),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    'Write a Review',
-                    style: modalTheme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Share your experience with this piece.',
-                    style: TextStyle(color: modalTheme.colorScheme.onSurfaceVariant, fontSize: 13),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (i) {
-                      final val = i + 1;
-                      return GestureDetector(
-                        onTap: () => setStateModal(() => selectedRating = val.toDouble()),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: Icon(
-                            val <= selectedRating ? CupertinoIcons.star_fill : CupertinoIcons.star,
-                            size: 34,
-                            color: Colors.amber,
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: reviewController,
-                    maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: 'Comments',
-                      hintText: 'Share your thoughts about this piece...',
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final comment = reviewController.text.trim();
-                      if (comment.isEmpty) return;
-                      await ref.read(shopRepositoryProvider).addReview(
-                            widget.product.id, selectedRating, comment);
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                        context.showSnackBar(
-                          'Review submitted successfully!',
-                          type: SnackBarType.success,
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: modalTheme.colorScheme.primary,
-                      foregroundColor: modalTheme.colorScheme.onPrimary,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                    child: const Text('Submit Review', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                ],
+      child: _WriteReviewSheet(
+        productId: widget.product.id,
+        onSubmit: (rating, comment) async {
+          await ref.read(shopRepositoryProvider).addReview(
+                widget.product.id, rating, comment);
+        },
+      ),
+    );
+  }
+
+  // ── _WriteReviewSheet ─────────────────────────────────────────────────
+}
+
+class _WriteReviewSheet extends StatefulWidget {
+  const _WriteReviewSheet({
+    required this.productId,
+    required this.onSubmit,
+  });
+
+  final String productId;
+  final Future<void> Function(double rating, String comment) onSubmit;
+
+  @override
+  State<_WriteReviewSheet> createState() => _WriteReviewSheetState();
+}
+
+class _WriteReviewSheetState extends State<_WriteReviewSheet> {
+  final _controller = TextEditingController();
+  double _rating = 5;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Write a Review', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            IconButton(
+              icon: const Icon(CupertinoIcons.clear),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Share your experience with this piece.',
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(5, (i) {
+            final val = i + 1;
+            return GestureDetector(
+              onTap: () => setState(() => _rating = val.toDouble()),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Icon(
+                  val <= _rating ? CupertinoIcons.star_fill : CupertinoIcons.star,
+                  size: 34,
+                  color: Colors.amber,
+                ),
               ),
             );
-          },
-        );
-      },
+          }),
+        ),
+        const SizedBox(height: 20),
+        TextField(
+          controller: _controller,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            labelText: 'Comments',
+            hintText: 'Share your thoughts about this piece...',
+          ),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            Expanded(
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final comment = _controller.text.trim();
+                  if (comment.isEmpty) return;
+                  await widget.onSubmit(_rating, comment);
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                    context.showSnackBar(
+                      'Review submitted successfully!',
+                      type: SnackBarType.success,
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('Submit Review', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -1423,22 +1264,4 @@ class _BottomBar extends StatelessWidget {
 }
 
 /// Custom grid painter for the AR view overlay
-class _GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.08)
-      ..strokeWidth = 1;
 
-    const step = 40.0;
-    for (double x = 0; x < size.width; x += step) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-    }
-    for (double y = 0; y < size.height; y += step) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_GridPainter oldDelegate) => false;
-}

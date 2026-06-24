@@ -61,8 +61,8 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
   final List<Widget> _tabs = const [
     ServicesTabView(),
     ShopTabView(),
-    ProfileTabView(),
     HomeView(),
+    ProfileTabView(),
   ];
 
   @override
@@ -142,27 +142,10 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── Animated tab content ──────────────────────────────────────────
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 220),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) {
-              final slide = Tween<Offset>(
-                begin: const Offset(0, 0.04),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-              );
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(position: slide, child: child),
-              );
-            },
-            child: KeyedSubtree(
-              key: ValueKey<int>(_currentIndex),
-              child: _tabs[_currentIndex],
-            ),
+          // ── Tab content (kept alive with IndexedStack) ─────────────────────
+          IndexedStack(
+            index: _currentIndex,
+            children: _tabs,
           ),
 
           // ── Bottom scrim ──────────────────────────────────────────────────
