@@ -204,6 +204,71 @@ class MockShopRepository implements ShopRepository {
         inventoryCount: 3,
         isReserved: false,
       ),
+      const Product(
+        id: 'prod-6',
+        name: 'Modern Bauhaus Dining Set',
+        description: 'A curated mid-century dining set featuring a tubular steel dining table and classic Breuer style chairs. Clean, functional, and timeless.',
+        price: 1850.0,
+        imageUrl: 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=800&auto=format&fit=crop&q=80',
+        imageUrls: [
+          'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=800&auto=format&fit=crop&q=80',
+        ],
+        category: 'Bundles',
+        inventoryCount: 5,
+        isReserved: false,
+      ),
+      const Product(
+        id: 'prod-7',
+        name: 'Warm Japandi Bedroom Loft',
+        description: 'Blends Japanese minimalism with Scandinavian warmth. Features our solid oak platform frame, linen bedding, and warm paper lamp.',
+        price: 2400.0,
+        imageUrl: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=800&auto=format&fit=crop&q=80',
+        imageUrls: [
+          'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=800&auto=format&fit=crop&q=80',
+        ],
+        category: 'Bundles',
+        inventoryCount: 2,
+        isReserved: false,
+      ),
+      const Product(
+        id: 'prod-8',
+        name: 'Cozy Rustic Living Room',
+        description: 'Bring the charm of rustic style to your space. Features our reclaimed wood coffee table, distressed leather sofa, and vintage rug.',
+        price: 3100.0,
+        imageUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800&auto=format&fit=crop&q=80',
+        imageUrls: [
+          'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800&auto=format&fit=crop&q=80',
+        ],
+        category: 'Bundles',
+        inventoryCount: 2,
+        isReserved: false,
+      ),
+      const Product(
+        id: 'prod-9',
+        name: 'Urban Industrial Workspace',
+        description: 'A productivity-first setup designed with steel and dark wood. Features our adjustable standing desk, ergonomic mesh chair, and smart task light.',
+        price: 1450.0,
+        imageUrl: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800&auto=format&fit=crop&q=80',
+        imageUrls: [
+          'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800&auto=format&fit=crop&q=80',
+        ],
+        category: 'Bundles',
+        inventoryCount: 4,
+        isReserved: false,
+      ),
+      const Product(
+        id: 'prod-10',
+        name: 'Minimalist Balcony Garden Set',
+        description: 'Transform your outdoor balcony into a serene green escape. Includes weather-resistant teak wood chairs, table, and set of ceramic planters.',
+        price: 850.0,
+        imageUrl: 'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?w=800&auto=format&fit=crop&q=80',
+        imageUrls: [
+          'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?w=800&auto=format&fit=crop&q=80',
+        ],
+        category: 'Bundles',
+        inventoryCount: 8,
+        isReserved: false,
+      ),
     ]);
   }
 

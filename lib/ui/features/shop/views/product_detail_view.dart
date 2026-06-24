@@ -790,40 +790,8 @@ class _ImageGalleryState extends State<_ImageGallery> {
                     );
                   },
                 ),
+          // No vignette gradients overlaying the image
 
-          // ── Bottom gradient ──────────────────────────────────────────────
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: const [0.45, 1.0],
-                  colors: [
-                    Colors.transparent,
-                    (theme.brightness == Brightness.dark ? Colors.black : Colors.white)
-                        .withValues(alpha: 0.9),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // ── Top gradient (AppBar readability) ───────────────────────────
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.center,
-                  colors: [
-                    Colors.black.withValues(alpha: 0.45),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
 
           // ── Image counter badge ─────────────────────────────────────────
           if (hasMultiple)

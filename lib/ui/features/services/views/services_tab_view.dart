@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../domain/models/maintenance_job.dart';
 import '../../../../domain/models/trade_type.dart';
 import '../../../../domain/models/job_status.dart';
@@ -276,11 +277,18 @@ class _JobList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: EdgeInsets.fromLTRB(24, topPadding + 16, 24, 96),
+      padding: EdgeInsets.fromLTRB(24, topPadding + 16, 24, 120),
       itemCount: jobs.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 16),
+      separatorBuilder: (_, _) => const Divider(
+        height: 1,
+        thickness: 1,
+        color: Color(0x1F8BA5A7),
+      ),
       itemBuilder: (context, index) {
-        return _JobCard(job: jobs[index]);
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16.0),
+          child: _JobCard(job: jobs[index]),
+        );
       },
     );
   }
@@ -306,89 +314,79 @@ class _JobCard extends StatelessWidget {
 
     return AnimatedTapScale(
       onTap: () => _showDetailsSheet(context),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(job.tradeType.icon, size: 18, color: theme.colorScheme.primary),
-                      const SizedBox(width: 8),
-                      Text(
-                        job.tradeType.displayName,
-                        style: theme.textTheme.titleLarge?.copyWith(fontSize: 14),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      job.status.displayName,
-                      style: TextStyle(
-                        color: statusColor,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: statusColor,
+                ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                job.description,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium,
-              ),
-              if (job.status == JobStatus.completed) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(CupertinoIcons.shield_fill, color: Colors.green, size: 14),
-                      SizedBox(width: 8),
-                      Text(
-                        '30-Day Workmanship Guarantee Active',
-                        style: TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
-                    ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  job.tradeType.displayName,
+                  style: GoogleFonts.instrumentSerif(
+                    fontSize: 20,
+                    height: 1.2,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
-              ],
-              const SizedBox(height: 12),
-              const Divider(height: 1),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(CupertinoIcons.calendar, size: 14, color: theme.colorScheme.onSurfaceVariant),
-                  const SizedBox(width: 6),
-                  Text(
-                    _formatDate(job.scheduleDateTime),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
+              ),
+              Text(
+                job.status.displayName.toUpperCase(),
+                style: GoogleFonts.inter(
+                  color: statusColor,
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.0,
+                ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 8),
+          Text(
+            job.description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              height: 1.4,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(CupertinoIcons.calendar, size: 12, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6)),
+              const SizedBox(width: 6),
+              Text(
+                _formatDate(job.scheduleDateTime),
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                ),
+              ),
+            ],
+          ),
+          if (job.status == JobStatus.completed) ...[
+            const SizedBox(height: 8),
+            Text(
+              '30-Day Workmanship Guarantee Active'.toUpperCase(),
+              style: GoogleFonts.inter(
+                fontSize: 8,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+                color: Colors.green,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

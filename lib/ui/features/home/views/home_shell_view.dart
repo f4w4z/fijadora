@@ -6,6 +6,7 @@ import '../../services/views/services_tab_view.dart';
 import '../../shop/views/shop_tab_view.dart';
 import '../../profile/views/profile_tab_view.dart';
 import '../../../../data/services/notification_service.dart';
+import 'home_view.dart';
 
 // ─── Shell ────────────────────────────────────────────────────────────────────
 class HomeShellView extends ConsumerStatefulWidget {
@@ -50,12 +51,18 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
       activeIcon: CupertinoIcons.house_fill,
       label: 'Home Hub',
     ),
+    _NavItem(
+      icon: CupertinoIcons.person,
+      activeIcon: CupertinoIcons.person_fill,
+      label: 'Profile',
+    ),
   ];
 
   final List<Widget> _tabs = const [
     ServicesTabView(),
     ShopTabView(),
     ProfileTabView(),
+    HomeView(),
   ];
 
   @override
@@ -183,17 +190,22 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
 
           // ── Floating nav bar ──────────────────────────────────────────────
           Positioned(
-            left: 20,
-            right: 20,
-            bottom: 20,
+            left: 0,
+            right: 0,
+            bottom: 24,
             child: SafeArea(
               top: false,
-              child: _FloatingNavBar(
-                currentIndex: _currentIndex,
-                items: _navItems,
-                bounceAnimations: _bounceAnimations,
-                onTap: _onTabTap,
-                theme: theme,
+              child: Center(
+                child: SizedBox(
+                  width: 340,
+                  child: _FloatingNavBar(
+                    currentIndex: _currentIndex,
+                    items: _navItems,
+                    bounceAnimations: _bounceAnimations,
+                    onTap: _onTabTap,
+                    theme: theme,
+                  ),
+                ),
               ),
             ),
           ),
@@ -236,87 +248,39 @@ class _FloatingNavBar extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      height: 64,
+      height: 68,
       decoration: BoxDecoration(
-        color: isDark ? theme.colorScheme.surfaceContainer : Colors.white,
-        borderRadius: BorderRadius.circular(28),
+        color: isDark 
+            ? const Color(0xFF0F1718) // deep dark teal surface
+            : const Color(0xFF1E293B), // slate surface
+        borderRadius: BorderRadius.circular(34),
         border: Border.all(
-          color: isDark ? theme.colorScheme.surfaceContainerHighest : const Color(0xFFE8E8E8),
+          color: isDark 
+              ? theme.colorScheme.outlineVariant.withValues(alpha: 0.15) 
+              : Colors.white.withValues(alpha: 0.1),
+          width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.40 : 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-      child: Stack(
-        children: [
-          // Sliding pill background
-          _SlidingPill(
-            currentIndex: currentIndex,
-            itemCount: items.length,
-            isDark: isDark,
-          ),
-          // Icons + labels row on top
-          Row(
-            children: List.generate(items.length, (i) {
-              return _NavItemWidget(
-                item: items[i],
-                isSelected: i == currentIndex,
-                bounceAnimation: bounceAnimations[i],
-                onTap: () => onTap(i),
-                isDark: isDark,
-                inactiveColor: theme.colorScheme.onSurfaceVariant,
-              );
-            }),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Sliding pill indicator ───────────────────────────────────────────────────
-class _SlidingPill extends StatelessWidget {
-  const _SlidingPill({
-    required this.currentIndex,
-    required this.itemCount,
-    required this.isDark,
-  });
-
-  final int currentIndex;
-  final int itemCount;
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    // Map index 0..N-1 → alignment -1..1
-    final double x = itemCount > 1
-        ? -1.0 + (2.0 * currentIndex / (itemCount - 1))
-        : 0.0;
-
-    return AnimatedAlign(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOutCubic,
-      alignment: Alignment(x, 0),
-      child: FractionallySizedBox(
-        widthFactor: 1 / itemCount,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white : Colors.black,
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-        ),
+      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: List.generate(items.length, (i) {
+          return _NavItemWidget(
+            item: items[i],
+            isSelected: i == currentIndex,
+            bounceAnimation: bounceAnimations[i],
+            onTap: () => onTap(i),
+            theme: theme,
+            inactiveColor: Colors.white.withValues(alpha: 0.5),
+          );
+        }),
       ),
     );
   }
@@ -329,7 +293,7 @@ class _NavItemWidget extends StatelessWidget {
     required this.isSelected,
     required this.bounceAnimation,
     required this.onTap,
-    required this.isDark,
+    required this.theme,
     required this.inactiveColor,
   });
 
@@ -337,55 +301,74 @@ class _NavItemWidget extends StatelessWidget {
   final bool isSelected;
   final Animation<double> bounceAnimation;
   final VoidCallback onTap;
-  final bool isDark;
+  final ThemeData theme;
   final Color inactiveColor;
 
   @override
   Widget build(BuildContext context) {
-    // Active color is inverted to contrast against the filled pill
-    final activeColor = isDark ? Colors.black : Colors.white;
+    final isDark = theme.brightness == Brightness.dark;
+    final double targetWidth = isSelected ? 144.0 : 52.0;
 
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: SizedBox(
-          height: 64,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Bounce + icon swap animation
-              AnimatedBuilder(
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOutCubic,
+        width: targetWidth,
+        height: 52,
+        decoration: BoxDecoration(
+          color: isDark 
+              ? const Color(0xFF1F2E30) // subtle dark grey-teal
+              : const Color(0xFF334155), // subtle dark grey-slate
+          borderRadius: BorderRadius.circular(26),
+        ),
+        padding: const EdgeInsets.all(6.0),
+        child: Row(
+          children: [
+            // Icon wrapper circle
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOutCubic,
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+              ),
+              child: AnimatedBuilder(
                 animation: bounceAnimation,
                 builder: (context, child) =>
                     Transform.scale(scale: bounceAnimation.value, child: child),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 180),
-                  transitionBuilder: (child, anim) =>
-                      ScaleTransition(scale: anim, child: child),
-                  child: Icon(
-                    isSelected ? item.activeIcon : item.icon,
-                    key: ValueKey(isSelected),
-                    size: 20,
-                    color: isSelected ? activeColor : inactiveColor,
+                child: Icon(
+                  isSelected ? item.activeIcon : item.icon,
+                  size: 22,
+                  color: isSelected ? theme.colorScheme.onPrimary : inactiveColor,
+                ),
+              ),
+            ),
+            // Expanded text label with singlechildview to prevent overflow during resize
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const NeverScrollableScrollPhysics(),
+                child: Container(
+                  width: 84,
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.only(left: 8.0, right: 4.0),
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 200),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                    child: Text(item.label),
                   ),
                 ),
               ),
-              const SizedBox(height: 3),
-              // Label fades weight/size/color
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
-                style: TextStyle(
-                  fontSize: isSelected ? 9.5 : 9.0,
-                  fontWeight:
-                      isSelected ? FontWeight.w700 : FontWeight.w400,
-                  color: isSelected ? activeColor : inactiveColor,
-                  letterSpacing: isSelected ? 0.3 : 0.0,
-                ),
-                child: Text(item.label),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

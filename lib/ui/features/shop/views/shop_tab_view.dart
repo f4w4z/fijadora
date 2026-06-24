@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../domain/models/product.dart';
 import '../view_models/cart_view_model.dart';
 import '../view_models/wishlist_view_model.dart';
@@ -12,6 +13,7 @@ import '../../../../ui/shared/widgets/animated_tap_scale.dart';
 import '../../../../ui/shared/widgets/custom_pinned_header.dart';
 import '../../../../ui/shared/widgets/floating_header_layout.dart';
 import '../../../shared/utils/notification_helper.dart';
+import 'widgets/shop_the_look_carousel.dart';
 
 
 class ShopTabView extends ConsumerStatefulWidget {
@@ -132,57 +134,77 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                           Padding(
                             padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 0),
                             child: Container(
-                              padding: const EdgeInsets.all(16.0),
+                              padding: const EdgeInsets.all(24.0),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.primary,
+                                color: theme.colorScheme.surfaceContainerLow,
                                 borderRadius: BorderRadius.circular(16.0),
+                                border: Border.all(
+                                  color: const Color(0x1F8BA5A7),
+                                  width: 1.0,
+                                ),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Phoebe Curated',
-                                    style: theme.textTheme.titleLarge?.copyWith(
-                                      color: theme.colorScheme.onPrimary,
-                                      fontSize: 12,
-                                      letterSpacing: 1.0,
+                                    'PHOEBE CURATED',
+                                    style: GoogleFonts.inter(
+                                      color: theme.colorScheme.primary,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 2.0,
                                     ),
                                   ),
-                                  const SizedBox(height: 6.0),
+                                  const SizedBox(height: 12.0),
                                   Text(
                                     'Architectural furniture for modern living spaces.',
-                                    style: theme.textTheme.titleLarge?.copyWith(
-                                      color: theme.colorScheme.onPrimary,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      height: 1.2,
+                                    style: GoogleFonts.instrumentSerif(
+                                      color: theme.colorScheme.onSurface,
+                                      fontSize: 24,
+                                      height: 1.1,
                                     ),
                                   ),
-                                  const SizedBox(height: 16.0),
+                                  const SizedBox(height: 20.0),
                                   Row(
                                     children: [
                                       Flexible(
                                         child: ElevatedButton(
                                           onPressed: () {},
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: theme.colorScheme.onPrimary,
-                                            foregroundColor: theme.colorScheme.primary,
-                                            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+                                            backgroundColor: theme.colorScheme.primary,
+                                            foregroundColor: theme.colorScheme.onPrimary,
+                                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
                                             elevation: 0,
                                           ),
-                                          child: const Text('View Collection', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                                          child: Text(
+                                            'VIEW COLLECTION',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 1.0,
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                      const SizedBox(width: 12),
+                                      const SizedBox(width: 16),
                                       Flexible(
                                         child: OutlinedButton.icon(
                                           onPressed: () => _showAiConcierge(context, products),
-                                          icon: const Icon(CupertinoIcons.sparkles, size: 14),
-                                          label: const Text('AI Concierge', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                          icon: const Icon(CupertinoIcons.sparkles, size: 12),
+                                          label: Text(
+                                            'AI CONCIERGE',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 1.0,
+                                            ),
+                                          ),
                                           style: OutlinedButton.styleFrom(
-                                            foregroundColor: theme.colorScheme.onPrimary,
-                                            side: BorderSide(color: theme.colorScheme.onPrimary),
-                                            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+                                            foregroundColor: theme.colorScheme.onSurface,
+                                            side: const BorderSide(color: Color(0x1F8BA5A7)),
+                                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
                                           ),
                                         ),
                                       ),
@@ -192,123 +214,18 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 16.0),
+                          const SizedBox(height: 24.0),
 
                           if (bundleProducts.isNotEmpty) ...[
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 24.0),
                               child: Text(
-                                'Shop the Look (Styled Rooms)',
+                                'Shop the Look',
                                 style: theme.textTheme.headlineMedium?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                             ),
                             const SizedBox(height: 16.0),
-                            SizedBox(
-                              height: 140.0,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                                itemCount: bundleProducts.length,
-                                itemBuilder: (context, index) {
-                                  final bundle = bundleProducts[index];
-                                  return AnimatedTapScale(
-                                    onTap: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(builder: (context) => ProductDetailView(product: bundle, heroTag: 'bundle-img-${bundle.id}')),
-                                      );
-                                    },
-                                    child: Container(
-                                      width: 280,
-                                      margin: const EdgeInsets.only(right: 16.0),
-                                      decoration: BoxDecoration(
-                                        color: theme.colorScheme.surface,
-                                        borderRadius: BorderRadius.circular(12.0),
-                                        border: Border.all(
-                                          color: theme.colorScheme.surfaceContainerHighest,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          ClipRRect(
-                                            borderRadius: const BorderRadius.horizontal(left: Radius.circular(11.0)),
-                                            child: Hero(
-                                              tag: 'bundle-img-${bundle.id}',
-                                              child: CachedNetworkImage(
-                                                imageUrl: bundle.imageUrl,
-                                                width: 100,
-                                                height: 140,
-                                                memCacheWidth: 200,
-                                                fit: BoxFit.cover,
-                                                placeholder: (c, u) => Container(
-                                                  color: theme.colorScheme.surfaceContainerHighest,
-                                                  width: 100,
-                                                  height: 140,
-                                                  child: const Center(
-                                                    child: SizedBox(
-                                                      width: 20,
-                                                      height: 20,
-                                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                                    ),
-                                                  ),
-                                                ),
-                                                errorWidget: (c, u, e) => Container(
-                                                  color: theme.colorScheme.surfaceContainerHighest,
-                                                  width: 100,
-                                                  child: const Icon(CupertinoIcons.photo),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(12.0),
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                    decoration: BoxDecoration(
-                                                      color: theme.colorScheme.primaryContainer,
-                                                      borderRadius: BorderRadius.circular(4),
-                                                    ),
-                                                    child: Text(
-                                                      'ROOM BUNDLE',
-                                                      style: TextStyle(
-                                                        fontSize: 8,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: theme.colorScheme.onPrimaryContainer,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 6),
-                                                  Text(
-                                                    bundle.name,
-                                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                                                    maxLines: 2,
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    '\$${bundle.price.toStringAsFixed(0)}',
-                                                    style: TextStyle(
-                                                      fontWeight: FontWeight.bold,
-                                                      color: theme.colorScheme.primary,
-                                                      fontSize: 12,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(height: 32.0),
+                            ShopTheLookCarousel(bundles: bundleProducts),
                           ],
 
                           // Categories list
@@ -392,16 +309,9 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // Product image card
                                     Expanded(
-                                      child: Card(
-                                        clipBehavior: Clip.antiAlias,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12.0),
-                                          side: BorderSide(
-                                            color: theme.colorScheme.surfaceContainerHighest,
-                                          ),
-                                        ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(16.0),
                                         child: Stack(
                                           fit: StackFit.expand,
                                           children: [
@@ -430,12 +340,10 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                             Positioned(
                                               top: 8,
                                               right: 8,
-                                              child: CircleAvatar(
-                                                radius: 16,
-                                                backgroundColor: Colors.white.withValues(alpha: 0.8),
-                                                child: IconButton(
-                                                  icon: const Icon(CupertinoIcons.add, size: 14, color: Colors.black),
-                                                  onPressed: () {
+                                              child: Material(
+                                                type: MaterialType.transparency,
+                                                child: InkWell(
+                                                  onTap: () {
                                                     ref.read(cartViewModelProvider.notifier).addToCart(product);
                                                     context.showSnackBar(
                                                       '${product.name} added to cart',
@@ -443,6 +351,16 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                                       duration: const Duration(seconds: 2),
                                                     );
                                                   },
+                                                  borderRadius: BorderRadius.circular(16),
+                                                  child: CircleAvatar(
+                                                    radius: 16,
+                                                    backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.8),
+                                                    child: Icon(
+                                                      CupertinoIcons.add,
+                                                      size: 14,
+                                                      color: theme.colorScheme.onSurface,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
                                             ),
@@ -450,20 +368,24 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(height: 8.0),
+                                    const SizedBox(height: 10.0),
                                     Text(
                                       product.name,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                      style: GoogleFonts.instrumentSerif(
+                                        fontSize: 16,
+                                        height: 1.1,
+                                        color: theme.colorScheme.onSurface,
+                                      ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     const SizedBox(height: 4.0),
                                     Text(
                                       '\$${product.price.toStringAsFixed(0)}',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: theme.colorScheme.primary,
+                                      style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.w500,
                                         fontSize: 12,
+                                        color: theme.colorScheme.primary,
                                       ),
                                     ),
                                   ],
@@ -487,28 +409,32 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
   }
 
   Widget _buildCategoryChip(String label, bool isSelected, ThemeData theme) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8.0),
-      child: FilterChip(
-        selected: isSelected,
-        label: Text(label),
-        onSelected: (_) {
-          setState(() {
-            _selectedCategory = label;
-          });
-        },
-        backgroundColor: theme.colorScheme.surface,
-        selectedColor: theme.colorScheme.primary,
-        checkmarkColor: theme.colorScheme.onPrimary,
-        labelStyle: TextStyle(
-          color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
-          fontSize: 12,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+    return AnimatedTapScale(
+      onTap: () {
+        setState(() {
+          _selectedCategory = label;
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(right: 12.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        decoration: BoxDecoration(
+          color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(
+            color: isSelected ? Colors.transparent : const Color(0x1F8BA5A7),
+            width: 1.0,
+          ),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: isSelected ? Colors.transparent : const Color(0xFFE5E5E5),
+        child: Center(
+          child: Text(
+            label.toUpperCase(),
+            style: GoogleFonts.inter(
+              color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+              fontSize: 10,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              letterSpacing: 1.0,
+            ),
           ),
         ),
       ),
