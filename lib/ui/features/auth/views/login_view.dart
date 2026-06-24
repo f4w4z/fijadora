@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../../ui/shared/widgets/animated_tap_scale.dart';
 import '../view_models/auth_view_model.dart';
 
 class LoginView extends ConsumerStatefulWidget {
@@ -176,7 +176,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         const SizedBox(height: 32.0),
 
                         // Primary Sign In Button
-                        _AnimatedPressable(
+                        AnimatedTapScale(
                           onTap: viewModel.isLoading ? () {} : _handleLogin,
                           child: SizedBox(
                             height: 56,
@@ -293,7 +293,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
-                            _AnimatedPressable(
+                            AnimatedTapScale(
                               onTap: () => context.push('/register'),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
@@ -376,7 +376,7 @@ class _PremiumLogo extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'Phoebe Homes',
-            style: GoogleFonts.instrumentSerif(
+            style: TextStyle(fontFamily: 'Instrument Serif', 
               fontSize: 36,
               fontWeight: FontWeight.bold,
               letterSpacing: -0.5,
@@ -426,53 +426,6 @@ class _LogoPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _AnimatedPressable extends StatefulWidget {
-  final Widget child;
-  final VoidCallback onTap;
-
-  const _AnimatedPressable({required this.child, required this.onTap});
-
-  @override
-  State<_AnimatedPressable> createState() => _AnimatedPressableState();
-}
-
-class _AnimatedPressableState extends State<_AnimatedPressable> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => _controller.forward(),
-      onTapUp: (_) => _controller.reverse(),
-      onTapCancel: () => _controller.reverse(),
-      onTap: widget.onTap,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: widget.child,
-      ),
-    );
-  }
-}
-
 class _DemoAccountCard extends StatelessWidget {
   final String roleName;
   final String email;
@@ -496,7 +449,7 @@ class _DemoAccountCard extends StatelessWidget {
     final borderColor = theme.colorScheme.surfaceContainerHighest;
     final onSurface = theme.colorScheme.onSurface;
 
-    return _AnimatedPressable(
+    return AnimatedTapScale(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),

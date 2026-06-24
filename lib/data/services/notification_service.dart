@@ -30,8 +30,14 @@ class NotificationService {
     _controller.add(notification);
     debugPrint('[NOTIFICATION] Title: $title | Body: $body');
   }
+
+  void dispose() {
+    _controller.close();
+  }
 }
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
-  return NotificationService();
+  final service = NotificationService();
+  ref.onDispose(() => service.dispose());
+  return service;
 });

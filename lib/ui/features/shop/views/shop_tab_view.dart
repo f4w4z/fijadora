@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../domain/models/product.dart';
 import '../view_models/cart_view_model.dart';
 import '../view_models/wishlist_view_model.dart';
@@ -134,7 +133,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                 color: theme.colorScheme.surfaceContainerLow,
                                 borderRadius: BorderRadius.circular(16.0),
                                 border: Border.all(
-                                  color: const Color(0x1F8BA5A7),
+                                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
                                   width: 1.0,
                                 ),
                               ),
@@ -143,7 +142,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                 children: [
                                   Text(
                                     'PHOEBE CURATED',
-                                    style: GoogleFonts.inter(
+                                    style: TextStyle(fontFamily: 'Inter', 
                                       color: theme.colorScheme.primary,
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
@@ -153,7 +152,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                   const SizedBox(height: 6.0),
                                   Text(
                                     'Architectural furniture for modern living spaces.',
-                                    style: GoogleFonts.instrumentSerif(
+                                    style: TextStyle(fontFamily: 'Instrument Serif', 
                                       color: theme.colorScheme.onSurface,
                                       fontSize: 20,
                                       height: 1.1,
@@ -189,7 +188,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                             label: const Text('AI CONCIERGE'),
                                             style: OutlinedButton.styleFrom(
                                               foregroundColor: theme.colorScheme.onSurface,
-                                              side: const BorderSide(color: Color(0x1F8BA5A7)),
+                                              side: BorderSide(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12)),
                                               padding: const EdgeInsets.symmetric(horizontal: 12.0),
                                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
                                               textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0),
@@ -360,7 +359,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                     const SizedBox(height: 10.0),
                                     Text(
                                       product.name,
-                                      style: GoogleFonts.instrumentSerif(
+                                      style: TextStyle(fontFamily: 'Instrument Serif', 
                                         fontSize: 16,
                                         height: 1.1,
                                         color: theme.colorScheme.onSurface,
@@ -371,7 +370,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                     const SizedBox(height: 4.0),
                                     Text(
                                       '\$${product.price.toStringAsFixed(0)}',
-                                      style: GoogleFonts.inter(
+                                      style: TextStyle(fontFamily: 'Inter', 
                                         fontWeight: FontWeight.w500,
                                         fontSize: 12,
                                         color: theme.colorScheme.primary,
@@ -411,14 +410,14 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
           color: isSelected ? theme.colorScheme.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(12.0),
           border: Border.all(
-            color: isSelected ? Colors.transparent : const Color(0x1F8BA5A7),
+            color: isSelected ? Colors.transparent : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
             width: 1.0,
           ),
         ),
         child: Center(
           child: Text(
             label.toUpperCase(),
-            style: GoogleFonts.inter(
+            style: TextStyle(fontFamily: 'Inter', 
               color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
               fontSize: 10,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

@@ -13,6 +13,7 @@ abstract class ShopRepository {
   Future<void> toggleWishlist(String productId);
   Stream<List<Map<String, dynamic>>> streamReviews(String productId);
   Future<void> addReview(String productId, double rating, String comment);
+  void dispose();
 }
 
 // 1. Supabase Shop Repository Implementation
@@ -97,6 +98,9 @@ class SupabaseShopRepository implements ShopRepository {
           'comment': comment
         });
   }
+
+  @override
+  void dispose() {}
 }
 
 // 2. Mock Shop Repository Implementation
@@ -358,6 +362,15 @@ class MockShopRepository implements ShopRepository {
       controller.add(List<Map<String, dynamic>>.from(list));
     }
   }
+
+  @override
+  void dispose() {
+    _controller.close();
+    _wishlistController.close();
+    for (final c in _reviewsControllers.values) {
+      c.close();
+    }
+  }
 }
 
 // 3. Riverpod Provider definition
@@ -365,16 +378,21 @@ final shopRepositoryProvider = Provider<ShopRepository>((ref) {
   const url = String.fromEnvironment('SUPABASE_URL', defaultValue: '');
   const anonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
 
+  ShopRepository repo;
   if (url.isEmpty || anonKey.isEmpty || url.contains('placeholder')) {
     debugPrint('ShopRepository: Using MOCK implementation');
-    return MockShopRepository();
+    repo = MockShopRepository();
+  } else {
+    try {
+      final client = SupabaseService.instance.client;
+      repo = SupabaseShopRepository(client);
+    } catch (e) {
+      debugPrint('ShopRepository: Failed to get Supabase client. Falling back to MOCK.');
+      repo = MockShopRepository();
+    }
   }
 
-  try {
-    final client = SupabaseService.instance.client;
-    return SupabaseShopRepository(client);
-  } catch (e) {
-    debugPrint('ShopRepository: Failed to get Supabase client. Falling back to MOCK.');
-    return MockShopRepository();
-  }
+  ref.onDispose(() => repo.dispose());
+
+  return repo;
 });

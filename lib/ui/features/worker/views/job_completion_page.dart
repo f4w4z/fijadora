@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../domain/models/job_status.dart';
 import '../../services/view_models/jobs_view_model.dart';
 
@@ -96,8 +97,8 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
                     if (_photoCaptured) ...[
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=300&auto=format&fit=crop&q=60',
+                        child: CachedNetworkImage(
+                          imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=300&auto=format&fit=crop&q=60',
                           height: 120,
                           width: double.infinity,
                           fit: BoxFit.cover,

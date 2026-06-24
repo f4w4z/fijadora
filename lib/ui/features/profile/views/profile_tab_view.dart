@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'home_detail_list_view.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../../shared/widgets/custom_pinned_header.dart';
@@ -44,7 +43,7 @@ class ProfileTabView extends ConsumerWidget {
                       color: theme.colorScheme.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: const Color(0x1F8BA5A7),
+                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
                       ),
                     ),
                     child: Row(
@@ -64,7 +63,7 @@ class ProfileTabView extends ConsumerWidget {
                             children: [
                               Text(
                                 'Family Home',
-                                style: GoogleFonts.instrumentSerif(
+                                style: TextStyle(fontFamily: 'Instrument Serif', 
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: theme.colorScheme.onSurface,
@@ -73,7 +72,7 @@ class ProfileTabView extends ConsumerWidget {
                               const SizedBox(height: 2),
                               Text(
                                 '123 Main Street, Springfield',
-                                style: GoogleFonts.inter(
+                                style: TextStyle(fontFamily: 'Inter', 
                                   fontSize: 12,
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
@@ -89,7 +88,7 @@ class ProfileTabView extends ConsumerWidget {
                           ),
                           child: Text(
                             'ALL GOOD',
-                            style: GoogleFonts.inter(
+                            style: TextStyle(fontFamily: 'Inter', 
                               fontSize: 9,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.0,
@@ -141,7 +140,7 @@ class ProfileTabView extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text(
                         'Predictive Reminders',
-                        style: GoogleFonts.instrumentSerif(
+                        style: TextStyle(fontFamily: 'Instrument Serif', 
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.onSurface,
@@ -186,7 +185,7 @@ class ProfileTabView extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text(
                         'Digital Home Record',
-                        style: GoogleFonts.instrumentSerif(
+                        style: TextStyle(fontFamily: 'Instrument Serif', 
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.onSurface,
@@ -254,7 +253,7 @@ class ProfileTabView extends ConsumerWidget {
                         color: theme.colorScheme.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: const Color(0x1F8BA5A7),
+                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
                         ),
                       ),
                       child: Row(
@@ -274,7 +273,7 @@ class ProfileTabView extends ConsumerWidget {
                               children: [
                                 Text(
                                   'Maintenance History',
-                                  style: GoogleFonts.inter(
+                                  style: TextStyle(fontFamily: 'Inter', 
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                     color: theme.colorScheme.onSurface,
@@ -283,7 +282,7 @@ class ProfileTabView extends ConsumerWidget {
                                 const SizedBox(height: 4),
                                 Text(
                                   'View past invoices, repairs, and receipts',
-                                  style: GoogleFonts.inter(
+                                  style: TextStyle(fontFamily: 'Inter', 
                                     fontSize: 12,
                                     color: theme.colorScheme.onSurfaceVariant,
                                   ),
@@ -317,7 +316,7 @@ class ProfileTabView extends ConsumerWidget {
             color: theme.colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: const Color(0x1F8BA5A7),
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
             ),
           ),
           child: Column(
@@ -326,7 +325,7 @@ class ProfileTabView extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 value,
-                style: GoogleFonts.instrumentSerif(
+                style: TextStyle(fontFamily: 'Instrument Serif', 
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onSurface,
@@ -335,7 +334,7 @@ class ProfileTabView extends ConsumerWidget {
               const SizedBox(height: 2),
               Text(
                 label,
-                style: GoogleFonts.inter(
+                style: TextStyle(fontFamily: 'Inter', 
                   fontSize: 10,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -362,7 +361,7 @@ class ProfileTabView extends ConsumerWidget {
         border: Border.all(
           color: isUrgent
               ? Colors.orange.withValues(alpha: 0.3)
-              : const Color(0x1F8BA5A7),
+              : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
         ),
       ),
       child: Row(
@@ -382,7 +381,7 @@ class ProfileTabView extends ConsumerWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.inter(
+                  style: TextStyle(fontFamily: 'Inter', 
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                     color: theme.colorScheme.onSurface,
@@ -391,7 +390,7 @@ class ProfileTabView extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: GoogleFonts.inter(
+                  style: TextStyle(fontFamily: 'Inter', 
                     color: theme.colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
@@ -409,7 +408,7 @@ class ProfileTabView extends ConsumerWidget {
             ),
             child: Text(
               detail.toUpperCase(),
-              style: GoogleFonts.inter(
+              style: TextStyle(fontFamily: 'Inter', 
                 fontSize: 8,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
@@ -431,7 +430,7 @@ class ProfileTabView extends ConsumerWidget {
           color: theme.colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: const Color(0x1F8BA5A7),
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
           ),
         ),
         child: Column(
@@ -451,7 +450,7 @@ class ProfileTabView extends ConsumerWidget {
               children: [
                 Text(
                   item.title,
-                  style: GoogleFonts.inter(
+                  style: TextStyle(fontFamily: 'Inter', 
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSurface,
@@ -460,7 +459,7 @@ class ProfileTabView extends ConsumerWidget {
                 const SizedBox(height: 2),
                 Text(
                   item.subtitle,
-                  style: GoogleFonts.inter(
+                  style: TextStyle(fontFamily: 'Inter', 
                     fontSize: 11,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

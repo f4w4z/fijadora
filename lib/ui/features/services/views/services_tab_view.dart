@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../domain/models/maintenance_job.dart';
 import '../../../../domain/models/job_status.dart';
 import '../view_models/jobs_view_model.dart';
@@ -15,6 +14,8 @@ import '../../../../ui/features/services/views/job_details_page.dart';
 import '../../../../ui/features/services/views/live_tracking_view.dart';
 import '../../../../ui/shared/widgets/app_bottom_sheet.dart';
 import '../../../../ui/shared/widgets/animated_tap_scale.dart';
+import '../../../shared/utils/date_extensions.dart';
+
 
 
 class ServicesTabView extends ConsumerStatefulWidget {
@@ -181,10 +182,10 @@ class _JobList extends StatelessWidget {
     return ListView.separated(
       padding: EdgeInsets.fromLTRB(24, topPadding + 16, 24, 120),
       itemCount: jobs.length,
-      separatorBuilder: (_, _) => const Divider(
+      separatorBuilder: (_, _) => Divider(
         height: 1,
         thickness: 1,
-        color: Color(0x1F8BA5A7),
+        color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
       ),
       itemBuilder: (context, index) {
         return Padding(
@@ -199,15 +200,6 @@ class _JobList extends StatelessWidget {
 class _JobCard extends StatelessWidget {
   const _JobCard({required this.job});
   final MaintenanceJob job;
-
-  String _formatDate(DateTime dt) {
-    final day = dt.day.toString().padLeft(2, '0');
-    final month = dt.month.toString().padLeft(2, '0');
-    final year = dt.year;
-    final hour = dt.hour.toString().padLeft(2, '0');
-    final minute = dt.minute.toString().padLeft(2, '0');
-    return '$day/$month/$year at $hour:$minute';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -233,7 +225,7 @@ class _JobCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   job.tradeType.displayName,
-                  style: GoogleFonts.instrumentSerif(
+                  style: TextStyle(fontFamily: 'Instrument Serif', 
                     fontSize: 20,
                     height: 1.2,
                     color: theme.colorScheme.onSurface,
@@ -242,7 +234,7 @@ class _JobCard extends StatelessWidget {
               ),
               Text(
                 job.status.displayName.toUpperCase(),
-                style: GoogleFonts.inter(
+                style: TextStyle(fontFamily: 'Inter', 
                   color: statusColor,
                   fontSize: 9,
                   fontWeight: FontWeight.bold,
@@ -256,7 +248,7 @@ class _JobCard extends StatelessWidget {
             job.description,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.inter(
+            style: TextStyle(fontFamily: 'Inter', 
               fontSize: 13,
               height: 1.4,
               color: theme.colorScheme.onSurfaceVariant,
@@ -268,8 +260,8 @@ class _JobCard extends StatelessWidget {
               Icon(CupertinoIcons.calendar, size: 12, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6)),
               const SizedBox(width: 6),
               Text(
-                _formatDate(job.scheduleDateTime),
-                style: GoogleFonts.inter(
+                job.scheduleDateTime.formattedFull,
+                style: TextStyle(fontFamily: 'Inter', 
                   fontSize: 11,
                   color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                 ),
@@ -280,7 +272,7 @@ class _JobCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               '30-Day Workmanship Guarantee Active'.toUpperCase(),
-              style: GoogleFonts.inter(
+              style: TextStyle(fontFamily: 'Inter', 
                 fontSize: 8,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
@@ -436,14 +428,6 @@ class _JobDetailsSheet extends ConsumerStatefulWidget {
 }
 
 class _JobDetailsSheetState extends ConsumerState<_JobDetailsSheet> {
-  String _formatDate(DateTime dt) {
-    final day = dt.day.toString().padLeft(2, '0');
-    final month = dt.month.toString().padLeft(2, '0');
-    final year = dt.year;
-    final hour = dt.hour.toString().padLeft(2, '0');
-    final minute = dt.minute.toString().padLeft(2, '0');
-    return '$day/$month/$year at $hour:$minute';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -500,7 +484,7 @@ class _JobDetailsSheetState extends ConsumerState<_JobDetailsSheet> {
           style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 6),
-        Text(_formatDate(job.scheduleDateTime), style: theme.textTheme.bodyMedium),
+        Text(job.scheduleDateTime.formattedFull, style: theme.textTheme.bodyMedium),
         if (job.status == JobStatus.waitingApproval) ...[
           CustomerReviewPanel(jobId: job.id),
         ],

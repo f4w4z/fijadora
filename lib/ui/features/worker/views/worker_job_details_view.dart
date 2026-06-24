@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/models/job_status.dart';
 import '../../../../domain/models/maintenance_job.dart';
 import '../../services/view_models/jobs_view_model.dart';
+import '../../../shared/utils/date_extensions.dart';
 import 'job_completion_page.dart';
 
 class WorkerJobDetailsView extends ConsumerStatefulWidget {
@@ -16,15 +17,6 @@ class WorkerJobDetailsView extends ConsumerStatefulWidget {
 }
 
 class _WorkerJobDetailsViewState extends ConsumerState<WorkerJobDetailsView> {
-  String _formatDate(DateTime dt) {
-    final day = dt.day.toString().padLeft(2, '0');
-    final month = dt.month.toString().padLeft(2, '0');
-    final year = dt.year;
-    final hour = dt.hour.toString().padLeft(2, '0');
-    final minute = dt.minute.toString().padLeft(2, '0');
-    return '$day/$month/$year at $hour:$minute';
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -97,7 +89,7 @@ class _WorkerJobDetailsViewState extends ConsumerState<WorkerJobDetailsView> {
                         style: theme.textTheme.titleLarge?.copyWith(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
                       ),
                       const SizedBox(height: 4),
-                      Text(_formatDate(job.scheduleDateTime), style: theme.textTheme.bodyLarge),
+                      Text(job.scheduleDateTime.formattedFull, style: theme.textTheme.bodyLarge),
                     ],
                   ),
                 ),

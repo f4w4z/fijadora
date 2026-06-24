@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   AppTheme._();
@@ -11,12 +10,12 @@ class AppTheme {
   static const Color onPrimary = Colors.white;
   static const Color secondary = Color(0xFFD4815A);
   static const Color onSecondary = Colors.white;
-  static const Color scaffold = Color(0xFF0C1F20); // Rich deep dark green
-  static const Color surface = Color(0xFF142E30); // Slightly lighter dark green for cards
-  static const Color onSurface = Color(0xFFF0F7F7); // Minty/white light text
-  static const Color cardBorder = Color(0xFF1F4447); // Dark green borders
-  static const Color textSecondary = Color(0xFF8BA5A7); // Soft light green-grey
-  static const Color inputFill = Color(0xFF081617); // Inset field background
+  static const Color scaffold = Color(0xFF0C1F20);
+  static const Color surface = Color(0xFF142E30);
+  static const Color onSurface = Color(0xFFF0F7F7);
+  static const Color cardBorder = Color(0xFF1F4447);
+  static const Color textSecondary = Color(0xFF8BA5A7);
+  static const Color inputFill = Color(0xFF081617);
 
   static ThemeData get lightTheme {
     final base = ThemeData.dark(useMaterial3: true);
@@ -39,38 +38,45 @@ class AppTheme {
         error: const Color(0xFFCF6679),
         onError: Colors.black,
       ),
-      textTheme: GoogleFonts.interTextTheme(base.textTheme).copyWith(
-        displayLarge: GoogleFonts.instrumentSerif(
-          fontSize: 36, // Serif headings look better slightly larger!
+      textTheme: base.textTheme.apply(fontFamily: 'Inter').copyWith(
+        displayLarge: const TextStyle(
+          fontFamily: 'Instrument Serif',
+          fontSize: 36,
           fontWeight: FontWeight.bold,
           color: onSurface,
         ),
-        displayMedium: GoogleFonts.instrumentSerif(
+        displayMedium: const TextStyle(
+          fontFamily: 'Instrument Serif',
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: onSurface,
         ),
-        displaySmall: GoogleFonts.instrumentSerif(
+        displaySmall: const TextStyle(
+          fontFamily: 'Instrument Serif',
           fontSize: 28,
           fontWeight: FontWeight.bold,
           color: onSurface,
         ),
-        headlineMedium: GoogleFonts.instrumentSerif(
+        headlineMedium: const TextStyle(
+          fontFamily: 'Instrument Serif',
           fontSize: 24,
           fontWeight: FontWeight.w600,
           color: onSurface,
         ),
-        titleLarge: GoogleFonts.inter(
+        titleLarge: const TextStyle(
+          fontFamily: 'Inter',
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: onSurface,
         ),
-        bodyLarge: GoogleFonts.inter(
+        bodyLarge: const TextStyle(
+          fontFamily: 'Inter',
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: onSurface,
         ),
-        bodyMedium: GoogleFonts.inter(
+        bodyMedium: const TextStyle(
+          fontFamily: 'Inter',
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: textSecondary,

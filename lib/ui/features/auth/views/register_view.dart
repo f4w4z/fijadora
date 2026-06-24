@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../../ui/shared/widgets/animated_tap_scale.dart';
 import '../../../../domain/models/user_role.dart';
 import '../view_models/auth_view_model.dart';
 
@@ -71,7 +71,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
         ? activeColor
         : (isDark ? const Color(0xFF222222) : const Color(0xFFE5E5E5));
 
-    return _AnimatedPressable(
+    return AnimatedTapScale(
       onTap: () {
         setState(() {
           _selectedRole = role;
@@ -134,7 +134,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
             const Spacer(),
             Text(
               title,
-              style: GoogleFonts.inter(
+              style: TextStyle(fontFamily: 'Inter', 
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: isSelected ? activeColor : theme.colorScheme.onSurface,
@@ -165,7 +165,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: _AnimatedPressable(
+        leading: AnimatedTapScale(
           onTap: () => context.pop(),
           child: const Padding(
             padding: EdgeInsets.all(12.0),
@@ -186,7 +186,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
               children: [
                 Text(
                   'Join Phoebe Homes',
-                  style: GoogleFonts.instrumentSerif(
+                  style: TextStyle(fontFamily: 'Instrument Serif', 
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
                     letterSpacing: -0.5,
@@ -369,7 +369,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                 const SizedBox(height: 36.0),
 
                 // Register Button
-                _AnimatedPressable(
+                AnimatedTapScale(
                   onTap: viewModel.isLoading ? () {} : _handleRegister,
                   child: SizedBox(
                     height: 56,
@@ -398,50 +398,5 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
   }
 }
 
-class _AnimatedPressable extends StatefulWidget {
-  final Widget child;
-  final VoidCallback onTap;
 
-  const _AnimatedPressable({required this.child, required this.onTap});
-
-  @override
-  State<_AnimatedPressable> createState() => _AnimatedPressableState();
-}
-
-class _AnimatedPressableState extends State<_AnimatedPressable> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => _controller.forward(),
-      onTapUp: (_) => _controller.reverse(),
-      onTapCancel: () => _controller.reverse(),
-      onTap: widget.onTap,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: widget.child,
-      ),
-    );
-  }
-}
 

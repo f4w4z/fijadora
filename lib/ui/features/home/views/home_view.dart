@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../domain/models/user_role.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
@@ -54,7 +53,7 @@ class HomeView extends ConsumerWidget {
                       color: theme.colorScheme.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: const Color(0x1F8BA5A7),
+                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
                       ),
                     ),
                     child: Row(
@@ -64,7 +63,7 @@ class HomeView extends ConsumerWidget {
                           backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
                           child: Text(
                             user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                            style: GoogleFonts.inter(
+                            style: TextStyle(fontFamily: 'Inter', 
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.primary,
@@ -78,7 +77,7 @@ class HomeView extends ConsumerWidget {
                             children: [
                               Text(
                                 user.name,
-                                style: GoogleFonts.instrumentSerif(
+                                style: TextStyle(fontFamily: 'Instrument Serif', 
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: theme.colorScheme.onSurface,
@@ -87,7 +86,7 @@ class HomeView extends ConsumerWidget {
                               const SizedBox(height: 2),
                               Text(
                                 user.email,
-                                style: GoogleFonts.inter(
+                                style: TextStyle(fontFamily: 'Inter', 
                                   fontSize: 12,
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
@@ -113,7 +112,7 @@ class HomeView extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text(
                         'Quick Actions',
-                        style: GoogleFonts.instrumentSerif(
+                        style: TextStyle(fontFamily: 'Instrument Serif', 
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.onSurface,
@@ -152,7 +151,7 @@ class HomeView extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text(
                         'Settings',
-                        style: GoogleFonts.instrumentSerif(
+                        style: TextStyle(fontFamily: 'Instrument Serif', 
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.onSurface,
@@ -250,7 +249,7 @@ class HomeView extends ConsumerWidget {
       ),
       child: Text(
         label.toUpperCase(),
-        style: GoogleFonts.inter(
+        style: TextStyle(fontFamily: 'Inter', 
           fontSize: 9,
           fontWeight: FontWeight.bold,
           letterSpacing: 0.8,
@@ -302,7 +301,7 @@ class HomeView extends ConsumerWidget {
            color: theme.colorScheme.surfaceContainerLow,
            borderRadius: BorderRadius.circular(16),
            border: Border.all(
-             color: const Color(0x1F8BA5A7),
+             color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
            ),
          ),
          child: Column(
@@ -327,7 +326,7 @@ class HomeView extends ConsumerWidget {
                      item.title,
                      maxLines: 2,
                      overflow: TextOverflow.ellipsis,
-                     style: GoogleFonts.inter(
+                     style: TextStyle(fontFamily: 'Inter', 
                        fontSize: 13,
                        fontWeight: FontWeight.bold,
                        color: theme.colorScheme.onSurface,
@@ -338,7 +337,7 @@ class HomeView extends ConsumerWidget {
                      item.subtitle,
                      maxLines: 1,
                      overflow: TextOverflow.ellipsis,
-                     style: GoogleFonts.inter(
+                     style: TextStyle(fontFamily: 'Inter', 
                        fontSize: 10,
                        color: theme.colorScheme.onSurfaceVariant,
                      ),
@@ -366,7 +365,7 @@ class HomeView extends ConsumerWidget {
           color: theme.colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: const Color(0x1F8BA5A7),
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
           ),
         ),
         child: Row(
@@ -386,7 +385,7 @@ class HomeView extends ConsumerWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.inter(
+                    style: TextStyle(fontFamily: 'Inter', 
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurface,
@@ -395,7 +394,7 @@ class HomeView extends ConsumerWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: GoogleFonts.inter(
+                    style: TextStyle(fontFamily: 'Inter', 
                       fontSize: 11,
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -461,7 +460,7 @@ class HomeView extends ConsumerWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.inter(
+                  style: TextStyle(fontFamily: 'Inter', 
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSurface,
@@ -470,7 +469,7 @@ class HomeView extends ConsumerWidget {
                 const SizedBox(height: 6),
                 Text(
                   description,
-                  style: GoogleFonts.inter(
+                  style: TextStyle(fontFamily: 'Inter', 
                     fontSize: 12,
                     height: 1.5,
                     color: theme.colorScheme.onSurfaceVariant,

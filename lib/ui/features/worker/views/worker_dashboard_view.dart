@@ -11,6 +11,7 @@ import '../../admin/view_models/dispatch_provider.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../services/view_models/jobs_view_model.dart';
 import 'worker_job_details_view.dart';
+import '../../../shared/utils/date_extensions.dart';
 
 final _workerTabProvider = StateProvider<int>((ref) => 0);
 
@@ -237,14 +238,6 @@ class _WorkerJobCard extends ConsumerWidget {
   final bool isOpenBoard;
   final String? workerId;
 
-  String _formatDate(DateTime dt) {
-    final day = dt.day.toString().padLeft(2, '0');
-    final month = dt.month.toString().padLeft(2, '0');
-    final hour = dt.hour.toString().padLeft(2, '0');
-    final minute = dt.minute.toString().padLeft(2, '0');
-    return '$day/$month at $hour:$minute';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -330,7 +323,7 @@ class _WorkerJobCard extends ConsumerWidget {
                 Icon(CupertinoIcons.clock, size: 14, color: theme.colorScheme.onSurfaceVariant),
                 const SizedBox(width: 6),
                 Text(
-                  _formatDate(job.scheduleDateTime),
+                  job.scheduleDateTime.formattedShort,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontSize: 12,
@@ -421,4 +414,3 @@ class _WorkerJobCard extends ConsumerWidget {
     );
   }
 }
-

@@ -17,6 +17,7 @@ abstract class AuthRepository {
     required UserRole role,
   });
   Future<void> signOut();
+  void dispose();
 }
 
 // 1. Supabase Auth Repository Implementation
@@ -28,9 +29,10 @@ class SupabaseAuthRepository implements AuthRepository {
   final sb.SupabaseClient _client;
   final _controller = StreamController<AppUser?>.broadcast();
   AppUser? _currentUser;
+  StreamSubscription? _authSubscription;
 
   void _initStream() {
-    _client.auth.onAuthStateChange.listen((data) async {
+    _authSubscription = _client.auth.onAuthStateChange.listen((data) async {
       final user = data.session?.user;
       if (user == null) {
         _currentUser = null;
@@ -138,6 +140,12 @@ class SupabaseAuthRepository implements AuthRepository {
   Future<void> signOut() async {
     await _client.auth.signOut();
   }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    _controller.close();
+  }
 }
 
 // 2. Mock Auth Repository Implementation (for testing & fallback)
@@ -239,6 +247,11 @@ class MockAuthRepository implements AuthRepository {
     _currentUser = null;
     _controller.add(null);
   }
+
+  @override
+  void dispose() {
+    _controller.close();
+  }
 }
 
 // 3. Riverpod Provider definition
@@ -246,16 +259,21 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   const url = String.fromEnvironment('SUPABASE_URL', defaultValue: '');
   const anonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
 
+  AuthRepository repo;
   if (url.isEmpty || anonKey.isEmpty || url.contains('placeholder')) {
     debugPrint('AuthRepository: Using MOCK implementation (credentials missing/placeholders)');
-    return MockAuthRepository();
+    repo = MockAuthRepository();
+  } else {
+    try {
+      final client = SupabaseService.instance.client;
+      repo = SupabaseAuthRepository(client);
+    } catch (e) {
+      debugPrint('AuthRepository: Failed to get Supabase client ($e). Falling back to MOCK.');
+      repo = MockAuthRepository();
+    }
   }
 
-  try {
-    final client = SupabaseService.instance.client;
-    return SupabaseAuthRepository(client);
-  } catch (e) {
-    debugPrint('AuthRepository: Failed to get Supabase client ($e). Falling back to MOCK.');
-    return MockAuthRepository();
-  }
+  ref.onDispose(() => repo.dispose());
+
+  return repo;
 });

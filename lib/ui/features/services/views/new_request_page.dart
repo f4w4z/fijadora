@@ -6,6 +6,7 @@ import '../view_models/jobs_view_model.dart';
 import '../../../../data/services/gemini_service.dart';
 import '../../../../ui/core/theme.dart';
 import '../../../../ui/shared/widgets/app_bottom_sheet.dart';
+import '../../../shared/utils/date_extensions.dart';
 
 class NewRequestPage extends ConsumerStatefulWidget {
   const NewRequestPage({super.key});
@@ -65,9 +66,7 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
     super.dispose();
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
-  }
+
 
   Future<void> _selectDate() async {
     final picked = await showDatePicker(
@@ -414,7 +413,7 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
                             borderRadius: BorderRadius.circular(12),
                             child: InputDecorator(
                               decoration: const InputDecoration(labelText: 'Date'),
-                              child: Text(_formatDate(_selectedDate)),
+                              child: Text(_selectedDate.formattedDateOnly),
                             ),
                           ),
                         ),

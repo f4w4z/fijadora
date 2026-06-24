@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../data/repositories/shop_repository.dart';
 import '../view_models/cart_view_model.dart';
 import '../view_models/wishlist_view_model.dart';
@@ -85,10 +86,11 @@ class WishlistView extends ConsumerWidget {
                         child: SizedBox(
                           width: 72,
                           height: 72,
-                          child: Image.network(
-                            product.imageUrl,
+                          child: CachedNetworkImage(
+                            imageUrl: product.imageUrl,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
+                            placeholder: (context, url) => Container(color: theme.colorScheme.surfaceContainerHighest),
+                            errorWidget: (context, url, error) => Container(
                               color: theme.colorScheme.surfaceContainerHighest,
                               child: const Icon(CupertinoIcons.photo, size: 24),
                             ),

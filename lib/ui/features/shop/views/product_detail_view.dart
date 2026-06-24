@@ -10,6 +10,10 @@ import 'product_3d_view_page.dart';
 import 'cart_view.dart';
 import '../../../shared/utils/notification_helper.dart';
 import '../../../shared/widgets/app_bottom_sheet.dart';
+import 'widgets/product_image_gallery.dart';
+import 'widgets/write_review_sheet.dart';
+import 'widgets/product_detail_bottom_bar.dart';
+import 'widgets/product_detail_info_widgets.dart';
 
 class ProductDetailView extends ConsumerStatefulWidget {
   const ProductDetailView({
@@ -26,9 +30,6 @@ class ProductDetailView extends ConsumerStatefulWidget {
 }
 
 class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
-  // ---------------------------------------------------------------------------
-  // Build
-  // ---------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -55,25 +56,15 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ────────────────────────────────────────────────────────────────
-            // Swipeable multi-image gallery
-            // ────────────────────────────────────────────────────────────────
-            _ImageGallery(
+            ProductImageGallery(
               product: widget.product,
               heroTag: widget.heroTag,
             ),
-
-            // ────────────────────────────────────────────────────────────────
-            // Product Details Content
-            // ────────────────────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ────────────────────────────────────────────────
-                  // Category + stock badge
-                  // ────────────────────────────────────────────────
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -93,14 +84,10 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                           ),
                         ),
                       ),
-                      _StockBadge(count: widget.product.inventoryCount),
+                      StockBadge(count: widget.product.inventoryCount),
                     ],
                   ),
                   const SizedBox(height: 14),
-
-                  // ────────────────────────────────────────────────
-                  // Product name
-                  // ────────────────────────────────────────────────
                   Text(
                     widget.product.name,
                     style: theme.textTheme.displaySmall?.copyWith(
@@ -110,10 +97,6 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // ────────────────────────────────────────────────
-                  // Price + qty stepper
-                  // ────────────────────────────────────────────────
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -138,7 +121,6 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                           ),
                         ],
                       ),
-                      // Quantity stepper
                       if (inStock)
                         Container(
                           decoration: BoxDecoration(
@@ -150,7 +132,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              _StepperButton(
+                              QuantityStepperButton(
                                 icon: CupertinoIcons.minus,
                                 onTap: cartQty > 0
                                     ? () => ref
@@ -169,7 +151,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                                   ),
                                 ),
                               ),
-                              _StepperButton(
+                              QuantityStepperButton(
                                 icon: CupertinoIcons.plus,
                                 onTap: canAdd
                                     ? () => ref
@@ -183,14 +165,10 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                     ],
                   ),
                   const SizedBox(height: 28),
-
-                  // ────────────────────────────────────────────────
-                  // AR / 3D buttons
-                  // ────────────────────────────────────────────────
                   Row(
                     children: [
                       Expanded(
-                        child: _FeatureButton(
+                        child: FeatureButton(
                           icon: CupertinoIcons.eye,
                           label: 'AR View',
                           onTap: () => _simulateARView(context),
@@ -199,7 +177,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _FeatureButton(
+                        child: FeatureButton(
                           icon: CupertinoIcons.cube,
                           label: '3D Model',
                           onTap: () => _simulate3DView(context),
@@ -209,10 +187,6 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                     ],
                   ),
                   const SizedBox(height: 28),
-
-                  // ────────────────────────────────────────────────
-                  // Description
-                  // ────────────────────────────────────────────────
                   Text(
                     'About this piece',
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -228,10 +202,6 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                     ),
                   ),
                   const SizedBox(height: 32),
-
-                  // ────────────────────────────────────────────────
-                  // Reviews
-                  // ────────────────────────────────────────────────
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -255,7 +225,6 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                     ],
                   ),
                   const SizedBox(height: 12),
-
                   StreamBuilder<List<Map<String, dynamic>>>(
                     stream: shopRepo.streamReviews(widget.product.id),
                     builder: (context, snapshot) {
@@ -289,7 +258,6 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                           ),
                         );
                       }
-
                       return Column(
                         children: reviews.asMap().entries.map((entry) {
                           final i = entry.key;
@@ -297,7 +265,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                           final rating = (review['rating'] as num).toDouble();
                           return Padding(
                             padding: EdgeInsets.only(bottom: i < reviews.length - 1 ? 12 : 0),
-                            child: _ReviewCard(
+                            child: ReviewCard(
                               theme: theme,
                               review: review,
                               rating: rating,
@@ -313,11 +281,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
           ],
         ),
       ),
-
-      // ──────────────────────────────────────────────────────────────────────
-      // Bottom bar — Add to Cart
-      // ──────────────────────────────────────────────────────────────────────
-      bottomNavigationBar: _BottomBar(
+      bottomNavigationBar: ProductDetailBottomBar(
         theme: theme,
         inStock: inStock,
         maxAdded: maxAdded,
@@ -346,9 +310,6 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Transparent AppBar with floating buttons
-  // ---------------------------------------------------------------------------
   PreferredSizeWidget _buildTransparentAppBar(
     BuildContext context,
     ThemeData theme,
@@ -362,13 +323,13 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
       scrolledUnderElevation: 0,
       leading: Padding(
         padding: const EdgeInsets.only(left: 12),
-        child: _FloatingIconButton(
+        child: FloatingIconButton(
           icon: CupertinoIcons.chevron_left,
           onTap: () => Navigator.of(context).pop(),
         ),
       ),
       actions: [
-        _FloatingIconButton(
+        FloatingIconButton(
           icon: isWishlisted ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
           iconColor: isWishlisted ? Colors.red : null,
           onTap: () => shopRepo.toggleWishlist(widget.product.id),
@@ -377,7 +338,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
         Stack(
           alignment: Alignment.center,
           children: [
-            _FloatingIconButton(
+            FloatingIconButton(
               icon: CupertinoIcons.cart,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const CartView()),
@@ -409,9 +370,6 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Modals (unchanged logic, improved presentation is in the sheet itself)
-  // ---------------------------------------------------------------------------
   void _simulateARView(BuildContext context) {
     Navigator.push(
       context,
@@ -429,7 +387,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
   void _showWriteReviewSheet(BuildContext context) {
     showAppBottomSheet(
       context: context,
-      child: _WriteReviewSheet(
+      child: WriteReviewSheet(
         productId: widget.product.id,
         onSubmit: (rating, comment) async {
           await ref.read(shopRepositoryProvider).addReview(
@@ -438,830 +396,4 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
       ),
     );
   }
-
-  // ── _WriteReviewSheet ─────────────────────────────────────────────────
 }
-
-class _WriteReviewSheet extends StatefulWidget {
-  const _WriteReviewSheet({
-    required this.productId,
-    required this.onSubmit,
-  });
-
-  final String productId;
-  final Future<void> Function(double rating, String comment) onSubmit;
-
-  @override
-  State<_WriteReviewSheet> createState() => _WriteReviewSheetState();
-}
-
-class _WriteReviewSheetState extends State<_WriteReviewSheet> {
-  final _controller = TextEditingController();
-  double _rating = 5;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Write a Review', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            IconButton(
-              icon: const Icon(CupertinoIcons.clear),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Share your experience with this piece.',
-          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
-        ),
-        const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(5, (i) {
-            final val = i + 1;
-            return GestureDetector(
-              onTap: () => setState(() => _rating = val.toDouble()),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Icon(
-                  val <= _rating ? CupertinoIcons.star_fill : CupertinoIcons.star,
-                  size: 34,
-                  color: Colors.amber,
-                ),
-              ),
-            );
-          }),
-        ),
-        const SizedBox(height: 20),
-        TextField(
-          controller: _controller,
-          maxLines: 3,
-          decoration: const InputDecoration(
-            labelText: 'Comments',
-            hintText: 'Share your thoughts about this piece...',
-          ),
-        ),
-        const SizedBox(height: 24),
-        Row(
-          children: [
-            Expanded(
-              child: TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: ElevatedButton(
-                onPressed: () async {
-                  final comment = _controller.text.trim();
-                  if (comment.isEmpty) return;
-                  await widget.onSubmit(_rating, comment);
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                    context.showSnackBar(
-                      'Review submitted successfully!',
-                      type: SnackBarType.success,
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: theme.colorScheme.onPrimary,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: const Text('Submit Review', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-// =============================================================================
-// Sub-widgets
-// =============================================================================
-
-/// Swipeable multi-image gallery with page indicators and thumbnail strip
-class _ImageGallery extends StatefulWidget {
-  const _ImageGallery({
-    required this.product,
-    this.heroTag,
-  });
-  final Product product;
-  final String? heroTag;
-
-  @override
-  State<_ImageGallery> createState() => _ImageGalleryState();
-}
-
-class _ImageGalleryState extends State<_ImageGallery> {
-  late final PageController _pageController;
-  int _currentIndex = 0;
-
-  List<String> get _images {
-    final urls = widget.product.imageUrls;
-    if (urls.isNotEmpty) return urls;
-    if (widget.product.imageUrl.isNotEmpty) return [widget.product.imageUrl];
-    return [];
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final images = _images;
-    final hasMultiple = images.length > 1;
-    final galleryHeight = MediaQuery.of(context).size.height * 0.52;
-
-    return SizedBox(
-      height: galleryHeight,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // ── PageView of images ──────────────────────────────────────────
-          images.isEmpty
-              ? Container(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  child: Icon(CupertinoIcons.photo, size: 64, color: theme.colorScheme.onSurfaceVariant),
-                )
-              : PageView.builder(
-                  controller: _pageController,
-                  onPageChanged: (i) => setState(() => _currentIndex = i),
-                  itemCount: images.length,
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
-                      onTap: () => _openFullscreen(context, images, index),
-                      child: index == 0
-                          ? Hero(
-                              tag: widget.heroTag ?? 'product-img-${widget.product.id}',
-                              child: _NetworkImage(url: images[index]),
-                            )
-                          : _NetworkImage(url: images[index]),
-                    );
-                  },
-                ),
-          // No vignette gradients overlaying the image
-
-
-          // ── Image counter badge ─────────────────────────────────────────
-          if (hasMultiple)
-            Positioned(
-              right: 16,
-              bottom: 56,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.55),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-                ),
-                child: Text(
-                  '${_currentIndex + 1} / ${images.length}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ),
-
-          // ── Dot indicators ──────────────────────────────────────────────
-          if (hasMultiple)
-            Positioned(
-              bottom: 16,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(images.length, (i) {
-                  final isActive = i == _currentIndex;
-                  return GestureDetector(
-                    onTap: () => _pageController.animateToPage(
-                      i,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    ),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      width: isActive ? 20 : 6,
-                      height: 6,
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      decoration: BoxDecoration(
-                        color: isActive
-                            ? Colors.white
-                            : Colors.white.withValues(alpha: 0.45),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  void _openFullscreen(BuildContext context, List<String> images, int startIndex) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        opaque: false,
-        barrierColor: Colors.black,
-        pageBuilder: (context, animation, secondaryAnimation) => _FullscreenGallery(
-          images: images,
-          initialIndex: startIndex,
-          productId: widget.product.id,
-          heroTag: widget.heroTag,
-        ),
-      ),
-    );
-  }
-}
-
-/// Full-screen pinch-to-zoom gallery
-class _FullscreenGallery extends StatefulWidget {
-  const _FullscreenGallery({
-    required this.images,
-    required this.initialIndex,
-    required this.productId,
-    this.heroTag,
-  });
-  final List<String> images;
-  final int initialIndex;
-  final String productId;
-  final String? heroTag;
-
-  @override
-  State<_FullscreenGallery> createState() => _FullscreenGalleryState();
-}
-
-class _FullscreenGalleryState extends State<_FullscreenGallery> {
-  late int _currentIndex;
-  late final PageController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentIndex = widget.initialIndex;
-    _ctrl = PageController(initialPage: widget.initialIndex);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          PageView.builder(
-            controller: _ctrl,
-            onPageChanged: (i) => setState(() => _currentIndex = i),
-            itemCount: widget.images.length,
-            itemBuilder: (context, index) {
-              return InteractiveViewer(
-                minScale: 0.8,
-                maxScale: 4.0,
-                child: Center(
-                  child: index == widget.initialIndex
-                      ? Hero(
-                          tag: widget.heroTag ?? 'product-img-${widget.productId}',
-                          child: Image.network(
-                            widget.images[index],
-                            fit: BoxFit.contain,
-                            errorBuilder: (c, e, s) => const Icon(CupertinoIcons.photo, color: Colors.white54, size: 64),
-                          ),
-                        )
-                      : Image.network(
-                          widget.images[index],
-                          fit: BoxFit.contain,
-                          errorBuilder: (c, e, s) => const Icon(CupertinoIcons.photo, color: Colors.white54, size: 64),
-                        ),
-                ),
-              );
-            },
-          ),
-          // Close button
-          SafeArea(
-            child: Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(CupertinoIcons.xmark, color: Colors.white, size: 18),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Counter
-          SafeArea(
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${_currentIndex + 1} / ${widget.images.length}',
-                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Thumbnail strip at bottom
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 100,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [Colors.black.withValues(alpha: 0.8), Colors.transparent],
-                ),
-              ),
-              alignment: Alignment.bottomCenter,
-              padding: const EdgeInsets.only(bottom: 24),
-              child: SizedBox(
-                height: 56,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: widget.images.length,
-                  itemBuilder: (context, i) {
-                    final isActive = i == _currentIndex;
-                    return GestureDetector(
-                      onTap: () => _ctrl.animateToPage(
-                        i,
-                        duration: const Duration(milliseconds: 250),
-                        curve: Curves.easeInOut,
-                      ),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 56,
-                        height: 56,
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isActive ? Colors.white : Colors.transparent,
-                            width: 2,
-                          ),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(7),
-                          child: Image.network(
-                            widget.images[i],
-                            fit: BoxFit.cover,
-                            errorBuilder: (c, e, s) => Container(
-                              color: Colors.white12,
-                              child: const Icon(CupertinoIcons.photo, color: Colors.white54, size: 20),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Simple network image with error state
-class _NetworkImage extends StatelessWidget {
-  const _NetworkImage({required this.url});
-  final String url;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Image.network(
-      url,
-      fit: BoxFit.cover,
-      errorBuilder: (context, e, s) => Container(
-        color: theme.colorScheme.surfaceContainerHighest,
-        child: Icon(CupertinoIcons.photo, size: 64, color: theme.colorScheme.onSurfaceVariant),
-      ),
-    );
-  }
-}
-
-/// Circular floating icon button used in the AppBar overlay
-class _FloatingIconButton extends StatelessWidget {
-  const _FloatingIconButton({
-    required this.icon,
-    required this.onTap,
-    this.iconColor,
-  });
-
-  final IconData icon;
-  final VoidCallback? onTap;
-  final Color? iconColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.45),
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-        ),
-        child: Icon(icon, color: iconColor ?? Colors.white, size: 17),
-      ),
-    );
-  }
-}
-
-/// Inventory / stock status badge
-class _StockBadge extends StatelessWidget {
-  const _StockBadge({required this.count});
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    if (count <= 0) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.red.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-        ),
-        child: const Text(
-          'Out of Stock',
-          style: TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.w600),
-        ),
-      );
-    }
-    final isLow = count < 4;
-    final color = isLow ? Colors.orange : Colors.green;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        isLow ? 'Only $count left' : '$count in stock',
-        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-}
-
-/// AR / 3D feature action button
-class _FeatureButton extends StatelessWidget {
-  const _FeatureButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    required this.theme,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: theme.brightness == Brightness.dark
-              ? theme.colorScheme.surface
-              : const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: theme.brightness == Brightness.dark
-                ? theme.colorScheme.surfaceContainerHighest
-                : const Color(0xFFE5E5E5),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 20, color: theme.colorScheme.primary),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Quantity stepper button (+ / -)
-class _StepperButton extends StatelessWidget {
-  const _StepperButton({required this.icon, this.onTap});
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: onTap != null
-              ? theme.colorScheme.primary
-              : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          size: 14,
-          color: onTap != null ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-        ),
-      ),
-    );
-  }
-}
-
-/// A single review card
-class _ReviewCard extends StatelessWidget {
-  const _ReviewCard({
-    required this.theme,
-    required this.review,
-    required this.rating,
-  });
-
-  final ThemeData theme;
-  final Map<String, dynamic> review;
-  final double rating;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.surfaceContainerHighest,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 14,
-                    backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
-                    child: Text(
-                      (review['user'] as String? ?? 'G')[0].toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    review['user'] as String? ?? 'Guest User',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-              Text(
-                review['date'] as String? ?? '',
-                style: TextStyle(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 11,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: List.generate(5, (i) => Padding(
-              padding: const EdgeInsets.only(right: 2),
-              child: Icon(
-                i < rating ? CupertinoIcons.star_fill : CupertinoIcons.star,
-                size: 12,
-                color: Colors.amber,
-              ),
-            )),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            review['comment'] as String? ?? '',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.5,
-              fontSize: 13,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Bottom Add-to-Cart action bar
-class _BottomBar extends StatelessWidget {
-  const _BottomBar({
-    required this.theme,
-    required this.inStock,
-    required this.maxAdded,
-    required this.cartQty,
-    required this.product,
-    required this.onAddToCart,
-    required this.onViewCart,
-    required this.totalCartItems,
-  });
-
-  final ThemeData theme;
-  final bool inStock;
-  final bool maxAdded;
-  final int cartQty;
-  final Product product;
-  final VoidCallback? onAddToCart;
-  final VoidCallback onViewCart;
-  final int totalCartItems;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        border: Border(
-          top: BorderSide(
-            color: theme.brightness == Brightness.dark
-                ? const Color(0xFF222222)
-                : const Color(0xFFE8E8E8),
-          ),
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: Row(
-            children: [
-              // Cart icon button
-              if (totalCartItems > 0) ...[
-                GestureDetector(
-                  onTap: onViewCart,
-                  child: Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: theme.brightness == Brightness.dark
-                          ? const Color(0xFF1E1E1E)
-                          : const Color(0xFFF5F5F5),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: theme.brightness == Brightness.dark
-                            ? const Color(0xFF2A2A2A)
-                            : const Color(0xFFE5E5E5),
-                      ),
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Icon(CupertinoIcons.cart, size: 20, color: theme.colorScheme.onSurface),
-                        Positioned(
-                          right: 6,
-                          top: 6,
-                          child: Container(
-                            width: 15,
-                            height: 15,
-                            decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                            child: Center(
-                              child: Text(
-                                '$totalCartItems',
-                                style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-              ],
-              // Add to Cart button
-              Expanded(
-                child: SizedBox(
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: onAddToCart,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: inStock ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
-                      foregroundColor: inStock ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
-                      elevation: 0,
-                      padding: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (inStock && !maxAdded)
-                          const Icon(CupertinoIcons.bag_badge_plus, size: 16),
-                        if (inStock && !maxAdded) const SizedBox(width: 8),
-                        Text(
-                          !inStock
-                              ? 'Out of Stock'
-                              : maxAdded
-                                  ? 'Max in Cart ($cartQty)'
-                                  : 'Add to Cart',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Custom grid painter for the AR view overlay
-

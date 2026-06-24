@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../../domain/models/product.dart';
 import '../product_detail_view.dart';
@@ -278,7 +277,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                     bundle.name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.instrumentSerif(
+                    style: TextStyle(fontFamily: 'Instrument Serif', 
                       color: Colors.white,
                       fontSize: 20.0,
                       fontWeight: FontWeight.w400,
@@ -288,7 +287,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                   const SizedBox(height: 6.0),
                   Text(
                     "\$${bundle.price.toStringAsFixed(0)}",
-                    style: GoogleFonts.inter(
+                    style: TextStyle(fontFamily: 'Inter', 
                       color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 13.0,
                       fontWeight: FontWeight.w400,
@@ -314,7 +313,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                       ),
                       child: Text(
                         'Explore',
-                        style: GoogleFonts.inter(
+                        style: TextStyle(fontFamily: 'Inter', 
                           color: Colors.white,
                           fontSize: 11.0,
                           fontWeight: FontWeight.w500,

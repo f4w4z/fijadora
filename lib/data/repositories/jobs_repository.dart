@@ -15,6 +15,7 @@ abstract class JobsRepository {
   Future<MaintenanceJob> updateJobStatus({required String jobId, required JobStatus status});
   Future<MaintenanceJob> getJob({required String jobId});
   Future<MaintenanceJob> assignWorker({required String jobId, required String workerId});
+  void dispose();
 }
 
 // 1. Supabase Jobs Repository Implementation
@@ -65,6 +66,9 @@ class SupabaseJobsRepository implements JobsRepository {
         .single();
     return MaintenanceJob.fromJson(response);
   }
+
+  @override
+  void dispose() {}
 
   @override
   Future<MaintenanceJob> assignWorker({required String jobId, required String workerId}) async {
@@ -273,6 +277,11 @@ class MockJobsRepository implements JobsRepository {
     _notifyListeners(updated.customerId, UserRole.customer);
     return updated;
   }
+
+  @override
+  void dispose() {
+    _controller.close();
+  }
 }
 
 // 3. Riverpod Provider definition
@@ -280,16 +289,21 @@ final jobsRepositoryProvider = Provider<JobsRepository>((ref) {
   const url = String.fromEnvironment('SUPABASE_URL', defaultValue: '');
   const anonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
 
+  JobsRepository repo;
   if (url.isEmpty || anonKey.isEmpty || url.contains('placeholder')) {
     debugPrint('JobsRepository: Using MOCK implementation');
-    return MockJobsRepository();
+    repo = MockJobsRepository();
+  } else {
+    try {
+      final client = SupabaseService.instance.client;
+      repo = SupabaseJobsRepository(client);
+    } catch (e) {
+      debugPrint('JobsRepository: Failed to get Supabase client. Falling back to MOCK.');
+      repo = MockJobsRepository();
+    }
   }
 
-  try {
-    final client = SupabaseService.instance.client;
-    return SupabaseJobsRepository(client);
-  } catch (e) {
-    debugPrint('JobsRepository: Failed to get Supabase client. Falling back to MOCK.');
-    return MockJobsRepository();
-  }
+  ref.onDispose(() => repo.dispose());
+
+  return repo;
 });

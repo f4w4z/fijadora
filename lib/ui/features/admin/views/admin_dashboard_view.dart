@@ -10,6 +10,7 @@ import '../../auth/view_models/auth_view_model.dart';
 import '../../../../data/services/notification_service.dart';
 import '../../../../ui/shared/widgets/custom_pinned_header.dart';
 import '../../../../ui/shared/widgets/floating_header_layout.dart';
+import '../../../shared/utils/date_extensions.dart';
 import '../../../../ui/shared/widgets/animated_tap_scale.dart';
 import '../view_models/dispatch_provider.dart';
 
@@ -255,10 +256,6 @@ class _MaintenanceJobCardState extends ConsumerState<MaintenanceJobCard> {
     }
   }
 
-  String _formatDateTime(DateTime dt) {
-    return '${dt.day}/${dt.month}/${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-  }
-
   String _getInitials(String name) {
     if (name.isEmpty) return '';
     final parts = name.split(' ');
@@ -395,7 +392,7 @@ class _MaintenanceJobCardState extends ConsumerState<MaintenanceJobCard> {
                             Icon(CupertinoIcons.calendar_today, size: 13, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
                             const SizedBox(width: 6),
                             Text(
-                              'Scheduled: ${_formatDateTime(job.scheduleDateTime)}',
+                              'Scheduled: ${job.scheduleDateTime.formattedDateTime}',
                               style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                             ),
                           ],

@@ -318,17 +318,17 @@ class _PropertyHeader extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFFFF3B30).withValues(alpha: 0.08),
+                color: theme.colorScheme.error.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                    color: const Color(0xFFFF3B30).withValues(alpha: 0.2)),
+                    color: theme.colorScheme.error.withValues(alpha: 0.2)),
               ),
               child: Text(
                 '$alertCount alert${alertCount > 1 ? 's' : ''}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFFFF3B30),
+                  color: theme.colorScheme.error,
                 ),
               ),
             ),
@@ -502,7 +502,7 @@ class _UnitRoomsSection extends StatelessWidget {
                     final healthy = _isHealthy(assetStatus);
                     final statusColor = healthy
                         ? const Color(0xFF34C759)
-                        : const Color(0xFFFF3B30);
+                        : theme.colorScheme.error;
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8),

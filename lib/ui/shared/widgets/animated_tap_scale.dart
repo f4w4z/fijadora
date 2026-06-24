@@ -5,7 +5,7 @@ class AnimatedTapScale extends StatefulWidget {
     super.key,
     required this.child,
     required this.onTap,
-    this.scaleFactor = 0.96,
+    this.scaleFactor = 0.95,
   });
 
   final Widget child;
@@ -16,7 +16,8 @@ class AnimatedTapScale extends StatefulWidget {
   State<AnimatedTapScale> createState() => _AnimatedTapScaleState();
 }
 
-class _AnimatedTapScaleState extends State<AnimatedTapScale> with SingleTickerProviderStateMixin {
+class _AnimatedTapScaleState extends State<AnimatedTapScale>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -28,7 +29,7 @@ class _AnimatedTapScaleState extends State<AnimatedTapScale> with SingleTickerPr
       duration: const Duration(milliseconds: 100),
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: widget.scaleFactor).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
   }
 
@@ -43,17 +44,11 @@ class _AnimatedTapScaleState extends State<AnimatedTapScale> with SingleTickerPr
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTapDown: (_) => _controller.forward(),
-      onTapUp: (_) {
-        _controller.reverse();
-        widget.onTap();
-      },
+      onTapUp: (_) => _controller.reverse(),
       onTapCancel: () => _controller.reverse(),
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) => Transform.scale(
-          scale: _scaleAnimation.value,
-          child: child,
-        ),
+      onTap: widget.onTap,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
         child: widget.child,
       ),
     );

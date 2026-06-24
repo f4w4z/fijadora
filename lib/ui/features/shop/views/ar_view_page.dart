@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ArViewPage extends StatelessWidget {
   const ArViewPage({super.key});
@@ -13,8 +14,8 @@ class ArViewPage extends StatelessWidget {
         children: [
           Opacity(
             opacity: 0.3,
-            child: Image.network(
-              'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&auto=format&fit=crop&q=60',
+            child: CachedNetworkImage(
+              imageUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&auto=format&fit=crop&q=60',
               fit: BoxFit.cover,
             ),
           ),
