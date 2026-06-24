@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../auth/view_models/auth_view_model.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'home_detail_list_view.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../../shared/widgets/custom_pinned_header.dart';
@@ -13,289 +13,408 @@ class ProfileTabView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final user = ref.watch(authViewModelProvider).user;
-    final screenHeight = MediaQuery.of(context).size.height;
-    // Adaptive spacing: ~1.5% of screen height, clamped between 10–20px
-    final gap = (screenHeight * 0.015).clamp(10.0, 20.0);
 
     return Scaffold(
       body: FloatingHeaderLayout(
         header: CustomPinnedHeader(
           title: 'Home Hub',
           actions: [
-            HeaderActionButton(
-              icon: CupertinoIcons.square_arrow_right,
-              onTap: () async {
-                await ref.read(authViewModelProvider.notifier).signOut();
-              },
+            GroupedHeaderActions(
+              actions: [
+                GroupedActionItem(
+                  icon: CupertinoIcons.refresh,
+                  onTap: () {},
+                ),
+              ],
             ),
           ],
         ),
         bodyBuilder: (context, topPadding) {
-          return SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(24, topPadding + gap, 24, 120),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-            // User Header Info Card
-            if (user != null)
-              Container(
-                padding: const EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(20.0),
-                  border: Border.all(
-                    color: theme.colorScheme.surfaceContainerHighest,
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(child: SizedBox(height: topPadding)),
+
+              // Home Identity Card
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0x1F8BA5A7),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(CupertinoIcons.house_fill, size: 22, color: theme.colorScheme.primary),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Family Home',
+                                style: GoogleFonts.instrumentSerif(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '123 Main Street, Springfield',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'ALL GOOD',
+                            style: GoogleFonts.inter(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.0,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      child: Text(
-                        user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16.0),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user.name,
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            user.email,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
               ),
-              
-            Divider(
-              height: gap * 2,
-              thickness: 1,
-              color: theme.brightness == Brightness.dark
-                  ? theme.colorScheme.surfaceContainerHighest
-                  : const Color(0xFFE5E5E5),
-            ),
 
-            // Predictive Reminders Card (Rehaul)
-            Container(
-              padding: const EdgeInsets.all(20.0),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(20.0),
-                border: Border.all(
-                  color: theme.colorScheme.surfaceContainerHighest,
+              // Home Stats
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  child: Row(
+                    children: [
+                      _buildStatCard(theme, '6', 'Rooms', CupertinoIcons.square_grid_2x2, () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'rooms')),
+                        );
+                      }),
+                      const SizedBox(width: 12),
+                      _buildStatCard(theme, '4', 'Appliances', CupertinoIcons.device_desktop, () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'appliances')),
+                        );
+                      }),
+                      const SizedBox(width: 12),
+                      _buildStatCard(theme, '3', 'Warranties', CupertinoIcons.doc_text, () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'warranties')),
+                        );
+                      }),
+                    ],
+                  ),
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+
+              // Predictive Reminders
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+                  child: Row(
                     children: [
-                      Icon(CupertinoIcons.bell_fill, color: theme.colorScheme.primary, size: 18),
-                      const SizedBox(width: 8.0),
+                      Icon(CupertinoIcons.bell_fill, size: 16, color: theme.colorScheme.primary),
+                      const SizedBox(width: 8),
                       Text(
                         'Predictive Reminders',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontSize: 14,
+                        style: GoogleFonts.instrumentSerif(
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16.0),
-                  _buildReminderItem('Air Filter (HVAC)', 'Replace filter in 6 days (due quarterly)', theme),
-                  const SizedBox(height: 8.0),
-                  _buildReminderItem('Smoke Detector', 'Test batteries next week (due bi-annually)', theme),
-                ],
+                ),
               ),
-            ),
-
-            Divider(
-              height: gap * 2,
-              thickness: 1,
-              color: theme.brightness == Brightness.dark
-                  ? theme.colorScheme.surfaceContainerHighest
-                  : const Color(0xFFE5E5E5),
-            ),
-
-            // Digital Home Record Section
-            Text(
-              'Digital Home Record',
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Main features grid list
-            GridView(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16.0,
-                mainAxisSpacing: 16.0,
-                childAspectRatio: 1.3,
-              ),
-              children: [
-                _buildRecordCard('Rooms', '6 Rooms', CupertinoIcons.square_grid_2x2, theme, () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'rooms')),
-                  );
-                }),
-                _buildRecordCard('Appliances', '4 Managed', CupertinoIcons.device_desktop, theme, () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'appliances')),
-                  );
-                }),
-                _buildRecordCard('Paint Codes', '3 Active', CupertinoIcons.paintbrush, theme, () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'paint')),
-                  );
-                }),
-                _buildRecordCard('Warranties', '3 Enrolled', CupertinoIcons.doc_text, theme, () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'warranties')),
-                  );
-                }),
-              ],
-            ),
-
-            Divider(
-              height: gap * 2,
-              thickness: 1,
-              color: theme.brightness == Brightness.dark
-                  ? theme.colorScheme.surfaceContainerHighest
-                  : const Color(0xFFE5E5E5),
-            ),
-
-            // Maintenance History Trigger
-            AnimatedTapScale(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'history')),
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(20.0),
-                  border: Border.all(
-                    color: theme.colorScheme.surfaceContainerHighest,
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                  child: _buildReminderCard(
+                    theme: theme,
+                    title: 'Air Filter (HVAC)',
+                    subtitle: 'Replace filter in 6 days',
+                    detail: 'Due quarterly',
+                    isUrgent: true,
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                  child: _buildReminderCard(
+                    theme: theme,
+                    title: 'Smoke Detector',
+                    subtitle: 'Test batteries next week',
+                    detail: 'Due bi-annually',
+                    isUrgent: false,
+                  ),
+                ),
+              ),
+
+              // Digital Home Record
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+                  child: Row(
+                    children: [
+                      Icon(CupertinoIcons.doc_text, size: 16, color: theme.colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Digital Home Record',
+                        style: GoogleFonts.instrumentSerif(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
                       ),
-                      child: Icon(CupertinoIcons.clock, color: theme.colorScheme.primary, size: 20),
-                    ),
-                    const SizedBox(width: 16.0),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    ],
+                  ),
+                ),
+              ),
+
+              // Record Grid
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.3,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final items = [
+                        _RecordGridItem('Rooms', '6 Rooms', CupertinoIcons.square_grid_2x2, () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'rooms')),
+                          );
+                        }),
+                        _RecordGridItem('Appliances', '4 Managed', CupertinoIcons.device_desktop, () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'appliances')),
+                          );
+                        }),
+                        _RecordGridItem('Paint Codes', '3 Active', CupertinoIcons.paintbrush, () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'paint')),
+                          );
+                        }),
+                        _RecordGridItem('Warranties', '3 Enrolled', CupertinoIcons.doc_text, () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'warranties')),
+                          );
+                        }),
+                      ];
+                      return _buildGridCard(theme: theme, item: items[index]);
+                    },
+                    childCount: 4,
+                  ),
+                ),
+              ),
+
+              // Maintenance History
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  child: AnimatedTapScale(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'history')),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0x1F8BA5A7),
+                        ),
+                      ),
+                      child: Row(
                         children: [
-                          Text(
-                            'Maintenance History',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(CupertinoIcons.clock, size: 18, color: theme.colorScheme.primary),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Maintenance History',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'View past invoices, repairs, and receipts',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'View past invoices, repairs, and receipts',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontSize: 12,
-                            ),
-                          ),
+                          Icon(CupertinoIcons.chevron_right, size: 16, color: theme.colorScheme.onSurfaceVariant),
                         ],
                       ),
                     ),
-                    Icon(CupertinoIcons.chevron_right, size: 16, color: theme.colorScheme.onSurfaceVariant),
-                  ],
+                  ),
                 ),
               ),
-            ),
-                ],
-              ),
-            );
-          },
-        ),
-      );
+
+              const SliverToBoxAdapter(child: SizedBox(height: 120)),
+            ],
+          );
+        },
+      ),
+    );
   }
 
-  Widget _buildReminderItem(String title, String subtitle, ThemeData theme) {
+  Widget _buildStatCard(ThemeData theme, String value, String label, IconData icon, VoidCallback onTap) {
+    return Expanded(
+      child: AnimatedTapScale(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0x1F8BA5A7),
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, size: 18, color: theme.colorScheme.primary),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: GoogleFonts.instrumentSerif(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReminderCard({
+    required ThemeData theme,
+    required String title,
+    required String subtitle,
+    required String detail,
+    required bool isUrgent,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? theme.colorScheme.surfaceContainerHigh
-            : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.brightness == Brightness.dark
-              ? theme.colorScheme.surfaceContainerHighest
-              : const Color(0xFFE5E5E5),
+          color: isUrgent
+              ? Colors.orange.withValues(alpha: 0.3)
+              : const Color(0x1F8BA5A7),
         ),
       ),
       child: Row(
         children: [
           Container(
-            width: 8,
-            height: 8,
-            decoration: const BoxDecoration(
-              color: Colors.orange,
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: isUrgent ? Colors.orange : theme.colorScheme.primary,
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
                 ),
               ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: isUrgent
+                  ? Colors.orange.withValues(alpha: 0.1)
+                  : theme.colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              detail.toUpperCase(),
+              style: GoogleFonts.inter(
+                fontSize: 8,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+                color: isUrgent ? Colors.orange : theme.colorScheme.primary,
+              ),
             ),
           ),
         ],
@@ -303,16 +422,16 @@ class ProfileTabView extends ConsumerWidget {
     );
   }
 
-  Widget _buildRecordCard(String title, String count, IconData icon, ThemeData theme, VoidCallback onTap) {
+  Widget _buildGridCard({required ThemeData theme, required _RecordGridItem item}) {
     return AnimatedTapScale(
-      onTap: onTap,
+      onTap: item.onTap,
       child: Container(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(20.0),
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: theme.colorScheme.surfaceContainerHighest,
+            color: const Color(0x1F8BA5A7),
           ),
         ),
         child: Column(
@@ -320,29 +439,30 @@ class ProfileTabView extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, size: 20, color: theme.colorScheme.primary),
+              child: Icon(item.icon, size: 18, color: theme.colorScheme.primary),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  item.title,
+                  style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  count,
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  item.subtitle,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
                     color: theme.colorScheme.onSurfaceVariant,
-                    fontSize: 12,
                   ),
                 ),
               ],
@@ -352,4 +472,13 @@ class ProfileTabView extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _RecordGridItem {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  _RecordGridItem(this.title, this.subtitle, this.icon, this.onTap);
 }
