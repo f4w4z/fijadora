@@ -10,6 +10,7 @@ import 'product_detail_view.dart';
 import 'wishlist_view.dart';
 import '../../../../ui/shared/widgets/animated_tap_scale.dart';
 import '../../../../ui/shared/widgets/custom_pinned_header.dart';
+import '../../../../ui/shared/widgets/floating_header_layout.dart';
 import '../../../shared/utils/notification_helper.dart';
 
 
@@ -49,76 +50,81 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
     final productsAsync = ref.watch(productsStreamProvider);
 
     return Scaffold(
-      body: Column(
-        children: [
-          CustomPinnedHeader(
-            title: 'Shop',
-            actions: [
-              GroupedHeaderActions(
-                actions: [
-                  GroupedActionItem(
-                    icon: CupertinoIcons.heart,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => const WishlistView()),
-                      );
-                    },
-                  ),
-                  GroupedActionItem(
-                    icon: CupertinoIcons.cart,
-                    badgeCount: totalCartItems,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => const CartView()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
-            bottomChild: CupertinoSearchTextField(
-              placeholder: 'Search pieces...',
-              onChanged: (val) => setState(() => _searchQuery = val),
-              style: TextStyle(color: theme.colorScheme.onSurface),
-              placeholderStyle: TextStyle(
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-              ),
-              itemColor: theme.colorScheme.onSurfaceVariant,
-              decoration: BoxDecoration(
-                color: theme.brightness == Brightness.dark
-                    ? theme.inputDecorationTheme.fillColor
-                    : const Color(0xFFF0F0F0),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: theme.brightness == Brightness.dark
-                      ? theme.colorScheme.surfaceContainerHighest
-                      : const Color(0xFFE5E5E5),
+      body: FloatingHeaderLayout(
+        header: CustomPinnedHeader(
+          title: 'Shop',
+          actions: [
+            GroupedHeaderActions(
+              actions: [
+                GroupedActionItem(
+                  icon: CupertinoIcons.heart,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => const WishlistView()),
+                    );
+                  },
                 ),
+                GroupedActionItem(
+                  icon: CupertinoIcons.cart,
+                  badgeCount: totalCartItems,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => const CartView()),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+          bottomChild: CupertinoSearchTextField(
+            placeholder: 'Search pieces...',
+            onChanged: (val) => setState(() => _searchQuery = val),
+            style: TextStyle(color: theme.colorScheme.onSurface),
+            placeholderStyle: TextStyle(
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+            ),
+            itemColor: theme.colorScheme.onSurfaceVariant,
+            decoration: BoxDecoration(
+              color: theme.brightness == Brightness.dark
+                  ? theme.inputDecorationTheme.fillColor
+                  : const Color(0xFFF0F0F0),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.brightness == Brightness.dark
+                    ? theme.colorScheme.surfaceContainerHighest
+                    : const Color(0xFFE5E5E5),
               ),
             ),
           ),
-          Expanded(
-            child: productsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(child: Text('Error: $error')),
-              data: (products) {
+        ),
+        bodyBuilder: (context, topPadding) {
+          return productsAsync.when(
+            loading: () => Padding(
+              padding: EdgeInsets.only(top: topPadding),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, stack) => Padding(
+              padding: EdgeInsets.only(top: topPadding),
+              child: Center(child: Text('Error: $error')),
+            ),
+            data: (products) {
+              // Extract categories dynamically
+              final categories = ['All Products', ...products.map((p) => p.category).toSet()];
 
-                // Extract categories dynamically
-                final categories = ['All Products', ...products.map((p) => p.category).toSet()];
+              final bundleProducts = products.where((p) => p.category == 'Bundles').toList();
 
-                final bundleProducts = products.where((p) => p.category == 'Bundles').toList();
+              final filteredProducts = products.where((p) {
+                final matchesCategory = _selectedCategory == 'All Products' || p.category == _selectedCategory;
+                final matchesSearch = _searchQuery.isEmpty ||
+                    p.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                    p.description.toLowerCase().contains(_searchQuery.toLowerCase());
+                return matchesCategory && matchesSearch;
+              }).toList();
 
-                final filteredProducts = products.where((p) {
-                  final matchesCategory = _selectedCategory == 'All Products' || p.category == _selectedCategory;
-                  final matchesSearch = _searchQuery.isEmpty ||
-                      p.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                      p.description.toLowerCase().contains(_searchQuery.toLowerCase());
-                  return matchesCategory && matchesSearch;
-                }).toList();
-
-                return CustomScrollView(
-                  slivers: [
-                    SliverToBoxAdapter(
+              return CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(child: SizedBox(height: topPadding)),
+                  SliverToBoxAdapter(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -474,11 +480,10 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                   ],
                 );
               },
-            ),
-          ),
-        ],
-      ),
-    );
+            );
+          },
+        ),
+      );
   }
 
   Widget _buildCategoryChip(String label, bool isSelected, ThemeData theme) {

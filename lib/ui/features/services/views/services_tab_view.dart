@@ -8,6 +8,7 @@ import '../view_models/jobs_view_model.dart';
 import '../../../../data/services/gemini_service.dart';
 import '../../../../ui/shared/widgets/shimmer_loading.dart';
 import '../../../../ui/shared/widgets/custom_pinned_header.dart';
+import '../../../../ui/shared/widgets/floating_header_layout.dart';
 import '../../../../ui/features/services/views/live_tracking_view.dart';
 import '../../../../ui/features/services/views/voice_assistant_sheet.dart';
 import '../../profile/views/home_detail_list_view.dart';
@@ -118,126 +119,130 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
     final jobsViewModel = ref.watch(jobsViewModelProvider);
 
     return Scaffold(
-      body: Column(
-        children: [
-          CustomPinnedHeader(
-            title: 'Services',
-            actions: [
-              GroupedHeaderActions(
-                actions: [
-                  GroupedActionItem(
-                    icon: CupertinoIcons.add,
-                    onTap: () => _showNewRequestSheet(context),
-                  ),
-                  GroupedActionItem(
-                    icon: CupertinoIcons.qrcode_viewfinder,
-                    onTap: () => _showQrScannerSim(context),
-                  ),
-                  GroupedActionItem(
-                    icon: CupertinoIcons.mic_fill,
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => const VoiceAssistantSheet(),
-                      );
-                    },
-                  ),
-                  GroupedActionItem(
-                    icon: CupertinoIcons.refresh,
-                    onTap: () => ref.invalidate(jobsViewModelProvider),
-                  ),
-                ],
-              ),
-            ],
-            bottomChild: CupertinoSearchTextField(
-              placeholder: 'Search requests...',
-              onChanged: (val) => setState(() => _searchQuery = val),
-              style: TextStyle(color: theme.colorScheme.onSurface),
-              placeholderStyle: TextStyle(
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-              ),
-              itemColor: theme.colorScheme.onSurfaceVariant,
-              decoration: BoxDecoration(
-                color: theme.brightness == Brightness.dark
-                    ? theme.inputDecorationTheme.fillColor
-                    : const Color(0xFFF0F0F0),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: theme.brightness == Brightness.dark
-                      ? theme.colorScheme.surfaceContainerHighest
-                      : const Color(0xFFE5E5E5),
+      body: FloatingHeaderLayout(
+        header: CustomPinnedHeader(
+          title: 'Services',
+          actions: [
+            GroupedHeaderActions(
+              actions: [
+                GroupedActionItem(
+                  icon: CupertinoIcons.add,
+                  onTap: () => _showNewRequestSheet(context),
                 ),
+                GroupedActionItem(
+                  icon: CupertinoIcons.qrcode_viewfinder,
+                  onTap: () => _showQrScannerSim(context),
+                ),
+                GroupedActionItem(
+                  icon: CupertinoIcons.mic_fill,
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => const VoiceAssistantSheet(),
+                    );
+                  },
+                ),
+                GroupedActionItem(
+                  icon: CupertinoIcons.refresh,
+                  onTap: () => ref.invalidate(jobsViewModelProvider),
+                ),
+              ],
+            ),
+          ],
+          bottomChild: CupertinoSearchTextField(
+            placeholder: 'Search requests...',
+            onChanged: (val) => setState(() => _searchQuery = val),
+            style: TextStyle(color: theme.colorScheme.onSurface),
+            placeholderStyle: TextStyle(
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+            ),
+            itemColor: theme.colorScheme.onSurfaceVariant,
+            decoration: BoxDecoration(
+              color: theme.brightness == Brightness.dark
+                  ? theme.inputDecorationTheme.fillColor
+                  : const Color(0xFFF0F0F0),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.brightness == Brightness.dark
+                    ? theme.colorScheme.surfaceContainerHighest
+                    : const Color(0xFFE5E5E5),
               ),
             ),
           ),
-          Expanded(
-            child: _buildBody(context, jobsViewModel),
-          ),
-        ],
+        ),
+        bodyBuilder: (context, topPadding) {
+          return _buildBody(context, jobsViewModel, topPadding);
+        },
       ),
     );
   }
 
-  Widget _buildBody(BuildContext context, JobsViewModel vm) {
+  Widget _buildBody(BuildContext context, JobsViewModel vm, double topPadding) {
     if (vm.isLoading && vm.jobs.isEmpty) {
-      return const ShimmerListPlaceholder(
-        padding: EdgeInsets.fromLTRB(24, 16, 24, 96),
+      return ShimmerListPlaceholder(
+        padding: EdgeInsets.fromLTRB(24, topPadding + 16, 24, 96),
       );
     }
 
     if (vm.errorMessage != null && vm.jobs.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(CupertinoIcons.exclamationmark_triangle, size: 48, color: Colors.red),
-              const SizedBox(height: 16),
-              Text(
-                'Something went wrong',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 18),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                vm.errorMessage!,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
+      return Padding(
+        padding: EdgeInsets.only(top: topPadding),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(CupertinoIcons.exclamationmark_triangle, size: 48, color: Colors.red),
+                const SizedBox(height: 16),
+                Text(
+                  'Something went wrong',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 18),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  vm.errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
           ),
         ),
       );
     }
 
     if (vm.jobs.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                CupertinoIcons.wrench,
-                size: 64,
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'No maintenance requests',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 18),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Everything in your home is running smoothly. Need something repaired? Request a service below.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-            ],
+      return Padding(
+        padding: EdgeInsets.only(top: topPadding),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  CupertinoIcons.wrench,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'No maintenance requests',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 18),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Everything in your home is running smoothly. Need something repaired? Request a service below.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -250,7 +255,7 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
           job.tradeType.displayName.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
 
-    return _JobList(jobs: filteredJobs);
+    return _JobList(jobs: filteredJobs, topPadding: topPadding);
   }
 
   void _showNewRequestSheet(BuildContext context) {
@@ -264,13 +269,14 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
 }
 
 class _JobList extends StatelessWidget {
-  const _JobList({required this.jobs});
+  const _JobList({required this.jobs, required this.topPadding});
   final List<MaintenanceJob> jobs;
+  final double topPadding;
 
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 96),
+      padding: EdgeInsets.fromLTRB(24, topPadding + 16, 24, 96),
       itemCount: jobs.length,
       separatorBuilder: (_, _) => const SizedBox(height: 16),
       itemBuilder: (context, index) {

@@ -9,6 +9,7 @@ import '../../../../domain/models/user_role.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../../../data/services/notification_service.dart';
 import '../../../../ui/shared/widgets/custom_pinned_header.dart';
+import '../../../../ui/shared/widgets/floating_header_layout.dart';
 import '../../../../ui/shared/widgets/animated_tap_scale.dart';
 import '../view_models/dispatch_provider.dart';
 
@@ -34,41 +35,42 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> {
     final jobsRepo = ref.watch(jobsRepositoryProvider);
 
     return Scaffold(
-      body: Column(
-        children: [
-          CustomPinnedHeader(
-            title: 'Operations Portal',
-            actions: [
-              HeaderActionButton(
-                icon: CupertinoIcons.square_arrow_right,
-                onTap: () async {
-                  await ref.read(authViewModelProvider.notifier).signOut();
-                },
-              ),
-            ],
-            bottomChild: SizedBox(
-              width: double.infinity,
-              child: CupertinoSlidingSegmentedControl<int>(
-                groupValue: _activeTab,
-                children: const {
-                  0: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Text('Jobs Queue', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                  ),
-                  1: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Text('Metrics', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                  ),
-                },
-                onValueChanged: (val) {
-                  if (val != null) {
-                    setState(() => _activeTab = val);
-                  }
-                },
-              ),
+      body: FloatingHeaderLayout(
+        header: CustomPinnedHeader(
+          title: 'Operations Portal',
+          actions: [
+            HeaderActionButton(
+              icon: CupertinoIcons.square_arrow_right,
+              onTap: () async {
+                await ref.read(authViewModelProvider.notifier).signOut();
+              },
+            ),
+          ],
+          bottomChild: SizedBox(
+            width: double.infinity,
+            child: CupertinoSlidingSegmentedControl<int>(
+              groupValue: _activeTab,
+              children: const {
+                0: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Text('Jobs Queue', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                ),
+                1: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Text('Metrics', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                ),
+              },
+              onValueChanged: (val) {
+                if (val != null) {
+                  setState(() => _activeTab = val);
+                }
+              },
             ),
           ),
-          Expanded(
+        ),
+        bodyBuilder: (context, topPadding) {
+          return Padding(
+            padding: EdgeInsets.only(top: topPadding),
             child: StreamBuilder<List<MaintenanceJob>>(
               stream: jobsRepo.streamJobs(userId: 'admin', role: UserRole.admin),
               builder: (context, snapshot) {
@@ -89,8 +91,8 @@ class _AdminDashboardViewState extends ConsumerState<AdminDashboardView> {
                 );
               },
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

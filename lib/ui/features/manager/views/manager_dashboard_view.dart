@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../../shared/widgets/custom_pinned_header.dart';
+import '../../../shared/widgets/floating_header_layout.dart';
 
 class ManagerDashboardView extends ConsumerStatefulWidget {
   const ManagerDashboardView({super.key});
@@ -106,20 +107,21 @@ class _ManagerDashboardViewState extends ConsumerState<ManagerDashboardView> {
         : const Color(0xFFE5E5E5);
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: CustomPinnedHeader(
-              title: 'Properties',
-              actions: [
-                HeaderActionButton(
-                  icon: CupertinoIcons.square_arrow_right,
-                  onTap: () async => authViewModel.signOut(),
-                ),
-              ],
+      body: FloatingHeaderLayout(
+        header: CustomPinnedHeader(
+          title: 'Properties',
+          actions: [
+            HeaderActionButton(
+              icon: CupertinoIcons.square_arrow_right,
+              onTap: () async => authViewModel.signOut(),
             ),
-          ),
-          SliverPadding(
+          ],
+        ),
+        bodyBuilder: (context, topPadding) {
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(child: SizedBox(height: topPadding)),
+              SliverPadding(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
@@ -156,9 +158,11 @@ class _ManagerDashboardViewState extends ConsumerState<ManagerDashboardView> {
             ),
           ),
         ],
-      ),
-    );
-  }
+      );
+    },
+   ),
+  );
+ }
 
   int _countAlerts(List units) {
     int count = 0;

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../ui/shared/widgets/custom_pinned_header.dart';
+import '../../../../ui/shared/widgets/floating_header_layout.dart';
 import '../../../../ui/shared/widgets/animated_tap_scale.dart';
 import '../../../../data/repositories/jobs_repository.dart';
 import '../../../../data/services/notification_service.dart';
@@ -28,20 +29,21 @@ class WorkerDashboardView extends ConsumerWidget {
     final openJobs = jobsViewModel.jobs.where((j) => j.workerId == null || j.workerId!.isEmpty).toList();
 
     return Scaffold(
-      body: Column(
-        children: [
-          CustomPinnedHeader(
-            title: 'Worker Portal',
-            actions: [
-              HeaderActionButton(
-                icon: CupertinoIcons.square_arrow_right,
-                onTap: () async {
-                  await ref.read(authViewModelProvider.notifier).signOut();
-                },
-              ),
-            ],
-          ),
-          Expanded(
+      body: FloatingHeaderLayout(
+        header: CustomPinnedHeader(
+          title: 'Worker Portal',
+          actions: [
+            HeaderActionButton(
+              icon: CupertinoIcons.square_arrow_right,
+              onTap: () async {
+                await ref.read(authViewModelProvider.notifier).signOut();
+              },
+            ),
+          ],
+        ),
+        bodyBuilder: (context, topPadding) {
+          return Padding(
+            padding: EdgeInsets.only(top: topPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -131,8 +133,8 @@ class WorkerDashboardView extends ConsumerWidget {
                 ),
               ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

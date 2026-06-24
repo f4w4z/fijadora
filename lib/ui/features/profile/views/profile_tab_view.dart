@@ -5,6 +5,7 @@ import '../../auth/view_models/auth_view_model.dart';
 import 'home_detail_list_view.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../../shared/widgets/custom_pinned_header.dart';
+import '../../../shared/widgets/floating_header_layout.dart';
 
 class ProfileTabView extends ConsumerWidget {
   const ProfileTabView({super.key});
@@ -18,23 +19,22 @@ class ProfileTabView extends ConsumerWidget {
     final gap = (screenHeight * 0.015).clamp(10.0, 20.0);
 
     return Scaffold(
-      body: Column(
-        children: [
-          CustomPinnedHeader(
-            title: 'Home Hub',
-            actions: [
-              HeaderActionButton(
-                icon: CupertinoIcons.square_arrow_right,
-                onTap: () async {
-                  await ref.read(authViewModelProvider.notifier).signOut();
-                },
-              ),
-            ],
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(24, gap, 24, 120),
-              child: Column(
+      body: FloatingHeaderLayout(
+        header: CustomPinnedHeader(
+          title: 'Home Hub',
+          actions: [
+            HeaderActionButton(
+              icon: CupertinoIcons.square_arrow_right,
+              onTap: () async {
+                await ref.read(authViewModelProvider.notifier).signOut();
+              },
+            ),
+          ],
+        ),
+        bodyBuilder: (context, topPadding) {
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(24, topPadding + gap, 24, 120),
+            child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
             // User Header Info Card
@@ -248,11 +248,10 @@ class ProfileTabView extends ConsumerWidget {
             ),
                 ],
               ),
-            ),
-          ),
-        ],
-      ),
-    );
+            );
+          },
+        ),
+      );
   }
 
   Widget _buildReminderItem(String title, String subtitle, ThemeData theme) {

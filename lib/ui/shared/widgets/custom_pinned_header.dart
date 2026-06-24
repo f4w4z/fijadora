@@ -16,74 +16,41 @@ class CustomPinnedHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bgColor = theme.scaffoldBackgroundColor;
 
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        // Header background + content
-        Container(
-          decoration: BoxDecoration(
-            color: bgColor.withValues(alpha: 0.97),
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 12.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: actions,
-                      ),
-                    ],
+    return SafeArea(
+      bottom: false,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(24.0, 12.0, 24.0, 4.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.5,
+                    ),
                   ),
-                  if (bottomChild != null) ...[
-                    const SizedBox(height: 12.0),
-                    bottomChild!,
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
-        // Fade overlay that bleeds below the header
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: -20,
-          height: 20,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    bgColor.withValues(alpha: 0.97),
-                    bgColor.withValues(alpha: 0.0),
-                  ],
                 ),
-              ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: actions,
+                ),
+              ],
             ),
-          ),
+            if (bottomChild != null) ...[
+              const SizedBox(height: 12.0),
+              bottomChild!,
+            ],
+          ],
         ),
-      ],
+      ),
     );
   }
 }
