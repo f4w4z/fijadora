@@ -267,7 +267,7 @@ class _NavItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = theme.brightness == Brightness.dark;
-    final double targetWidth = isSelected ? 128.0 : 48.0;
+    final double targetWidth = isSelected ? 128.0 : 52.0;
 
     return GestureDetector(
       onTap: onTap,
@@ -284,46 +284,60 @@ class _NavItemWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(26),
         ),
         padding: const EdgeInsets.all(6.0),
-        child: Row(
+        child: Stack(
           children: [
-            // Icon wrapper circle
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOutCubic,
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isSelected ? theme.colorScheme.primary : Colors.transparent,
-              ),
-              child: AnimatedBuilder(
-                animation: bounceAnimation,
-                builder: (context, child) =>
-                    Transform.scale(scale: bounceAnimation.value, child: child),
-                child: Icon(
-                  isSelected ? item.activeIcon : item.icon,
-                  size: 20,
-                  color: isSelected ? theme.colorScheme.onPrimary : inactiveColor,
+            // Text label positioned next to the icon area
+            Positioned(
+              left: 42, // 36 (icon width) + 6 (spacing)
+              right: 0,
+              top: 0,
+              bottom: 0,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const NeverScrollableScrollPhysics(),
+                  child: Container(
+                    width: 60,
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.only(left: 2.0, right: 2.0),
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 200),
+                      style: TextStyle(
+                        color: isSelected
+                            ? (isDark ? Colors.white : const Color(0xFF1A1A1A))
+                            : Colors.transparent,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                      child: Text(item.label),
+                    ),
+                  ),
                 ),
               ),
             ),
-            // Expanded text label with singlechildview to prevent overflow during resize
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                physics: const NeverScrollableScrollPhysics(),
-                child: Container(
-                  width: 60,
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.only(left: 6.0, right: 2.0),
-                  child: AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 200),
-                    style: TextStyle(
-                      color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                    child: Text(item.label),
+            // Icon wrapper circle
+            AnimatedAlign(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOutCubic,
+              alignment: isSelected ? Alignment.centerLeft : Alignment.center,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOutCubic,
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+                ),
+                child: AnimatedBuilder(
+                  animation: bounceAnimation,
+                  builder: (context, child) =>
+                      Transform.scale(scale: bounceAnimation.value, child: child),
+                  child: Icon(
+                    isSelected ? item.activeIcon : item.icon,
+                    size: 20,
+                    color: isSelected ? theme.colorScheme.onPrimary : inactiveColor,
                   ),
                 ),
               ),
