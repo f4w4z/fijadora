@@ -1,11 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../domain/models/user_role.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../../shared/widgets/custom_pinned_header.dart';
 import '../../../shared/widgets/floating_header_layout.dart';
+import '../../../core/theme.dart';
+import '../../profile/views/home_detail_list_view.dart';
 
 class HomeView extends ConsumerWidget {
   const HomeView({super.key});
@@ -13,7 +14,6 @@ class HomeView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authViewModelProvider).user;
-    final theme = Theme.of(context);
 
     if (user == null) {
       return const Scaffold(
@@ -24,73 +24,150 @@ class HomeView extends ConsumerWidget {
     return Scaffold(
       body: FloatingHeaderLayout(
         header: CustomPinnedHeader(
-          title: 'Profile',
+          title: 'Home',
           actions: [
-            GroupedHeaderActions(
-              actions: [
-                GroupedActionItem(
-                  icon: CupertinoIcons.square_arrow_right,
-                  onTap: () async {
-                    await ref.read(authViewModelProvider.notifier).signOut();
-                  },
+            GestureDetector(
+              onTap: () async {
+                await ref.read(authViewModelProvider.notifier).signOut();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardSurface,
+                  borderRadius: BorderRadius.circular(28),
                 ),
-              ],
+                child: const Text(
+                  'Sign Out',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.onSurface,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
         bodyBuilder: (context, topPadding) {
           return CustomScrollView(
             slivers: [
-              SliverToBoxAdapter(child: SizedBox(height: topPadding)),
+              SliverToBoxAdapter(child: SizedBox(height: topPadding + 8)),
 
-              // Profile Card
+              // ─── Profile Hero ──────────────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
+                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: AppTheme.accent.withValues(alpha: 0.12),
+                        child: Text(
+                          user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w400,
+                            color: AppTheme.accent,
+                          ),
+                        ),
                       ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              user.name,
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w300,
+                                color: AppTheme.onSurface,
+                                height: 1.0,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              user.email,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: AppTheme.textSecondary,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // ─── Home Address Card ─────────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(28, 48, 28, 0),
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: AppTheme.cardSurface,
+                      borderRadius: BorderRadius.circular(24),
                     ),
                     child: Row(
                       children: [
-                        CircleAvatar(
-                          radius: 32,
-                          backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
-                          child: Text(
-                            user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                            style: TextStyle(fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
-                            ),
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accent.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16),
                           ),
+                          child: const Icon(CupertinoIcons.house_fill, size: 22, color: AppTheme.accent),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 20),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                user.name,
-                                style: TextStyle(fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.onSurface,
+                              const Text(
+                                'Family Home',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppTheme.onSurface,
+                                  height: 1.1,
+                                  letterSpacing: -0.2,
                                 ),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                user.email,
-                                style: TextStyle(fontSize: 12,
-                                  color: theme.colorScheme.onSurfaceVariant,
+                              const SizedBox(height: 4),
+                              const Text(
+                                '123 Main Street, Springfield',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                  color: AppTheme.textSecondary,
+                                  letterSpacing: 0.3,
                                 ),
                               ),
-                              const SizedBox(height: 6),
-                              _buildRoleBadge(theme, user.role),
                             ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF4CAF50).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            'ALL GOOD',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1.2,
+                              color: Color(0xFF4CAF50),
+                            ),
                           ),
                         ),
                       ],
@@ -99,349 +176,314 @@ class HomeView extends ConsumerWidget {
                 ),
               ),
 
-              // Quick Actions
+              // ─── Stats Row ─────────────────────────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+                  padding: const EdgeInsets.fromLTRB(28, 20, 28, 0),
                   child: Row(
                     children: [
-                      Icon(CupertinoIcons.square_grid_2x2, size: 16, color: theme.colorScheme.primary),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Quick Actions',
-                        style: TextStyle(fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface,
-                        ),
+                      _StatPill(
+                        icon: CupertinoIcons.square_grid_2x2,
+                        value: '6',
+                        label: 'Rooms',
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'rooms')),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 10),
+                      _StatPill(
+                        icon: CupertinoIcons.device_desktop,
+                        value: '4',
+                        label: 'Appliances',
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'appliances')),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 10),
+                      _StatPill(
+                        icon: CupertinoIcons.doc_text,
+                        value: '3',
+                        label: 'Warranties',
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'warranties')),
+                          );
+                        },
                       ),
                     ],
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 1.3,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final actions = _getQuickActions(user.role);
-                      return _buildActionCard(theme: theme, item: actions[index]);
-                    },
-                    childCount: _getQuickActions(user.role).length,
                   ),
                 ),
               ),
 
-              // Settings
+              // ─── Reminders ──────────────────────────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
-                  child: Row(
-                    children: [
-                      Icon(CupertinoIcons.gear, size: 16, color: theme.colorScheme.primary),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Settings',
-                        style: TextStyle(fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
+                  padding: const EdgeInsets.fromLTRB(28, 56, 28, 0),
+                  child: Text(
+                    'Upcoming',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w400,
+                      color: AppTheme.textSecondary,
+                      height: 1.0,
+                    ),
                   ),
                 ),
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                  child: _buildSettingsRow(
-                    theme: theme,
+                  padding: const EdgeInsets.fromLTRB(28, 20, 28, 0),
+                  child: _ReminderTile(
+                    icon: CupertinoIcons.wind,
+                    title: 'HVAC Air Filter',
+                    subtitle: 'Replace in 6 days',
+                    detail: 'Quarterly',
+                    color: const Color(0xFFD4815A),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(28, 10, 28, 0),
+                  child: _ReminderTile(
+                    icon: CupertinoIcons.bell_fill,
+                    title: 'Smoke Detector',
+                    subtitle: 'Test batteries next week',
+                    detail: 'Bi-annual',
+                    color: AppTheme.accent,
+                  ),
+                ),
+              ),
+
+              // ─── Maintenance History ────────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(28, 20, 28, 0),
+                  child: AnimatedTapScale(
+                    scaleFactor: 0.97,
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => const HomeDetailListView(type: 'history')),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppTheme.cardSurface,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppTheme.accent.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(CupertinoIcons.clock, size: 20, color: AppTheme.accent),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Maintenance History',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppTheme.onSurface,
+                                    letterSpacing: 0.0,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  'Invoices, repairs, and receipts',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w400,
+                                    color: AppTheme.textSecondary,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(CupertinoIcons.chevron_right, size: 16, color: AppTheme.textSecondary),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // ─── Settings ───────────────────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(28, 56, 28, 0),
+                  child: Text(
+                    'Settings',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w400,
+                      color: AppTheme.textSecondary,
+                      height: 1.0,
+                    ),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(28, 20, 28, 0),
+                  child: _SettingsRow(
                     icon: CupertinoIcons.bell_fill,
                     title: 'Notifications',
-                    subtitle: 'Manage alert preferences',
+                    subtitle: 'Alert preferences',
                   ),
                 ),
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-                  child: _buildSettingsRow(
-                    theme: theme,
+                  padding: const EdgeInsets.fromLTRB(28, 8, 28, 0),
+                  child: _SettingsRow(
                     icon: CupertinoIcons.creditcard,
                     title: 'Payment Methods',
-                    subtitle: 'Cards & billing information',
+                    subtitle: 'Cards & billing',
                   ),
                 ),
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-                  child: _buildSettingsRow(
-                    theme: theme,
+                  padding: const EdgeInsets.fromLTRB(28, 8, 28, 0),
+                  child: _SettingsRow(
                     icon: CupertinoIcons.doc_text,
                     title: 'Terms & Conditions',
-                    subtitle: 'Platform terms of service',
+                    subtitle: 'Platform terms',
                   ),
                 ),
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-                  child: _buildSettingsRow(
-                    theme: theme,
+                  padding: const EdgeInsets.fromLTRB(28, 8, 28, 0),
+                  child: _SettingsRow(
                     icon: CupertinoIcons.shield,
                     title: 'Privacy Policy',
-                    subtitle: 'How we handle your data',
+                    subtitle: 'Data handling',
                   ),
                 ),
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-                  child: _buildSettingsRow(
-                    theme: theme,
+                  padding: const EdgeInsets.fromLTRB(28, 8, 28, 0),
+                  child: _SettingsRow(
                     icon: CupertinoIcons.question_circle,
                     title: 'Help & Support',
-                    subtitle: 'Get help with your account',
+                    subtitle: 'Get help',
                   ),
                 ),
               ),
 
-              // Role Info
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
-                  child: _buildRoleInfoCard(theme: theme, role: user.role),
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 120)),
+              const SliverToBoxAdapter(child: SizedBox(height: 140)),
             ],
           );
         },
       ),
     );
   }
+}
 
-  Widget _buildRoleBadge(ThemeData theme, UserRole role) {
-    final (label, color) = switch (role) {
-      UserRole.customer => ('Customer', theme.colorScheme.primary),
-      UserRole.worker => ('Service Pro', Colors.orange),
-      UserRole.admin => ('Admin', Colors.red),
-      UserRole.manager => ('Manager', Colors.purple),
-    };
+class _StatPill extends StatelessWidget {
+  const _StatPill({
+    required this.icon,
+    required this.value,
+    required this.label,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String value;
+  final String label;
+  final VoidCallback onTap;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        label.toUpperCase(),
-        style: TextStyle(fontSize: 9,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.8,
-          color: color,
-        ),
-      ),
-    );
-  }
-
-  List<_QuickActionItem> _getQuickActions(UserRole role) {
-    switch (role) {
-      case UserRole.customer:
-        return [
-          _QuickActionItem('Notifications', 'Alert preferences', CupertinoIcons.bell_fill, () {}),
-          _QuickActionItem('Payment Methods', 'Cards & billing', CupertinoIcons.creditcard, () {}),
-          _QuickActionItem('Refer a Friend', 'Share the app', CupertinoIcons.share, () {}),
-          _QuickActionItem('Get Help', 'Contact support', CupertinoIcons.question_circle, () {}),
-        ];
-      case UserRole.worker:
-        return [
-          _QuickActionItem('My Schedule', 'Upcoming jobs', CupertinoIcons.calendar, () {}),
-          _QuickActionItem('Earnings', 'Payment summary', CupertinoIcons.money_dollar, () {}),
-          _QuickActionItem('Availability', 'Set work hours', CupertinoIcons.clock, () {}),
-          _QuickActionItem('Support', 'Contact dispatch', CupertinoIcons.question_circle, () {}),
-        ];
-      case UserRole.admin:
-        return [
-          _QuickActionItem('Dashboard', 'System overview', CupertinoIcons.chart_bar_fill, () {}),
-          _QuickActionItem('Workers', 'Manage team', CupertinoIcons.person_2_fill, () {}),
-          _QuickActionItem('Inventory', 'Stock & supplies', CupertinoIcons.tray_full_fill, () {}),
-          _QuickActionItem('Analytics', 'Reports & data', CupertinoIcons.graph_square_fill, () {}),
-        ];
-      case UserRole.manager:
-        return [
-          _QuickActionItem('Buildings', 'Property portfolio', CupertinoIcons.building_2_fill, () {}),
-          _QuickActionItem('Units', 'Tenant overview', CupertinoIcons.square_grid_2x2, () {}),
-          _QuickActionItem('Maintenance', 'Open requests', CupertinoIcons.wrench_fill, () {}),
-          _QuickActionItem('Reports', 'Monthly summaries', CupertinoIcons.doc_chart_fill, () {}),
-        ];
-    }
-  }
-
-  Widget _buildActionCard({required ThemeData theme, required _QuickActionItem item}) {
-     return AnimatedTapScale(
-       onTap: item.onTap,
-       child: Container(
-         padding: const EdgeInsets.all(12),
-         decoration: BoxDecoration(
-           color: theme.colorScheme.surfaceContainerLow,
-           borderRadius: BorderRadius.circular(16),
-           border: Border.all(
-             color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
-           ),
-         ),
-         child: Column(
-           crossAxisAlignment: CrossAxisAlignment.start,
-           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-           children: [
-             Container(
-               padding: const EdgeInsets.all(6),
-               decoration: BoxDecoration(
-                 color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                 borderRadius: BorderRadius.circular(10),
-               ),
-               child: Icon(item.icon, size: 18, color: theme.colorScheme.primary),
-             ),
-             const SizedBox(height: 8),
-             Expanded(
-               child: Column(
-                 crossAxisAlignment: CrossAxisAlignment.start,
-                 mainAxisAlignment: MainAxisAlignment.end,
-                 children: [
-                   Text(
-                     item.title,
-                     maxLines: 2,
-                     overflow: TextOverflow.ellipsis,
-                     style: TextStyle(fontSize: 13,
-                       fontWeight: FontWeight.bold,
-                       color: theme.colorScheme.onSurface,
-                     ),
-                   ),
-                   const SizedBox(height: 2),
-                   Text(
-                     item.subtitle,
-                     maxLines: 1,
-                     overflow: TextOverflow.ellipsis,
-                     style: TextStyle(fontSize: 10,
-                       color: theme.colorScheme.onSurfaceVariant,
-                     ),
-                   ),
-                 ],
-               ),
-             ),
-           ],
-         ),
-       ),
-     );
-   }
-
-  Widget _buildSettingsRow({
-    required ThemeData theme,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return AnimatedTapScale(
-      onTap: () {},
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: AnimatedTapScale(
+        scaleFactor: 0.95,
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          decoration: BoxDecoration(
+            color: AppTheme.cardSurface,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, size: 16, color: AppTheme.accent),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w400,
+                  color: AppTheme.onSurface,
+                  height: 1.0,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                  color: AppTheme.textSecondary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
           ),
         ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, size: 18, color: theme.colorScheme.primary),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 11,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(CupertinoIcons.chevron_right, size: 14, color: theme.colorScheme.onSurfaceVariant),
-          ],
-        ),
       ),
     );
   }
+}
 
-  Widget _buildRoleInfoCard({required ThemeData theme, required UserRole role}) {
-    final (title, description, icon) = switch (role) {
-      UserRole.customer => (
-        'Account Overview',
-        'Manage your profile, notification preferences, and payment methods from this screen. Your home details and maintenance records are in Home Hub.',
-        CupertinoIcons.person_fill,
-      ),
-      UserRole.worker => (
-        "Professional's Workspace",
-        'View your schedule, track earnings, and manage your work availability. Job details and navigation are in the Services tab.',
-        CupertinoIcons.hammer_fill,
-      ),
-      UserRole.admin => (
-        'Administrator Access',
-        'Full platform control — manage workers, inventory, and system analytics. Monitor all operations from a single dashboard.',
-        CupertinoIcons.shield_fill,
-      ),
-      UserRole.manager => (
-        'Property Management',
-        'Oversee buildings, units, and tenant maintenance requests across your portfolio. Generate reports and track open work orders.',
-        CupertinoIcons.building_2_fill,
-      ),
-    };
+class _ReminderTile extends StatelessWidget {
+  const _ReminderTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.detail,
+    required this.color,
+  });
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String detail;
+  final Color color;
 
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.2),
-        ),
+        color: AppTheme.cardSurface,
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, size: 20, color: theme.colorScheme.primary),
+            child: Center(child: Icon(icon, size: 17, color: color)),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -450,20 +492,40 @@ class HomeView extends ConsumerWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.onSurface,
+                    letterSpacing: 0.0,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 3),
                 Text(
-                  description,
-                  style: TextStyle(fontSize: 12,
-                    height: 1.5,
-                    color: theme.colorScheme.onSurfaceVariant,
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: AppTheme.textSecondary,
+                    letterSpacing: 0.3,
                   ),
                 ),
               ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              detail.toUpperCase(),
+              style: TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.0,
+                color: color,
+              ),
             ),
           ),
         ],
@@ -472,11 +534,68 @@ class HomeView extends ConsumerWidget {
   }
 }
 
-class _QuickActionItem {
+class _SettingsRow extends StatelessWidget {
+  const _SettingsRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+  final IconData icon;
   final String title;
   final String subtitle;
-  final IconData icon;
-  final VoidCallback onTap;
 
-  _QuickActionItem(this.title, this.subtitle, this.icon, this.onTap);
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedTapScale(
+      scaleFactor: 0.97,
+      onTap: () {},
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.cardSurface,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppTheme.accent.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, size: 18, color: AppTheme.accent),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.onSurface,
+                      letterSpacing: 0.0,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: AppTheme.textSecondary,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(CupertinoIcons.chevron_right, size: 14, color: AppTheme.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
 }

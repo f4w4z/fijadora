@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/views/services_tab_view.dart';
 import '../../shop/views/shop_tab_view.dart';
-import '../../profile/views/profile_tab_view.dart';
+import '../../calendar/views/calendar_tab_view.dart';
 import '../../../../data/services/notification_service.dart';
 import 'home_view.dart';
 
@@ -47,22 +47,22 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
       label: 'Shop',
     ),
     _NavItem(
-      icon: CupertinoIcons.house,
-      activeIcon: CupertinoIcons.house_fill,
-      label: 'Home Hub',
+      icon: CupertinoIcons.calendar,
+      activeIcon: CupertinoIcons.calendar,
+      label: 'Calendar',
     ),
     _NavItem(
-      icon: CupertinoIcons.person,
-      activeIcon: CupertinoIcons.person_fill,
-      label: 'Profile',
+      icon: CupertinoIcons.house,
+      activeIcon: CupertinoIcons.house_fill,
+      label: 'Home',
     ),
   ];
 
   final List<Widget> _tabs = const [
     ServicesTabView(),
     ShopTabView(),
+    CalendarTabView(),
     HomeView(),
-    ProfileTabView(),
   ];
 
   @override
@@ -148,29 +148,6 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
             children: _tabs,
           ),
 
-          // ── Bottom scrim ──────────────────────────────────────────────────
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 130,
-            child: IgnorePointer(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.white.withValues(alpha: 0.7),
-                      Colors.white,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
           // ── Floating nav bar ──────────────────────────────────────────────
           Positioned(
             left: 0,
@@ -180,7 +157,7 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
               top: false,
               child: Center(
                 child: SizedBox(
-                  width: 340,
+                  width: 330,
                   child: _FloatingNavBar(
                     currentIndex: _currentIndex,
                     items: _navItems,
@@ -290,7 +267,7 @@ class _NavItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = theme.brightness == Brightness.dark;
-    final double targetWidth = isSelected ? 144.0 : 52.0;
+    final double targetWidth = isSelected ? 128.0 : 48.0;
 
     return GestureDetector(
       onTap: onTap,
@@ -313,8 +290,8 @@ class _NavItemWidget extends StatelessWidget {
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOutCubic,
-              width: 40,
-              height: 40,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isSelected ? theme.colorScheme.primary : Colors.transparent,
@@ -325,7 +302,7 @@ class _NavItemWidget extends StatelessWidget {
                     Transform.scale(scale: bounceAnimation.value, child: child),
                 child: Icon(
                   isSelected ? item.activeIcon : item.icon,
-                  size: 22,
+                  size: 20,
                   color: isSelected ? theme.colorScheme.onPrimary : inactiveColor,
                 ),
               ),
@@ -336,15 +313,15 @@ class _NavItemWidget extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 physics: const NeverScrollableScrollPhysics(),
                 child: Container(
-                  width: 84,
+                  width: 60,
                   alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.only(left: 8.0, right: 4.0),
+                  padding: const EdgeInsets.only(left: 6.0, right: 2.0),
                   child: AnimatedDefaultTextStyle(
                     duration: const Duration(milliseconds: 200),
                     style: TextStyle(
                       color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                       fontWeight: FontWeight.w600,
-                      fontSize: 13,
+                      fontSize: 12,
                     ),
                     child: Text(item.label),
                   ),

@@ -63,17 +63,12 @@ class ProfileTabView extends ConsumerWidget {
                             children: [
                               Text(
                                 'Family Home',
-                                style: TextStyle(fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.onSurface,
-                                ),
+                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 '123 Main Street, Springfield',
-                                style: TextStyle(fontSize: 12,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
+                                style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                               ),
                             ],
                           ),
@@ -86,11 +81,7 @@ class ProfileTabView extends ConsumerWidget {
                           ),
                           child: Text(
                             'ALL GOOD',
-                            style: TextStyle(fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.0,
-                              color: Colors.green,
-                            ),
+                            style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: Colors.green),
                           ),
                         ),
                       ],
@@ -137,10 +128,7 @@ class ProfileTabView extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text(
                         'Predictive Reminders',
-                        style: TextStyle(fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface,
-                        ),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                       ),
                     ],
                   ),
@@ -181,17 +169,12 @@ class ProfileTabView extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text(
                         'Digital Home Record',
-                        style: TextStyle(fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface,
-                        ),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                       ),
                     ],
                   ),
                 ),
               ),
-
-              // Record Grid
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
                 sliver: SliverGrid(
@@ -268,17 +251,12 @@ class ProfileTabView extends ConsumerWidget {
                               children: [
                                 Text(
                                   'Maintenance History',
-                                  style: TextStyle(fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: theme.colorScheme.onSurface,
-                                  ),
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   'View past invoices, repairs, and receipts',
-                                  style: TextStyle(fontSize: 12,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
+                                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                                 ),
                               ],
                             ),
@@ -291,7 +269,7 @@ class ProfileTabView extends ConsumerWidget {
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 120)),
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           );
         },
@@ -318,17 +296,12 @@ class ProfileTabView extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 value,
-                style: TextStyle(fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
               ),
               const SizedBox(height: 2),
               Text(
                 label,
-                style: TextStyle(fontSize: 10,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -372,17 +345,12 @@ class ProfileTabView extends ConsumerWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    color: theme.colorScheme.onSurface,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: theme.colorScheme.onSurface),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
                 ),
               ],
             ),
@@ -397,11 +365,7 @@ class ProfileTabView extends ConsumerWidget {
             ),
             child: Text(
               detail.toUpperCase(),
-              style: TextStyle(fontSize: 8,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
-                color: isUrgent ? Colors.orange : theme.colorScheme.primary,
-              ),
+              style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: isUrgent ? Colors.orange : theme.colorScheme.primary),
             ),
           ),
         ],
@@ -438,17 +402,12 @@ class ProfileTabView extends ConsumerWidget {
               children: [
                 Text(
                   item.title,
-                  style: TextStyle(fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   item.subtitle,
-                  style: TextStyle(fontSize: 11,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],
             ),

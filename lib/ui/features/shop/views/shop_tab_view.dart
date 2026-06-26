@@ -13,6 +13,7 @@ import '../../../../ui/shared/widgets/animated_tap_scale.dart';
 import '../../../../ui/shared/widgets/custom_pinned_header.dart';
 import '../../../../ui/shared/widgets/floating_header_layout.dart';
 import '../../../shared/utils/notification_helper.dart';
+import '../../../core/theme.dart';
 import 'widgets/shop_the_look_carousel.dart';
 
 
@@ -46,6 +47,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
     final productsAsync = ref.watch(productsStreamProvider);
 
     return Scaffold(
+      backgroundColor: AppTheme.scaffold,
       body: FloatingHeaderLayout(
         header: CustomPinnedHeader(
           title: 'Shop',
@@ -79,17 +81,10 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
             placeholderStyle: TextStyle(
               color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
-            itemColor: theme.colorScheme.onSurfaceVariant,
+            itemColor: AppTheme.textSecondary,
             decoration: BoxDecoration(
-              color: theme.brightness == Brightness.dark
-                  ? theme.inputDecorationTheme.fillColor
-                  : const Color(0xFFF0F0F0),
+              color: AppTheme.cardSurface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: theme.brightness == Brightness.dark
-                    ? theme.colorScheme.surfaceContainerHighest
-                    : const Color(0xFFE5E5E5),
-              ),
             ),
           ),
         ),
@@ -130,19 +125,15 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.surfaceContainerLow,
+                                color: AppTheme.cardSurface,
                                 borderRadius: BorderRadius.circular(16.0),
-                                border: Border.all(
-                                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
-                                  width: 1.0,
-                                ),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     'PHOEBE CURATED',
-                                    style: TextStyle(color: theme.colorScheme.primary,
+                                    style: TextStyle(color: AppTheme.accent,
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
                                       letterSpacing: 2.0,
@@ -151,7 +142,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                   const SizedBox(height: 6.0),
                                   Text(
                                     'Architectural furniture for modern living spaces.',
-                                    style: TextStyle(color: theme.colorScheme.onSurface,
+                                    style: TextStyle(color: AppTheme.onSurface,
                                       fontSize: 20,
                                       height: 1.1,
                                     ),
@@ -165,12 +156,12 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                           child: ElevatedButton(
                                             onPressed: () {},
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: theme.colorScheme.primary,
-                                              foregroundColor: theme.colorScheme.onPrimary,
+                                              backgroundColor: AppTheme.onSurface,
+                                              foregroundColor: Colors.white,
                                               padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
                                               elevation: 0,
-                                              textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                                              textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.0),
                                             ),
                                             child: const Text('VIEW COLLECTION'),
                                           ),
@@ -185,11 +176,11 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                             icon: const Icon(CupertinoIcons.sparkles, size: 10),
                                             label: const Text('AI CONCIERGE'),
                                             style: OutlinedButton.styleFrom(
-                                              foregroundColor: theme.colorScheme.onSurface,
-                                              side: BorderSide(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12)),
+                                              foregroundColor: AppTheme.onSurface,
+                                              side: BorderSide(color: AppTheme.surfaceBorder),
                                               padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-                                              textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+                                              textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.0),
                                             ),
                                           ),
                                         ),
@@ -205,9 +196,9 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                           if (bundleProducts.isNotEmpty) ...[
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                              child: Text(
+                              child:                               Text(
                                 'Shop the Look',
-                                style: theme.textTheme.headlineMedium?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.onSurface, letterSpacing: -0.3),
                               ),
                             ),
                             const SizedBox(height: 16.0),
@@ -219,7 +210,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                             padding: const EdgeInsets.symmetric(horizontal: 24.0),
                             child: Text(
                               'Browse Categories',
-                              style: theme.textTheme.headlineMedium?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
+                               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.onSurface, letterSpacing: -0.3),
                             ),
                           ),
                           const SizedBox(height: 16.0),
@@ -246,11 +237,11 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                               children: [
                                 Text(
                                   'Featured Pieces',
-                                  style: theme.textTheme.headlineMedium?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.onSurface, letterSpacing: -0.3),
                                 ),
                                 TextButton(
                                   onPressed: () {},
-                                  child: const Text('See All'),
+                                  child: Text('See All', style: TextStyle(color: AppTheme.accent, fontSize: 13)),
                                 ),
                               ],
                             ),
@@ -308,7 +299,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                                 memCacheWidth: 300,
                                                 fit: BoxFit.cover,
                                                 placeholder: (context, url) => Container(
-                                                  color: theme.colorScheme.surfaceContainerHighest,
+                                                  color: AppTheme.cardSurface,
                                                   child: const Center(
                                                     child: SizedBox(
                                                       width: 24,
@@ -318,7 +309,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                                   ),
                                                 ),
                                                 errorWidget: (context, url, error) => Container(
-                                                  color: theme.colorScheme.surfaceContainerHighest,
+                                                  color: AppTheme.cardSurface,
                                                   child: const Icon(CupertinoIcons.photo),
                                                 ),
                                               ),
@@ -338,13 +329,13 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                                     );
                                                   },
                                                   borderRadius: BorderRadius.circular(16),
-                                                  child: CircleAvatar(
+                                                  child:                                                   CircleAvatar(
                                                     radius: 16,
-                                                    backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.8),
+                                                    backgroundColor: AppTheme.scaffold.withValues(alpha: 0.9),
                                                     child: Icon(
                                                       CupertinoIcons.add,
                                                       size: 14,
-                                                      color: theme.colorScheme.onSurface,
+                                                      color: AppTheme.onSurface,
                                                     ),
                                                   ),
                                                 ),
@@ -359,7 +350,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                       product.name,
                                       style: TextStyle(fontSize: 16,
                                         height: 1.1,
-                                        color: theme.colorScheme.onSurface,
+                                        color: AppTheme.onSurface,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -369,7 +360,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                                       '\$${product.price.toStringAsFixed(0)}',
                                       style: TextStyle(fontWeight: FontWeight.w500,
                                         fontSize: 12,
-                                        color: theme.colorScheme.primary,
+                                        color: AppTheme.accent,
                                       ),
                                     ),
                                   ],
@@ -381,7 +372,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
                         ),
                       ),
                     const SliverToBoxAdapter(
-                      child: SizedBox(height: 120.0), // Padding to clear the bottom nav bar
+                      child: SizedBox(height: 140.0),
                     ),
                   ],
                 );
@@ -403,19 +394,19 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> {
         margin: const EdgeInsets.only(right: 12.0),
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+          color: isSelected ? AppTheme.onSurface : Colors.transparent,
           borderRadius: BorderRadius.circular(12.0),
           border: Border.all(
-            color: isSelected ? Colors.transparent : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
+            color: isSelected ? Colors.transparent : AppTheme.surfaceBorder,
             width: 1.0,
           ),
         ),
         child: Center(
           child: Text(
             label.toUpperCase(),
-            style: TextStyle(color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+            style: TextStyle(color: isSelected ? Colors.white : AppTheme.onSurface,
               fontSize: 10,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
               letterSpacing: 1.0,
             ),
           ),
