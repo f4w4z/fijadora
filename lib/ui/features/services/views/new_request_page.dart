@@ -9,7 +9,8 @@ import '../../../../ui/shared/widgets/app_bottom_sheet.dart';
 import '../../../shared/utils/date_extensions.dart';
 
 class NewRequestPage extends ConsumerStatefulWidget {
-  const NewRequestPage({super.key});
+  final TradeType? initialTrade;
+  const NewRequestPage({super.key, this.initialTrade});
 
   @override
   ConsumerState<NewRequestPage> createState() => _NewRequestPageState();
@@ -20,10 +21,16 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
   final _descriptionController = TextEditingController();
   final _addressController = TextEditingController();
 
-  TradeType _selectedTrade = TradeType.generalRepairs;
+  late TradeType _selectedTrade;
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   TimeOfDay _selectedTime = const TimeOfDay(hour: 9, minute: 0);
   bool _isAiDiagnosing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedTrade = widget.initialTrade ?? TradeType.generalRepairs;
+  }
 
   Future<void> _runAiDiagnosis() async {
     setState(() => _isAiDiagnosing = true);

@@ -74,7 +74,31 @@ class _FloatingHeaderLayoutState extends State<FloatingHeaderLayout> {
           ),
         ),
 
-        // 3. Floating header
+        // 3. Bottom scrim (gradient fade)
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: _headerHeight / 2,
+          child: IgnorePointer(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    theme.scaffoldBackgroundColor.withValues(alpha: 0.0),
+                    theme.scaffoldBackgroundColor.withValues(alpha: 0.85),
+                    theme.scaffoldBackgroundColor,
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // 4. Floating header
         Positioned(
           left: 0,
           right: 0,

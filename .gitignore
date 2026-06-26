@@ -22,11 +22,10 @@ flutter_01.png
 .idea/
 
 # VS Code related
-.vscode/settings.json
-.vscode/tasks.json
-.vscode/launch.json
-.vscode/extensions.json
-.vscode/workspace.code-workspace
+.vscode/
+
+# Agent skills
+.agents/
 
 # Flutter/Dart/Pub related
 **/doc/api/

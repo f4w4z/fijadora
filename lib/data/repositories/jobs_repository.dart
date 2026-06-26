@@ -102,23 +102,6 @@ class MockJobsRepository implements JobsRepository {
   }
 
   void _populateInitialMockJobs() {
-    try {
-      final box = Hive.box('cached_jobs');
-      final list = box.get('jobs_list') as List<dynamic>?;
-      if (list != null && list.length >= 7) {
-        _mockJobs.clear();
-        for (final item in list) {
-          if (item is Map) {
-            final jsonMap = Map<String, dynamic>.from(item);
-            _mockJobs.add(MaintenanceJob.fromJson(jsonMap));
-          }
-        }
-        return;
-      }
-    } catch (e) {
-      debugPrint('Hive read error: $e. Falling back to default list.');
-    }
-
     _mockJobs.addAll([
       MaintenanceJob(
         id: 'job-1',
@@ -127,7 +110,7 @@ class MockJobsRepository implements JobsRepository {
         status: JobStatus.completed,
         scheduleDateTime: DateTime.now().subtract(const Duration(days: 3)),
         address: 'Apartment 4B, Oakwood Heights, NY',
-        images: const [],
+        images: const ['https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=300&fit=crop'],
         customerId: 'mock-customer',
         workerId: 'mock-worker',
         createdAt: DateTime.now().subtract(const Duration(days: 3, hours: 2)),
@@ -139,7 +122,7 @@ class MockJobsRepository implements JobsRepository {
         status: JobStatus.assigned,
         scheduleDateTime: DateTime.now().add(const Duration(days: 1, hours: 3)),
         address: 'Apartment 4B, Oakwood Heights, NY',
-        images: const [],
+        images: const ['https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=400&h=300&fit=crop'],
         customerId: 'mock-customer',
         workerId: 'mock-worker-alex',
         createdAt: DateTime.now().subtract(const Duration(days: 1)),
@@ -151,7 +134,7 @@ class MockJobsRepository implements JobsRepository {
         status: JobStatus.pending,
         scheduleDateTime: DateTime.now().add(const Duration(days: 2, hours: 5)),
         address: 'Apartment 4B, Oakwood Heights, NY',
-        images: const [],
+        images: const ['https://images.unsplash.com/photo-1631545806605-7ed6658f0e2a?w=400&h=300&fit=crop'],
         customerId: 'mock-customer',
         createdAt: DateTime.now().subtract(const Duration(hours: 4)),
       ),
@@ -162,7 +145,7 @@ class MockJobsRepository implements JobsRepository {
         status: JobStatus.workerEnRoute,
         scheduleDateTime: DateTime.now().add(const Duration(hours: 2)),
         address: 'Apartment 12C, Pineview Apartments, NY',
-        images: const [],
+        images: const ['https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=400&h=300&fit=crop'],
         customerId: 'mock-customer',
         workerId: 'mock-worker-alex',
         createdAt: DateTime.now().subtract(const Duration(hours: 12)),
@@ -174,7 +157,7 @@ class MockJobsRepository implements JobsRepository {
         status: JobStatus.completed,
         scheduleDateTime: DateTime.now().subtract(const Duration(days: 1)),
         address: 'Apartment 4B, Oakwood Heights, NY',
-        images: const [],
+        images: const ['https://images.unsplash.com/photo-1581147036324-f54c9955a764?w=400&h=300&fit=crop'],
         customerId: 'mock-customer',
         workerId: 'mock-worker-alex',
         createdAt: DateTime.now().subtract(const Duration(days: 1, hours: 4)),
@@ -186,7 +169,7 @@ class MockJobsRepository implements JobsRepository {
         status: JobStatus.pending,
         scheduleDateTime: DateTime.now().add(const Duration(days: 3)),
         address: 'Apartment 8A, Oakwood Heights, NY',
-        images: const [],
+        images: const ['https://images.unsplash.com/photo-1558002038-1055907df827?w=400&h=300&fit=crop'],
         customerId: 'mock-customer',
         createdAt: DateTime.now().subtract(const Duration(hours: 1)),
       ),
@@ -197,7 +180,7 @@ class MockJobsRepository implements JobsRepository {
         status: JobStatus.pending,
         scheduleDateTime: DateTime.now().add(const Duration(days: 5)),
         address: 'Apartment 15D, Pineview Apartments, NY',
-        images: const [],
+        images: const ['https://images.unsplash.com/photo-1527404943460-8e5b9c1cd5e7?w=400&h=300&fit=crop'],
         customerId: 'mock-customer',
         createdAt: DateTime.now().subtract(const Duration(days: 2)),
       ),
