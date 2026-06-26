@@ -29,7 +29,7 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
   @override
   void initState() {
     super.initState();
-    _selectedTrade = widget.initialTrade ?? TradeType.generalRepairs;
+    _selectedTrade = widget.initialTrade ?? TradeType.plumbing;
   }
 
   Future<void> _runAiDiagnosis() async {

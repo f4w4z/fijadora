@@ -1,57 +1,72 @@
 import 'package:flutter/cupertino.dart';
 
 enum TradeType {
-  plumbing,
+  interiorDesign,
   electrical,
-  carpentry,
-  painting,
-  hvac,
+  plumbing,
+  masonry,
+  tiling,
+  designConsultation,
+  acEngineering,
+  kitchenDesigns,
   cleaning,
-  generalRepairs;
+  gardening;
 
   String get displayName {
     switch (this) {
-      case TradeType.plumbing:
-        return 'Plumbing';
+      case TradeType.interiorDesign:
+        return 'Interior Design';
       case TradeType.electrical:
         return 'Electrical';
-      case TradeType.carpentry:
-        return 'Carpentry';
-      case TradeType.painting:
-        return 'Painting';
-      case TradeType.hvac:
-        return 'HVAC';
+      case TradeType.plumbing:
+        return 'Plumbing';
+      case TradeType.masonry:
+        return 'Masonry';
+      case TradeType.tiling:
+        return 'Tiling';
+      case TradeType.designConsultation:
+        return 'Design Consultation';
+      case TradeType.acEngineering:
+        return 'AC Engineering';
+      case TradeType.kitchenDesigns:
+        return 'Kitchen Designs';
       case TradeType.cleaning:
         return 'Cleaning';
-      case TradeType.generalRepairs:
-        return 'General Repairs';
+      case TradeType.gardening:
+        return 'Gardening';
     }
   }
 
   IconData get icon {
     switch (this) {
-      case TradeType.plumbing:
-        return CupertinoIcons.drop_fill;
+      case TradeType.interiorDesign:
+        return CupertinoIcons.house_fill;
       case TradeType.electrical:
         return CupertinoIcons.bolt_fill;
-      case TradeType.carpentry:
+      case TradeType.plumbing:
+        return CupertinoIcons.drop_fill;
+      case TradeType.masonry:
+        return CupertinoIcons.hammer_fill;
+      case TradeType.tiling:
         return CupertinoIcons.square_grid_2x2_fill;
-      case TradeType.painting:
+      case TradeType.designConsultation:
         return CupertinoIcons.paintbrush_fill;
-      case TradeType.hvac:
+      case TradeType.acEngineering:
         return CupertinoIcons.wind;
+      case TradeType.kitchenDesigns:
+        return CupertinoIcons.rectangle_stack_fill;
       case TradeType.cleaning:
         return CupertinoIcons.sparkles;
-      case TradeType.generalRepairs:
-        return CupertinoIcons.wrench_fill;
+      case TradeType.gardening:
+        return CupertinoIcons.leaf_arrow_circlepath;
     }
   }
 
   static TradeType fromString(String? value) {
-    if (value == null) return TradeType.generalRepairs;
+    if (value == null) return TradeType.plumbing;
     return TradeType.values.firstWhere(
       (e) => e.name.toLowerCase() == value.toLowerCase(),
-      orElse: () => TradeType.generalRepairs,
+      orElse: () => TradeType.plumbing,
     );
   }
 }

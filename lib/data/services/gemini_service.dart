@@ -36,13 +36,13 @@ class GeminiService {
     await Future.delayed(const Duration(milliseconds: 1500));
 
     switch (tradeType) {
-      case TradeType.plumbing:
+      case TradeType.interiorDesign:
         return AiDiagnosis(
-          problemSummary: 'Thread/joint leakage detected in underneath sink plumbing line. Water pressure has caused a slow gasket leak.',
-          requiredTools: ['Adjustable Wrench', 'Thread Seal Tape', 'Pipe Cutter'],
-          suggestedParts: ['1/2-inch Rubber Washer', 'PVC Threaded Coupling'],
-          priority: 'High (Prevent potential water damage)',
-          estimatedDuration: '45 mins',
+          problemSummary: 'Room layout and color scheme assessment. Existing furniture arrangement underutilizes space.',
+          requiredTools: ['Measuring Tape', 'Mood Board', 'Design Software'],
+          suggestedParts: ['Sample Paint Swatches', 'Fabric Samples'],
+          priority: 'Low (Aesthetic enhancement)',
+          estimatedDuration: '2 hours',
         );
       case TradeType.electrical:
         return AiDiagnosis(
@@ -52,7 +52,39 @@ class GeminiService {
           priority: 'Critical (Fire hazard risk)',
           estimatedDuration: '30 mins',
         );
-      case TradeType.hvac:
+      case TradeType.plumbing:
+        return AiDiagnosis(
+          problemSummary: 'Thread/joint leakage detected in underneath sink plumbing line. Water pressure has caused a slow gasket leak.',
+          requiredTools: ['Adjustable Wrench', 'Thread Seal Tape', 'Pipe Cutter'],
+          suggestedParts: ['1/2-inch Rubber Washer', 'PVC Threaded Coupling'],
+          priority: 'High (Prevent potential water damage)',
+          estimatedDuration: '45 mins',
+        );
+      case TradeType.masonry:
+        return AiDiagnosis(
+          problemSummary: 'Crack detected in brick mortar joint. Water ingress possible during heavy rain.',
+          requiredTools: ['Mortar Mix', 'Trowel', 'Joint Raker'],
+          suggestedParts: ['Type N Mortar Mix', 'Wall Ties'],
+          priority: 'Medium (Structural integrity)',
+          estimatedDuration: '1.5 hours',
+        );
+      case TradeType.tiling:
+        return AiDiagnosis(
+          problemSummary: 'Loose ceramic tile with cracked grout lines. Underlayment may be compromised.',
+          requiredTools: ['Tile Cutter', 'Notched Trowel', 'Grout Float'],
+          suggestedParts: ['Replacement Tile', 'Thinset Mortar', 'Grout'],
+          priority: 'Low (Cosmetic)',
+          estimatedDuration: '1 hour',
+        );
+      case TradeType.designConsultation:
+        return AiDiagnosis(
+          problemSummary: 'Space planning review. Current layout does not optimize natural light or traffic flow.',
+          requiredTools: ['Laser Measure', 'Floor Plan Software'],
+          suggestedParts: ['Material Sample Kit'],
+          priority: 'Low (Planning phase)',
+          estimatedDuration: '1 hour',
+        );
+      case TradeType.acEngineering:
         return AiDiagnosis(
           problemSummary: 'Evaporator coil freezing or low refrigerant charge detected. Filter is highly clogged restricting airflow.',
           requiredTools: ['Manifold Gauge Set', 'Hex Key Set', 'Fin Comb'],
@@ -60,21 +92,13 @@ class GeminiService {
           priority: 'Medium (Climate control degradation)',
           estimatedDuration: '1.5 hours',
         );
-      case TradeType.carpentry:
+      case TradeType.kitchenDesigns:
         return AiDiagnosis(
           problemSummary: 'Cabinet door hinge mounting screws have stripped wood threads from cabinet frame. Sagging door.',
           requiredTools: ['Power Drill', 'Phillips Bit', 'Wood Glue'],
           suggestedParts: ['Wooden Dowels (for thread repair)', 'Replacement Cabinet Hinge Screws'],
-          priority: 'Low (Cosmetic/Functional annoyance)',
-          estimatedDuration: '20 mins',
-        );
-      case TradeType.painting:
-        return AiDiagnosis(
-          problemSummary: 'Minor drywall puncture and surrounding paint peeling from moisture exposure.',
-          requiredTools: ['Putty Knife', 'Sanding Block', 'Paint Roller'],
-          suggestedParts: ['Spackling Paste', 'Wall Primer', 'Matching Latex Paint (Satin)'],
-          priority: 'Low (Aesthetic maintenance)',
-          estimatedDuration: '1 hour (excl. drying time)',
+          priority: 'Low (Functional)',
+          estimatedDuration: '30 mins',
         );
       case TradeType.cleaning:
         return AiDiagnosis(
@@ -84,13 +108,13 @@ class GeminiService {
           priority: 'Medium (Hygiene recommendation)',
           estimatedDuration: '1 hour',
         );
-      case TradeType.generalRepairs:
+      case TradeType.gardening:
         return AiDiagnosis(
-          problemSummary: 'General structural/operational wear on drywall/hardware.',
-          requiredTools: ['Universal Toolkit', 'Screwdriver Set'],
-          suggestedParts: ['Assorted Mounting Anchors', 'Standard Fasteners'],
-          priority: 'Low',
-          estimatedDuration: '30 mins',
+          problemSummary: 'Overgrown shrubs and weeds. Soil compaction detected in planting beds.',
+          requiredTools: ['Pruning Shears', 'Garden Fork', 'Leaf Rake'],
+          suggestedParts: ['Compost Mix', 'Mulch'],
+          priority: 'Low (Seasonal maintenance)',
+          estimatedDuration: '2 hours',
         );
     }
   }

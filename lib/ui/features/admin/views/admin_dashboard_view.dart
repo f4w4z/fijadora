@@ -239,20 +239,26 @@ class _MaintenanceJobCardState extends ConsumerState<MaintenanceJobCard> {
 
   List<Color> _getGradientForTrade(TradeType type) {
     switch (type) {
-      case TradeType.plumbing:
-        return [const Color(0xFF1E88E5), const Color(0xFF0D47A1)];
+      case TradeType.interiorDesign:
+        return [const Color(0xFF8E44AD), const Color(0xFF4A235A)];
       case TradeType.electrical:
         return [const Color(0xFFFFB300), const Color(0xFFFF6F00)];
-      case TradeType.carpentry:
+      case TradeType.plumbing:
+        return [const Color(0xFF1E88E5), const Color(0xFF0D47A1)];
+      case TradeType.masonry:
         return [const Color(0xFF8D6E63), const Color(0xFF4E342E)];
-      case TradeType.painting:
-        return [const Color(0xFFEC407A), const Color(0xFF880E4F)];
-      case TradeType.hvac:
+      case TradeType.tiling:
         return [const Color(0xFF00ACC1), const Color(0xFF006064)];
-      case TradeType.cleaning:
+      case TradeType.designConsultation:
+        return [const Color(0xFFEC407A), const Color(0xFF880E4F)];
+      case TradeType.acEngineering:
         return [const Color(0xFF26A69A), const Color(0xFF004D40)];
-      case TradeType.generalRepairs:
+      case TradeType.kitchenDesigns:
         return [const Color(0xFF78909C), const Color(0xFF37474F)];
+      case TradeType.cleaning:
+        return [const Color(0xFF1E88E5), const Color(0xFF0D47A1)];
+      case TradeType.gardening:
+        return [const Color(0xFF43A047), const Color(0xFF1B5E20)];
     }
   }
 
