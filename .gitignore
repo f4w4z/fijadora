@@ -24,9 +24,6 @@ flutter_01.png
 # VS Code related
 .vscode/
 
-# Agent skills
-.agents/
-
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id
