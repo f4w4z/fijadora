@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import '../../../shared/utils/notification_helper.dart';
 
 class LiveTrackingView extends StatefulWidget {
   const LiveTrackingView({super.key, required this.jobId, required this.address});
@@ -71,9 +72,7 @@ class _LiveTrackingViewState extends State<LiveTrackingView> {
         setState(() {
           _etaMinutes = 0;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Technician has arrived at your location!')),
-        );
+        context.showSnackBar('Technician has arrived at your location!', type: SnackBarType.info);
       }
     });
   }
@@ -280,9 +279,7 @@ class _LiveTrackingViewState extends State<LiveTrackingView> {
                           height: 48,
                           child: OutlinedButton.icon(
                             onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Calling technician: +1 (555) 019-2831')),
-                              );
+                              context.showSnackBar('Calling technician: +1 (555) 019-2831', type: SnackBarType.info);
                             },
                             icon: const Icon(CupertinoIcons.phone_fill, size: 16),
                             label: const Text('Call Staff', style: TextStyle(fontWeight: FontWeight.bold)),

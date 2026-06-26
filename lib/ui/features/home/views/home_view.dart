@@ -6,6 +6,7 @@ import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../../shared/widgets/custom_pinned_header.dart';
 import '../../../shared/widgets/floating_header_layout.dart';
 import '../../../core/theme.dart';
+import '../../../core/theme_provider.dart';
 import '../../profile/views/home_detail_list_view.dart';
 
 class HomeView extends ConsumerWidget {
@@ -21,6 +22,50 @@ class HomeView extends ConsumerWidget {
       );
     }
 
+Widget settingsRow(BuildContext context, IconData icon, String title, String subtitle) {
+  final theme = Theme.of(context);
+  return SizedBox(
+        height: 52,
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              ),
+              child: Icon(icon, size: 18, color: theme.colorScheme.primary),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(CupertinoIcons.chevron_right, size: 14, color: theme.colorScheme.onSurfaceVariant),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       body: FloatingHeaderLayout(
         header: CustomPinnedHeader(
@@ -33,15 +78,15 @@ class HomeView extends ConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                 decoration: BoxDecoration(
-                  color: AppTheme.cardSurface,
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(28),
                 ),
-                child: const Text(
+                child: Text(
                   'Sign Out',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: AppTheme.onSurface,
+                    color: Theme.of(context).colorScheme.onSurface,
                     letterSpacing: 0.3,
                   ),
                 ),
@@ -50,7 +95,10 @@ class HomeView extends ConsumerWidget {
           ],
         ),
         bodyBuilder: (context, topPadding) {
-          return CustomScrollView(
+          final theme = Theme.of(context);
+          return RefreshIndicator(
+            onRefresh: () async => Future.delayed(const Duration(milliseconds: 300)),
+            child: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(child: SizedBox(height: topPadding + 8)),
 
@@ -63,13 +111,13 @@ class HomeView extends ConsumerWidget {
                     children: [
                       CircleAvatar(
                         radius: 28,
-                        backgroundColor: AppTheme.accent.withValues(alpha: 0.12),
+                        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
                         child: Text(
                           user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w400,
-                            color: AppTheme.accent,
+                            color: theme.colorScheme.primary,
                           ),
                         ),
                       ),
@@ -80,21 +128,15 @@ class HomeView extends ConsumerWidget {
                           children: [
                             Text(
                               user.name,
-                              style: const TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.w300,
-                                color: AppTheme.onSurface,
-                                height: 1.0,
-                                letterSpacing: -0.3,
-                              ),
+                              style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.onSurface),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               user.email,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w400,
-                                color: AppTheme.textSecondary,
+                                color: theme.colorScheme.onSurfaceVariant,
                                 letterSpacing: 0.3,
                               ),
                             ),
@@ -113,41 +155,41 @@ class HomeView extends ConsumerWidget {
                   child: Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: AppTheme.cardSurface,
-                      borderRadius: BorderRadius.circular(24),
+                      color: theme.colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                     ),
                     child: Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: AppTheme.accent.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(16),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                           ),
-                          child: const Icon(CupertinoIcons.house_fill, size: 22, color: AppTheme.accent),
+                          child: Icon(CupertinoIcons.house_fill, size: 22, color: theme.colorScheme.primary),
                         ),
                         const SizedBox(width: 20),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Family Home',
                                 style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w500,
-                                  color: AppTheme.onSurface,
+                                  color: theme.colorScheme.onSurface,
                                   height: 1.1,
                                   letterSpacing: -0.2,
                                 ),
                               ),
                               const SizedBox(height: 4),
-                              const Text(
+                              Text(
                                 '123 Main Street, Springfield',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w400,
-                                  color: AppTheme.textSecondary,
+                                  color: theme.colorScheme.onSurfaceVariant,
                                   letterSpacing: 0.3,
                                 ),
                               ),
@@ -225,12 +267,7 @@ class HomeView extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(28, 56, 28, 0),
                   child: Text(
                     'Upcoming',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w400,
-                      color: AppTheme.textSecondary,
-                      height: 1.0,
-                    ),
+                    style: theme.textTheme.headlineMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   ),
                 ),
               ),
@@ -254,7 +291,7 @@ class HomeView extends ConsumerWidget {
                     title: 'Smoke Detector',
                     subtitle: 'Test batteries next week',
                     detail: 'Bi-annual',
-                    color: AppTheme.accent,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
               ),
@@ -273,7 +310,7 @@ class HomeView extends ConsumerWidget {
                     child: Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: AppTheme.cardSurface,
+                        color: theme.colorScheme.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -281,39 +318,39 @@ class HomeView extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppTheme.accent.withValues(alpha: 0.08),
+                              color: theme.colorScheme.primary.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            child: const Icon(CupertinoIcons.clock, size: 20, color: AppTheme.accent),
+                            child: Icon(CupertinoIcons.clock, size: 20, color: theme.colorScheme.primary),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Maintenance History',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppTheme.onSurface,
-                                    letterSpacing: 0.0,
-                                  ),
+                              Text(
+                                'Maintenance History',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: theme.colorScheme.onSurface,
+                                  letterSpacing: 0.0,
                                 ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  'Invoices, repairs, and receipts',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w400,
-                                    color: AppTheme.textSecondary,
-                                    letterSpacing: 0.3,
-                                  ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                'Invoices, repairs, and receipts',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w400,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  letterSpacing: 0.3,
                                 ),
+                              ),
                               ],
                             ),
                           ),
-                          const Icon(CupertinoIcons.chevron_right, size: 16, color: AppTheme.textSecondary),
+                          Icon(CupertinoIcons.chevron_right, size: 16, color: theme.colorScheme.onSurfaceVariant),
                         ],
                       ),
                     ),
@@ -321,74 +358,118 @@ class HomeView extends ConsumerWidget {
                 ),
               ),
 
-              // ─── Settings ───────────────────────────────────────────────────────────
+              // ─── Settings ────────────────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 56, 28, 0),
+                  padding: const EdgeInsets.fromLTRB(28, 48, 28, 0),
                   child: Text(
                     'Settings',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w400,
-                      color: AppTheme.textSecondary,
-                      height: 1.0,
+                    style: theme.textTheme.headlineMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(28, 16, 28, 0),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(18),
                     ),
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 20, 28, 0),
-                  child: _SettingsRow(
-                    icon: CupertinoIcons.bell_fill,
-                    title: 'Notifications',
-                    subtitle: 'Alert preferences',
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 8, 28, 0),
-                  child: _SettingsRow(
-                    icon: CupertinoIcons.creditcard,
-                    title: 'Payment Methods',
-                    subtitle: 'Cards & billing',
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 8, 28, 0),
-                  child: _SettingsRow(
-                    icon: CupertinoIcons.doc_text,
-                    title: 'Terms & Conditions',
-                    subtitle: 'Platform terms',
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 8, 28, 0),
-                  child: _SettingsRow(
-                    icon: CupertinoIcons.shield,
-                    title: 'Privacy Policy',
-                    subtitle: 'Data handling',
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 8, 28, 0),
-                  child: _SettingsRow(
-                    icon: CupertinoIcons.question_circle,
-                    title: 'Help & Support',
-                    subtitle: 'Get help',
+                    child: Column(
+                      children: [
+                        settingsRow(context, CupertinoIcons.bell_fill, 'Notifications', 'Alert preferences'),
+                        Divider(height: 1, color: theme.colorScheme.outlineVariant),
+                        SizedBox(
+                          height: 52,
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                                ),
+                                child: Consumer(
+                                  builder: (context, ref, _) {
+                                    final themeMode = ref.watch(themeModeProvider);
+                                    final isDark = themeMode == ThemeMode.dark ||
+                                        (themeMode == ThemeMode.system &&
+                                            MediaQuery.of(context).platformBrightness == Brightness.dark);
+                                    return Icon(
+                                      isDark ? CupertinoIcons.moon_fill : CupertinoIcons.sun_max_fill,
+                                      size: 18,
+                                      color: theme.colorScheme.primary,
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Consumer(
+                                  builder: (context, ref, _) {
+                                    final themeMode = ref.watch(themeModeProvider);
+                                    final isDark = themeMode == ThemeMode.dark ||
+                                        (themeMode == ThemeMode.system &&
+                                            MediaQuery.of(context).platformBrightness == Brightness.dark);
+                                    return Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          'Appearance',
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w500,
+                                            color: theme.colorScheme.onSurface,
+                                          ),
+                                        ),
+                                        Text(
+                                          isDark ? 'Dark mode' : 'Light mode',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: theme.colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ),
+                              Consumer(
+                                builder: (context, ref, _) {
+                                  final themeMode = ref.watch(themeModeProvider);
+                                  final isDark = themeMode == ThemeMode.dark ||
+                                      (themeMode == ThemeMode.system &&
+                                          MediaQuery.of(context).platformBrightness == Brightness.dark);
+                                    return CupertinoSwitch(
+                                      value: isDark,
+                                      activeTrackColor: theme.colorScheme.primary,
+                                    onChanged: (_) => ref.read(themeModeProvider.notifier).toggleTheme(),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Divider(height: 1, color: theme.colorScheme.outlineVariant),
+                        settingsRow(context, CupertinoIcons.creditcard, 'Payment Methods', 'Cards & billing'),
+                        Divider(height: 1, color: theme.colorScheme.outlineVariant),
+                        settingsRow(context, CupertinoIcons.doc_text, 'Terms & Conditions', 'Platform terms'),
+                        Divider(height: 1, color: theme.colorScheme.outlineVariant),
+                        settingsRow(context, CupertinoIcons.shield, 'Privacy Policy', 'Data handling'),
+                        Divider(height: 1, color: theme.colorScheme.outlineVariant),
+                        settingsRow(context, CupertinoIcons.question_circle, 'Help & Support', 'Get help'),
+                      ],
+                    ),
                   ),
                 ),
               ),
 
               const SliverToBoxAdapter(child: SizedBox(height: 140)),
             ],
+          ),
           );
         },
       ),
@@ -417,19 +498,19 @@ class _StatPill extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 18),
           decoration: BoxDecoration(
-            color: AppTheme.cardSurface,
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(18),
           ),
           child: Column(
             children: [
-              Icon(icon, size: 16, color: AppTheme.accent),
+              Icon(icon, size: 16, color: Theme.of(context).colorScheme.primary),
               const SizedBox(height: 8),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w400,
-                  color: AppTheme.onSurface,
+                  color: Theme.of(context).colorScheme.onSurface,
                   height: 1.0,
                   letterSpacing: -0.3,
                 ),
@@ -437,10 +518,10 @@ class _StatPill extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w400,
-                  color: AppTheme.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -471,7 +552,7 @@ class _ReminderTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppTheme.cardSurface,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
@@ -481,7 +562,7 @@ class _ReminderTile extends StatelessWidget {
             height: 38,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             ),
             child: Center(child: Icon(icon, size: 17, color: color)),
           ),
@@ -492,20 +573,20 @@ class _ReminderTile extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: AppTheme.onSurface,
+                    color: Theme.of(context).colorScheme.onSurface,
                     letterSpacing: 0.0,
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: AppTheme.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     letterSpacing: 0.3,
                   ),
                 ),
@@ -534,68 +615,3 @@ class _ReminderTile extends StatelessWidget {
   }
 }
 
-class _SettingsRow extends StatelessWidget {
-  const _SettingsRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedTapScale(
-      scaleFactor: 0.97,
-      onTap: () {},
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppTheme.cardSurface,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppTheme.accent.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, size: 18, color: AppTheme.accent),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.onSurface,
-                      letterSpacing: 0.0,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: AppTheme.textSecondary,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(CupertinoIcons.chevron_right, size: 14, color: AppTheme.textSecondary),
-          ],
-        ),
-      ),
-    );
-  }
-}

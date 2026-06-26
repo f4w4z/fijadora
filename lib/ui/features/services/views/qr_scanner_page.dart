@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../profile/views/home_detail_list_view.dart';
+import '../../../shared/utils/notification_helper.dart';
 
 class QrScannerPage extends StatelessWidget {
   const QrScannerPage({super.key});
@@ -60,11 +61,7 @@ class QrScannerPage extends StatelessWidget {
                     builder: (context) => const HomeDetailListView(type: 'appliances'),
                   ),
                 );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('QR Code scanned: Loaded digital appliance record'),
-                  ),
-                );
+                context.showSnackBar('QR Code scanned: Loaded digital appliance record', type: SnackBarType.info);
               },
               icon: const Icon(CupertinoIcons.barcode_viewfinder),
               label: const Text('Simulate Appliance Tag Scan', style: TextStyle(fontWeight: FontWeight.bold)),

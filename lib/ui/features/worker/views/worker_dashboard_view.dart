@@ -12,6 +12,7 @@ import '../../auth/view_models/auth_view_model.dart';
 import '../../services/view_models/jobs_view_model.dart';
 import 'worker_job_details_view.dart';
 import '../../../shared/utils/date_extensions.dart';
+import '../../../shared/utils/notification_helper.dart';
 
 final _workerTabProvider = StateProvider<int>((ref) => 0);
 
@@ -356,15 +357,11 @@ class _WorkerJobCard extends ConsumerWidget {
                             body: 'You successfully claimed the request for ${job.tradeType.displayName}.',
                           );
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Job claimed successfully!')),
-                        );
+                        context.showSnackBar('Job claimed successfully!', type: SnackBarType.success);
                       }
                     } catch (e) {
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to claim job: $e')),
-                        );
+                        context.showSnackBar('Failed to claim job: $e', type: SnackBarType.error);
                       }
                     }
                   },

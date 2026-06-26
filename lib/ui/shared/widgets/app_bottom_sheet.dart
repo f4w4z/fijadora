@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme.dart';
 
 Future<T?> showAppBottomSheet<T>({
   required BuildContext context,
@@ -29,7 +30,7 @@ Future<T?> showAppBottomSheet<T>({
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.18),
@@ -44,7 +45,7 @@ Future<T?> showAppBottomSheet<T>({
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                     child: Container(
                       color: theme.colorScheme.surface,
                       child: Column(

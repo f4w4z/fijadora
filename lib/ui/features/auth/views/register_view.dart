@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../ui/shared/widgets/animated_tap_scale.dart';
+import '../../../../ui/shared/utils/notification_helper.dart';
 import '../../../../domain/models/user_role.dart';
 import '../view_models/auth_view_model.dart';
 
@@ -46,13 +47,9 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
+        context.showSnackBar(
+          e.toString().replaceAll('Exception: ', ''),
+          type: SnackBarType.error,
         );
       }
     }

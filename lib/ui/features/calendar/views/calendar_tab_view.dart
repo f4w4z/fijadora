@@ -17,7 +17,7 @@ class CalendarTabView extends ConsumerStatefulWidget {
   ConsumerState<CalendarTabView> createState() => _CalendarTabViewState();
 }
 
-class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
+class _CalendarTabViewState extends ConsumerState<CalendarTabView> with AutomaticKeepAliveClientMixin {
   late DateTime _focusedMonth;
   DateTime _selectedDay = DateTime.now();
 
@@ -52,12 +52,17 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     final jobsAsync = ref.watch(jobsViewModelProvider);
     final jobs = jobsAsync.jobs;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final selected = DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day);
+    final theme = Theme.of(context);
 
     final recurringTasks = generateRecurringTasks(_focusedMonth);
 
@@ -76,7 +81,7 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
         type: CalendarEventType.job,
         tradeType: j.tradeType,
         icon: j.tradeType.icon,
-        color: AppTheme.accent,
+        color: theme.colorScheme.primary,
       ))
       .toList();
 
@@ -105,7 +110,7 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.scaffold,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: FloatingHeaderLayout(
         header: CustomPinnedHeader(
           title: 'Calendar',
@@ -115,7 +120,7 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
-                  color: AppTheme.cardSurface,
+                  color: theme.colorScheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Text(
@@ -123,7 +128,7 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: AppTheme.onSurface,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
               ),
@@ -131,7 +136,9 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
           ],
         ),
         bodyBuilder: (context, topPadding) {
-          return CustomScrollView(
+          return RefreshIndicator(
+            onRefresh: () async => Future.delayed(const Duration(milliseconds: 300)),
+            child: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(child: SizedBox(height: topPadding)),
 
@@ -143,15 +150,15 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
                     children: [
                       AnimatedTapScale(
                         onTap: _previousMonth,
-                        child: Icon(CupertinoIcons.chevron_left, size: 18, color: AppTheme.onSurface),
+                        child: Icon(CupertinoIcons.chevron_left, size: 18, color: theme.colorScheme.onSurface),
                       ),
                       const Spacer(),
                       Text(
                         '${_monthName(_focusedMonth.month)} ${_focusedMonth.year}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.w300,
-                          color: AppTheme.onSurface,
+                          color: theme.colorScheme.onSurface,
                           letterSpacing: 0.5,
                           height: 1.0,
                         ),
@@ -159,7 +166,7 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
                       const Spacer(),
                       AnimatedTapScale(
                         onTap: _nextMonth,
-                        child: Icon(CupertinoIcons.chevron_right, size: 18, color: AppTheme.onSurface),
+                        child: Icon(CupertinoIcons.chevron_right, size: 18, color: theme.colorScheme.onSurface),
                       ),
                     ],
                   ),
@@ -179,7 +186,7 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
-                            color: AppTheme.textSecondary,
+                            color: theme.colorScheme.onSurfaceVariant,
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -192,10 +199,20 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
 
               // ─── Calendar grid ────────────────────────────────────────────
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    children: List.generate(totalCells ~/ 7, (rowIndex) {
+                child: GestureDetector(
+                  onHorizontalDragEnd: (details) {
+                    if (details.primaryVelocity == null) return;
+                    if (details.primaryVelocity! < 0) {
+                      _nextMonth();
+                    } else if (details.primaryVelocity! > 0) {
+                      _previousMonth();
+                    }
+                  },
+                  behavior: HitTestBehavior.translucent,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      children: List.generate(totalCells ~/ 7, (rowIndex) {
                       return Padding(
                         padding: EdgeInsets.only(bottom: rowIndex < (totalCells ~/ 7) - 1 ? 4 : 0),
                         child: Row(
@@ -217,9 +234,9 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: isSelected
-                                        ? AppTheme.onSurface
+                                        ? theme.colorScheme.onSurface
                                         : isToday
-                                            ? AppTheme.accent
+                                            ? theme.colorScheme.primary
                                             : Colors.transparent,
                                   ),
                                   child: Column(
@@ -236,7 +253,7 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
                                               ? Colors.white
                                               : isToday
                                                   ? Colors.white
-                                                  : AppTheme.onSurface,
+                                                  : theme.colorScheme.onSurface,
                                           height: 1.0,
                                         ),
                                       ),
@@ -245,9 +262,9 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
                                           margin: const EdgeInsets.only(top: 3),
                                           width: 4,
                                           height: 4,
-                                          decoration: const BoxDecoration(
+                                          decoration: BoxDecoration(
                                             shape: BoxShape.circle,
-                                            color: AppTheme.accent,
+                                            color: theme.colorScheme.primary,
                                           ),
                                         ),
                                       if (hasEvent && (isSelected || isToday))
@@ -271,6 +288,7 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
                     }),
                   ),
                 ),
+                ),
               ),
 
               // ─── Selected day schedule ─────────────────────────────────────
@@ -283,7 +301,7 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w500,
-                        color: AppTheme.onSurface,
+                        color: theme.colorScheme.onSurface,
                         letterSpacing: -0.3,
                       ),
                     ),
@@ -311,7 +329,7 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.onSurface,
+                      color: theme.colorScheme.onSurface,
                       letterSpacing: -0.3,
                     ),
                   ),
@@ -333,7 +351,7 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
                               title: 'No events today',
                               type: CalendarEventType.recurringTask,
                               icon: CupertinoIcons.checkmark_circle,
-                              color: AppTheme.textSecondary,
+                              color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                         );
@@ -351,6 +369,7 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
 
               const SliverToBoxAdapter(child: SizedBox(height: 140)),
             ],
+          ),
           );
         },
       ),
@@ -369,22 +388,26 @@ class _CalendarEventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
       ),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: event.color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
+          Hero(
+            tag: 'event-icon-${event.hashCode}',
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: event.color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              ),
+              child: Icon(event.icon, size: 18, color: event.color),
             ),
-            child: Icon(event.icon, size: 18, color: event.color),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -396,7 +419,7 @@ class _CalendarEventCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.onSurface,
+                    color: theme.colorScheme.onSurface,
                     letterSpacing: -0.2,
                   ),
                 ),
@@ -406,7 +429,7 @@ class _CalendarEventCard extends StatelessWidget {
                     event.subtitle!,
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.textSecondary,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -414,7 +437,7 @@ class _CalendarEventCard extends StatelessWidget {
             ),
           ),
           if (event.type == CalendarEventType.job)
-            Icon(CupertinoIcons.chevron_right, size: 14, color: AppTheme.textSecondary),
+            Icon(CupertinoIcons.chevron_right, size: 14, color: theme.colorScheme.onSurfaceVariant),
         ],
       ),
     );

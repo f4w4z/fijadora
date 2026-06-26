@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../view_models/cart_view_model.dart';
+import '../../../shared/widgets/empty_state_widget.dart';
+import '../../../shared/utils/notification_helper.dart';
 
 class CartView extends ConsumerWidget {
   const CartView({super.key});
@@ -30,31 +32,10 @@ class CartView extends ConsumerWidget {
         ],
       ),
       body: cart.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    CupertinoIcons.bag,
-                    size: 64,
-                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Your cart is empty',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Explore curated pieces in our shop.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
+          ? const EmptyStateWidget(
+              icon: CupertinoIcons.bag,
+              title: 'Your cart is empty',
+              message: 'Explore curated pieces in our shop.',
             )
           : CustomScrollView(
               slivers: [
@@ -66,7 +47,21 @@ class CartView extends ConsumerWidget {
                         final product = entry.key;
                         final qty = entry.value;
 
-                        return Container(
+                        return Dismissible(
+                          key: ValueKey(product.id),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 24),
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.error,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(CupertinoIcons.trash, color: Colors.white),
+                          ),
+                          onDismissed: (_) => cartNotifier.removeFromCart(product),
+                          child: Container(
                           margin: const EdgeInsets.only(bottom: 16.0),
                           padding: const EdgeInsets.all(12.0),
                           decoration: BoxDecoration(
@@ -156,6 +151,7 @@ class CartView extends ConsumerWidget {
                               ),
                             ],
                           ),
+                        ),
                         );
                       }).toList(),
                     ),
@@ -291,9 +287,7 @@ class CartView extends ConsumerWidget {
                       } catch (e) {
                         if (context.mounted) {
                           Navigator.of(context).pop(); // dismiss loading
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Reservation failed: $e')),
-                          );
+                          context.showSnackBar('Reservation failed: $e', type: SnackBarType.error);
                         }
                       }
                     },

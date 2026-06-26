@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/utils/notification_helper.dart';
 
 class ApplianceDetailPage extends StatelessWidget {
   const ApplianceDetailPage({
@@ -83,12 +84,7 @@ class ApplianceDetailPage extends StatelessWidget {
               onPressed: () {
                 Navigator.pop(context);
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    behavior: SnackBarBehavior.floating,
-                    content: Text('Selected $title. Pre-filling diagnostic ticket...'),
-                  ),
-                );
+                context.showSnackBar('Selected $title. Pre-filling diagnostic ticket...', type: SnackBarType.info);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: isNeedsService ? Colors.orange : theme.colorScheme.primary,

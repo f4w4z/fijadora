@@ -125,3 +125,168 @@ class ShimmerListPlaceholder extends StatelessWidget {
     );
   }
 }
+
+class ShimmerProductGrid extends StatelessWidget {
+  const ShimmerProductGrid({super.key, this.itemCount = 6});
+
+  final int itemCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16.0,
+          mainAxisSpacing: 24.0,
+          childAspectRatio: 0.72,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            return const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: SkeletonBox(
+                    width: double.infinity,
+                    borderRadius: 16.0,
+                  ),
+                ),
+                SizedBox(height: 10),
+                SkeletonBox(width: 120, height: 16, borderRadius: 4),
+                SizedBox(height: 4),
+                SkeletonBox(width: 60, height: 14, borderRadius: 4),
+              ],
+            );
+          },
+          childCount: itemCount,
+        ),
+      ),
+    );
+  }
+}
+
+class ShimmerServiceGrid extends StatelessWidget {
+  const ShimmerServiceGrid({super.key, this.itemCount = 6});
+
+  final int itemCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 0.68,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            return const Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: SkeletonBox(
+                    width: double.infinity,
+                    borderRadius: 20.0,
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(10, 8, 10, 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SkeletonBox(width: 100, height: 14, borderRadius: 4),
+                        SizedBox(height: 6),
+                        SkeletonBox(width: double.infinity, height: 10, borderRadius: 4),
+                        SizedBox(height: 4),
+                        SkeletonBox(width: 80, height: 10, borderRadius: 4),
+                        Spacer(),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            SkeletonBox(width: 60, height: 12, borderRadius: 4),
+                            SkeletonBox(width: 26, height: 26, borderRadius: 13),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+          childCount: itemCount,
+        ),
+      ),
+    );
+  }
+}
+
+class ShimmerJobCard extends StatelessWidget {
+  const ShimmerJobCard({super.key, this.itemCount = 3});
+
+  final int itemCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 24, right: 24,
+              bottom: index == itemCount - 1 ? 0 : 10,
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: const Row(
+                children: [
+                  SkeletonBox(width: 38, height: 38, borderRadius: 12),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: SkeletonBox(height: 14, borderRadius: 4),
+                            ),
+                            SizedBox(width: 8),
+                            SkeletonBox(width: 50, height: 14, borderRadius: 6),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          children: [
+                            SkeletonBox(width: 14, height: 10, borderRadius: 2),
+                            SizedBox(width: 4),
+                            SkeletonBox(width: 80, height: 10, borderRadius: 4),
+                            SizedBox(width: 8),
+                            SkeletonBox(width: 40, height: 10, borderRadius: 4),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+        childCount: itemCount,
+      ),
+    );
+  }
+}

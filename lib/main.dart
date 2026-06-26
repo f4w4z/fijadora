@@ -1,20 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'data/services/supabase_service.dart';
 import 'data/services/telemetry_service.dart';
 import 'ui/core/router.dart';
 import 'ui/core/theme.dart';
+import 'ui/core/theme_provider.dart';
 
 void main() async {
   // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Hive for offline cache
+  // Edge-to-edge system UI
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.dark,
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarIconBrightness: Brightness.dark,
+  ));
+
+  // Initialize Hive for offline cache and preferences
   try {
     await Hive.initFlutter();
     await Hive.openBox('cached_jobs');
-    debugPrint('Hive initialized and cached_jobs box opened.');
+    await Hive.openBox('app_preferences');
+    debugPrint('Hive initialized (cached_jobs, app_preferences).');
   } catch (e) {
     debugPrint('Hive initialization failed: $e');
   }
@@ -51,17 +63,42 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
-    return MaterialApp.router(
-      title: 'Phoebe Homes',
-      debugShowCheckedModeBanner: false,
-      
-      // Light-only theme
-      theme: AppTheme.lightTheme,
-      themeMode: ThemeMode.light,
+    final isDark = themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
 
-      // Routing configuration
-      routerConfig: router,
+    final textScale = MediaQuery.of(context).textScaler.scale(1.0).clamp(0.85, 1.3);
+
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: isDark
+            ? const SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: Brightness.light,
+                systemNavigationBarColor: Colors.transparent,
+                systemNavigationBarIconBrightness: Brightness.light,
+              )
+            : const SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: Brightness.dark,
+                systemNavigationBarColor: Colors.transparent,
+                systemNavigationBarIconBrightness: Brightness.dark,
+              ),
+        child: MaterialApp.router(
+        title: 'Phoebe Homes',
+        debugShowCheckedModeBanner: false,
+        
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeMode,
+
+        // Routing configuration
+        routerConfig: router,
+      ),
+      ),
     );
   }
 }

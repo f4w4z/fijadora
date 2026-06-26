@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
 import 'appliance_detail_page.dart';
+import '../../../shared/utils/notification_helper.dart';
 
 class HomeDetailListView extends StatelessWidget {
   const HomeDetailListView({super.key, required this.type});
@@ -51,12 +52,7 @@ class HomeDetailListView extends StatelessWidget {
                     if (type == 'appliances') {
                       _showApplianceDetail(context, item);
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          behavior: SnackBarBehavior.floating,
-                          content: Text('${item.title} detail sheet: ${item.subtitle.replaceAll('\n', ' ')}'),
-                        ),
-                      );
+                      context.showSnackBar('${item.title} detail sheet: ${item.subtitle.replaceAll('\n', ' ')}', type: SnackBarType.info);
                     }
                   },
                   child: Container(

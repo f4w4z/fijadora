@@ -1,8 +1,10 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../ui/shared/widgets/animated_tap_scale.dart';
+import '../../../../ui/shared/utils/notification_helper.dart';
 import '../view_models/auth_view_model.dart';
 
 class LoginView extends ConsumerStatefulWidget {
@@ -36,13 +38,9 @@ class _LoginViewState extends ConsumerState<LoginView> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
+        context.showSnackBar(
+          e.toString().replaceAll('Exception: ', ''),
+          type: SnackBarType.error,
         );
       }
     }
@@ -196,92 +194,94 @@ class _LoginViewState extends ConsumerState<LoginView> {
                           ),
                         ),
 
-                        const SizedBox(height: 28.0),
+                        if (!kReleaseMode) ...[
+                          const SizedBox(height: 28.0),
 
-                        // Demo Accounts Section Redesign
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? theme.colorScheme.primary.withValues(alpha: 0.08)
-                                : theme.colorScheme.primary.withValues(alpha: 0.06),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
+                          // Demo Accounts Section Redesign
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
                               color: isDark
-                                  ? theme.colorScheme.primary.withValues(alpha: 0.2)
-                                  : theme.colorScheme.primary.withValues(alpha: 0.15),
+                                  ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                                  : theme.colorScheme.primary.withValues(alpha: 0.06),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isDark
+                                    ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                                    : theme.colorScheme.primary.withValues(alpha: 0.15),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  'QUICK DEMO ACCESS',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    letterSpacing: 1.2,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 16),
+                                Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: _DemoAccountCard(
+                                            roleName: 'Client',
+                                            email: 'customer@phoebe.com',
+                                            icon: CupertinoIcons.person_solid,
+                                            themeColor: const Color(0xFF2F80ED),
+                                            onTap: () => _useCredentials('customer@phoebe.com'),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: _DemoAccountCard(
+                                            roleName: 'Service Worker',
+                                            email: 'alex.worker@phoebe.com',
+                                            icon: CupertinoIcons.hammer_fill,
+                                            themeColor: const Color(0xFFF2994A),
+                                            onTap: () => _useCredentials('alex.worker@phoebe.com'),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: _DemoAccountCard(
+                                            roleName: 'Operations Admin',
+                                            email: 'phoebe.admin@phoebe.com',
+                                            icon: CupertinoIcons.shield_fill,
+                                            themeColor: const Color(0xFF9B51E0),
+                                            onTap: () => _useCredentials('phoebe.admin@phoebe.com'),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: _DemoAccountCard(
+                                            roleName: 'Property Manager',
+                                            email: 'manager@phoebe.com',
+                                            icon: CupertinoIcons.briefcase_fill,
+                                            themeColor: const Color(0xFF27AE60),
+                                            onTap: () => _useCredentials('manager@phoebe.com'),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                'QUICK DEMO ACCESS',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                  letterSpacing: 1.2,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 16),
-                              Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: _DemoAccountCard(
-                                          roleName: 'Client',
-                                          email: 'customer@phoebe.com',
-                                          icon: CupertinoIcons.person_solid,
-                                          themeColor: const Color(0xFF2F80ED),
-                                          onTap: () => _useCredentials('customer@phoebe.com'),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: _DemoAccountCard(
-                                          roleName: 'Service Worker',
-                                          email: 'alex.worker@phoebe.com',
-                                          icon: CupertinoIcons.hammer_fill,
-                                          themeColor: const Color(0xFFF2994A),
-                                          onTap: () => _useCredentials('alex.worker@phoebe.com'),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: _DemoAccountCard(
-                                          roleName: 'Operations Admin',
-                                          email: 'phoebe.admin@phoebe.com',
-                                          icon: CupertinoIcons.shield_fill,
-                                          themeColor: const Color(0xFF9B51E0),
-                                          onTap: () => _useCredentials('phoebe.admin@phoebe.com'),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: _DemoAccountCard(
-                                          roleName: 'Property Manager',
-                                          email: 'manager@phoebe.com',
-                                          icon: CupertinoIcons.briefcase_fill,
-                                          themeColor: const Color(0xFF27AE60),
-                                          onTap: () => _useCredentials('manager@phoebe.com'),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
 
-                        const SizedBox(height: 28.0),
+                          const SizedBox(height: 28.0),
+                        ],
 
                         // Sign Up Link Row
                         Row(

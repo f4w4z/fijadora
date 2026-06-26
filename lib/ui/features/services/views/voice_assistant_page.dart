@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/models/trade_type.dart';
 import '../view_models/jobs_view_model.dart';
+import '../../../shared/utils/notification_helper.dart';
 
 class VoiceAssistantPage extends ConsumerStatefulWidget {
   const VoiceAssistantPage({super.key});
@@ -72,9 +73,7 @@ class _VoiceAssistantPageState extends ConsumerState<VoiceAssistantPage> with Si
             _flowTimer = Timer(const Duration(milliseconds: 2500), () {
               if (mounted) {
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Plumbing request booked by Voice Assistant!')),
-                );
+                context.showSnackBar('Plumbing request booked by Voice Assistant!', type: SnackBarType.success);
               }
             });
           }

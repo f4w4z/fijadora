@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/models/job_status.dart';
 import '../view_models/jobs_view_model.dart';
 import '../../../../data/services/telemetry_service.dart';
+import '../../../shared/utils/notification_helper.dart';
 
 class CustomerReviewPanel extends ConsumerStatefulWidget {
   const CustomerReviewPanel({super.key, required this.jobId});
@@ -45,19 +46,16 @@ class CustomerReviewPanelState extends ConsumerState<CustomerReviewPanel> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(targetStatus == JobStatus.completed
-                ? 'Job approved and signed off successfully!'
-                : 'Job status: Complaint submitted.'),
-          ),
+        context.showSnackBar(
+          targetStatus == JobStatus.completed
+              ? 'Job approved and signed off successfully!'
+              : 'Job status: Complaint submitted.',
+          type: targetStatus == JobStatus.completed ? SnackBarType.success : SnackBarType.info,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error submitting review: $e')),
-        );
+        context.showSnackBar('Error submitting review: $e', type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);

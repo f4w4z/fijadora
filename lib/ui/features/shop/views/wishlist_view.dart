@@ -7,6 +7,8 @@ import '../view_models/cart_view_model.dart';
 import '../view_models/wishlist_view_model.dart';
 import 'product_detail_view.dart';
 import '../../../shared/utils/notification_helper.dart';
+import '../../../shared/widgets/empty_state_widget.dart';
+import '../../../shared/widgets/error_state_widget.dart';
 
 class WishlistView extends ConsumerWidget {
   const WishlistView({super.key});
@@ -23,34 +25,16 @@ class WishlistView extends ConsumerWidget {
       ),
       body: wishlistAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error loading wishlist: $err')),
+        error: (err, stack) => ErrorStateWidget(
+          message: 'Could not load your wishlist.',
+          onRetry: () => ref.invalidate(wishlistProvider),
+        ),
         data: (products) {
           if (products.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    CupertinoIcons.heart,
-                    size: 64,
-                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Your wishlist is empty',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Tap heart icon on pieces you love.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
+            return const EmptyStateWidget(
+              icon: CupertinoIcons.heart,
+              title: 'Your wishlist is empty',
+              message: 'Tap the heart icon on pieces you love.',
             );
           }
 

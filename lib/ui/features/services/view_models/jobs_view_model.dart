@@ -136,6 +136,11 @@ class JobsViewModel extends ChangeNotifier {
     }
   }
 
+  void refresh() {
+    _subscription?.cancel();
+    _init();
+  }
+
   @override
   void dispose() {
     _subscription?.cancel();

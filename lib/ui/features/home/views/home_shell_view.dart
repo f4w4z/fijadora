@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/views/services_tab_view.dart';
 import '../../shop/views/shop_tab_view.dart';
@@ -19,19 +20,21 @@ class HomeShellView extends ConsumerStatefulWidget {
 class _HomeShellViewState extends ConsumerState<HomeShellView>
     with TickerProviderStateMixin {
   int _currentIndex = 0;
+  final PageController _pageController = PageController(initialPage: 0);
   StreamSubscription<AppNotification>? _notificationSubscription;
 
   late final List<AnimationController> _bounceControllers = List.generate(_navItems.length, (_) {
     return AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 320),
+      duration: const Duration(milliseconds: 500),
     );
   });
   late final List<Animation<double>> _bounceAnimations = _bounceControllers.map((ctrl) {
     return TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.75), weight: 25),
-      TweenSequenceItem(tween: Tween(begin: 0.75, end: 1.1), weight: 45),
-      TweenSequenceItem(tween: Tween(begin: 1.1, end: 1.0), weight: 30),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.82), weight: 18),
+      TweenSequenceItem(tween: Tween(begin: 0.82, end: 1.12), weight: 35),
+      TweenSequenceItem(tween: Tween(begin: 1.12, end: 0.95), weight: 22),
+      TweenSequenceItem(tween: Tween(begin: 0.95, end: 1.0), weight: 25),
     ]).animate(CurvedAnimation(parent: ctrl, curve: Curves.easeInOut));
   }).toList();
 
@@ -74,6 +77,7 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
   @override
   void dispose() {
     _notificationSubscription?.cancel();
+    _pageController.dispose();
     for (final ctrl in _bounceControllers) {
       ctrl.dispose();
     }
@@ -130,6 +134,17 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
 
   void _onTabTap(int index) {
     if (index == _currentIndex) return;
+    HapticFeedback.lightImpact();
+    _bounceControllers[index].forward(from: 0.0);
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOutCubic,
+    );
+  }
+
+  void _onPageChanged(int index) {
+    if (index == _currentIndex) return;
     _bounceControllers[index].forward(from: 0.0);
     setState(() => _currentIndex = index);
   }
@@ -138,38 +153,50 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // ── Tab content (kept alive with IndexedStack) ─────────────────────
-          IndexedStack(
-            index: _currentIndex,
-            children: _tabs,
-          ),
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.digit1, control: true): () => _onTabTap(0),
+        const SingleActivator(LogicalKeyboardKey.digit2, control: true): () => _onTabTap(1),
+        const SingleActivator(LogicalKeyboardKey.digit3, control: true): () => _onTabTap(2),
+        const SingleActivator(LogicalKeyboardKey.digit4, control: true): () => _onTabTap(3),
+      },
+      child: Focus(
+        autofocus: true,
+        child: Scaffold(
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              // ── Tab content with swipe gesture ──────────────────────────
+              PageView(
+                controller: _pageController,
+                onPageChanged: _onPageChanged,
+                children: _tabs,
+              ),
 
-          // ── Floating nav bar ──────────────────────────────────────────────
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 24,
-            child: SafeArea(
-              top: false,
-              child: Center(
-                child: SizedBox(
-                  width: 330,
-                  child: _FloatingNavBar(
-                    currentIndex: _currentIndex,
-                    items: _navItems,
-                    bounceAnimations: _bounceAnimations,
-                    onTap: _onTabTap,
-                    theme: theme,
+              // ── Floating nav bar ──────────────────────────────────────────
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 24,
+                child: SafeArea(
+                  top: false,
+                  child: Center(
+                    child: SizedBox(
+                      width: 330,
+                      child: _FloatingNavBar(
+                        currentIndex: _currentIndex,
+                        items: _navItems,
+                        bounceAnimations: _bounceAnimations,
+                        onTap: _onTabTap,
+                        theme: theme,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -207,7 +234,10 @@ class _FloatingNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
+    return Semantics(
+      container: true,
+      explicitChildNodes: true,
+      child: Container(
       height: 68,
       decoration: BoxDecoration(
         color: isDark 
@@ -242,6 +272,7 @@ class _FloatingNavBar extends StatelessWidget {
           );
         }),
       ),
+      ),
     );
   }
 }
@@ -269,7 +300,11 @@ class _NavItemWidget extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final double targetWidth = isSelected ? 128.0 : 52.0;
 
-    return GestureDetector(
+    return Semantics(
+      label: item.label,
+      button: true,
+      selected: isSelected,
+      child: GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
@@ -344,6 +379,7 @@ class _NavItemWidget extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

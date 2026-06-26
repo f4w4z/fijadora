@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'animated_tap_scale.dart';
+import '../../core/theme.dart';
 
 class CustomPinnedHeader extends StatelessWidget {
   const CustomPinnedHeader({
@@ -95,14 +96,10 @@ class HeaderActionButton extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark
-                ? theme.colorScheme.surfaceContainer
-                : Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            color: theme.colorScheme.surfaceContainer,
+            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             border: Border.all(
-              color: theme.brightness == Brightness.dark
-                  ? theme.colorScheme.surfaceContainerHighest
-                  : const Color(0xFFE5E5E5),
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
               width: 1.0,
             ),
           ),
@@ -124,16 +121,15 @@ class GroupedHeaderActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       margin: const EdgeInsets.only(left: 8.0),
       height: 40,
       decoration: BoxDecoration(
-        color: isDark ? theme.colorScheme.surfaceContainer : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
         border: Border.all(
-          color: isDark ? theme.colorScheme.surfaceContainerHighest : const Color(0xFFE5E5E5),
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
           width: 1.0,
         ),
       ),
@@ -172,9 +168,7 @@ class GroupedHeaderActions extends StatelessWidget {
                   VerticalDivider(
                     width: 1,
                     thickness: 1,
-                    color: isDark
-                        ? theme.colorScheme.surfaceContainerHighest
-                        : const Color(0xFFE5E5E5),
+                    color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
                     indent: 8,
                     endIndent: 8,
                   ),

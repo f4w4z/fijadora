@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../domain/models/job_status.dart';
 import '../../services/view_models/jobs_view_model.dart';
+import '../../../shared/utils/notification_helper.dart';
 
 class JobCompletionPage extends ConsumerStatefulWidget {
   const JobCompletionPage({super.key, required this.jobId});
@@ -38,9 +39,7 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error completing job: $e')),
-        );
+        context.showSnackBar('Error completing job: $e', type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -55,9 +54,7 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
         _photoCaptured = true;
         _isCapturing = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Completion proof photo captured successfully.')),
-      );
+      context.showSnackBar('Completion proof photo captured successfully.', type: SnackBarType.success);
     }
   }
 

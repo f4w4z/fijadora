@@ -7,6 +7,7 @@ import '../../../../data/services/gemini_service.dart';
 import '../../../../ui/core/theme.dart';
 import '../../../../ui/shared/widgets/app_bottom_sheet.dart';
 import '../../../shared/utils/date_extensions.dart';
+import '../../../shared/utils/notification_helper.dart';
 
 class NewRequestPage extends ConsumerStatefulWidget {
   final TradeType? initialTrade;
@@ -51,15 +52,11 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('AI diagnosis applied successfully!')),
-        );
+        context.showSnackBar('AI diagnosis applied successfully!', type: SnackBarType.success);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI diagnosis failed: $e')),
-        );
+        context.showSnackBar('AI diagnosis failed: $e', type: SnackBarType.error);
       }
     } finally {
       setState(() => _isAiDiagnosing = false);
@@ -117,7 +114,7 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
             final isActive = trade == _selectedTrade;
             return InkWell(
               onTap: () => Navigator.pop(context, trade),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
                 margin: const EdgeInsets.symmetric(vertical: 4),
@@ -126,7 +123,7 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
                   color: isActive
                       ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   border: Border.all(
                     color: isActive
                         ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
@@ -252,9 +249,7 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error raising request: $e')),
-        );
+        context.showSnackBar('Error raising request: $e', type: SnackBarType.error);
       }
     }
   }
@@ -417,7 +412,7 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
                         Expanded(
                           child: InkWell(
                             onTap: _selectDate,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                             child: InputDecorator(
                               decoration: const InputDecoration(labelText: 'Date'),
                               child: Text(_selectedDate.formattedDateOnly),
@@ -428,7 +423,7 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
                         Expanded(
                           child: InkWell(
                             onTap: _selectTime,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                             child: InputDecorator(
                               decoration: const InputDecoration(labelText: 'Time'),
                               child: Text(_selectedTime.format(context)),
@@ -462,7 +457,7 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
                           backgroundColor: theme.colorScheme.primary,
                           foregroundColor: theme.colorScheme.onPrimary,
                           shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.zero,
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                           ),
                         ),
                         child: isCreating

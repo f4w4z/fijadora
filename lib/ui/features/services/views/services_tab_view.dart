@@ -9,14 +9,16 @@ import '../../../../domain/models/trade_type.dart';
 import '../view_models/jobs_view_model.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../../../ui/shared/widgets/animated_tap_scale.dart';
+import '../../../../ui/shared/widgets/app_bottom_sheet.dart';
+import '../../../../ui/shared/widgets/custom_pinned_header.dart';
+import '../../../../ui/shared/widgets/empty_state_widget.dart';
+import '../../../../ui/shared/widgets/floating_header_layout.dart';
 import '../../../../ui/features/services/views/new_request_page.dart';
 import '../../../../ui/features/services/views/job_details_page.dart';
 import '../../../../ui/features/services/views/live_tracking_view.dart';
-import '../../../../ui/shared/widgets/app_bottom_sheet.dart';
-import '../../../../ui/shared/widgets/custom_pinned_header.dart';
-import '../../../../ui/shared/widgets/floating_header_layout.dart';
 import '../../../shared/utils/date_extensions.dart';
 import '../../../core/theme.dart';
+import '../../../shared/utils/notification_helper.dart';
 
 final _quotes = [
   'Your home runs on care',
@@ -86,7 +88,7 @@ class ServicesTabView extends ConsumerStatefulWidget {
   ConsumerState<ServicesTabView> createState() => _ServicesTabViewState();
 }
 
-class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
+class _ServicesTabViewState extends ConsumerState<ServicesTabView> with AutomaticKeepAliveClientMixin {
   int _quoteIndex = 0;
   TradeType? _selectedTrade;
 
@@ -98,7 +100,7 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
 
   void _loadAndUpdateQuoteIndex() {
     try {
-      final box = Hive.box('cached_jobs');
+      final box = Hive.box('app_preferences');
       final lastIndex = box.get('quote_index', defaultValue: -1) as int;
       final nextIndex = (lastIndex + 1) % _quotes.length;
       box.put('quote_index', nextIndex);
@@ -110,7 +112,11 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     final theme = Theme.of(context);
     final jobsViewModel = ref.watch(jobsViewModelProvider);
     final authViewModel = ref.watch(authViewModelProvider);
@@ -130,7 +136,7 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
     final trades = TradeType.values;
 
     return Scaffold(
-      backgroundColor: AppTheme.scaffold,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: FloatingHeaderLayout(
           header: CustomPinnedHeader(
             title: 'Services',
@@ -140,20 +146,20 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                   decoration: BoxDecoration(
-                    color: AppTheme.cardSurface,
+                    color: theme.colorScheme.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(22),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(CupertinoIcons.add, size: 16, color: Color(0xFF1A1A1A)),
+                      Icon(CupertinoIcons.add, size: 16, color: theme.colorScheme.onSurface),
                       const SizedBox(width: 6),
-                      const Text(
+                      Text(
                         'New Request',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: Color(0xFF1A1A1A),
+                          color: theme.colorScheme.onSurface,
                           letterSpacing: -0.2,
                         ),
                       ),
@@ -174,18 +180,18 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
                   hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6), fontSize: 14),
                   prefixIcon: Icon(CupertinoIcons.search, size: 18, color: theme.colorScheme.onSurfaceVariant),
                   filled: true,
-                  fillColor: AppTheme.cardSurface,
+                  fillColor: theme.colorScheme.surfaceContainerLow,
                   contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     borderSide: BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -197,7 +203,9 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
               ? trades
               : trades.where((t) => t == _selectedTrade).toList();
 
-          return CustomScrollView(
+          return RefreshIndicator(
+            onRefresh: () async => ref.read(jobsViewModelProvider).refresh(),
+            child: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(child: SizedBox(height: topPadding)),
 
@@ -213,7 +221,7 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w500,
-                          color: AppTheme.onSurface,
+                          color: theme.colorScheme.onSurface,
                           letterSpacing: -0.5,
                         ),
                       ),
@@ -229,7 +237,7 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
                           style: TextStyle(
                             fontSize: 36,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.onSurface,
+                            color: theme.colorScheme.onSurface,
                             height: 1.0,
                             letterSpacing: -1.0,
                           ),
@@ -278,11 +286,11 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
                     children: [
                       Text(
                         'All Services',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.onSurface, letterSpacing: -0.3),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface, letterSpacing: -0.3),
                       ),
                       TextButton(
                         onPressed: () => _showNewRequest(context),
-                        child: Text('See All', style: TextStyle(color: AppTheme.accent, fontSize: 13)),
+                        child: Text('See All', style: TextStyle(color: theme.colorScheme.primary, fontSize: 13)),
                       ),
                     ],
                   ),
@@ -327,11 +335,11 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
                       children: [
                         Text(
                           'My Requests',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.onSurface, letterSpacing: -0.3),
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface, letterSpacing: -0.3),
                         ),
                         TextButton(
                           onPressed: () => _scrollToMyRequests(),
-                          child: Text('${activeJobs.length} active', style: TextStyle(color: AppTheme.accent, fontSize: 13)),
+                          child: Text('${activeJobs.length} active', style: TextStyle(color: theme.colorScheme.primary, fontSize: 13)),
                         ),
                       ],
                     ),
@@ -364,11 +372,11 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
                       children: [
                         Text(
                           'History',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.onSurface, letterSpacing: -0.3),
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface, letterSpacing: -0.3),
                         ),
                         TextButton(
                           onPressed: () {},
-                          child: Text('${jobs.length - activeJobs.length} past', style: TextStyle(color: AppTheme.accent, fontSize: 13)),
+                          child: Text('${jobs.length - activeJobs.length} past', style: TextStyle(color: theme.colorScheme.primary, fontSize: 13)),
                         ),
                       ],
                     ),
@@ -395,19 +403,18 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> {
               if (jobs.isEmpty)
                 SliverToBoxAdapter(
                   child: SizedBox(
-                    height: 120,
-                    child: Center(
-                      child: Text(
-                        'No requests yet. Browse services above to get started.',
-                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14),
-                        textAlign: TextAlign.center,
-                      ),
+                    height: 280,
+                    child: EmptyStateWidget(
+                      icon: CupertinoIcons.hammer,
+                      title: 'No requests yet',
+                      message: 'Browse services above to get started with your first request.',
                     ),
                   ),
                 ),
 
               const SliverToBoxAdapter(child: SizedBox(height: 140)),
             ],
+          ),
           );
         },
       ),
@@ -433,6 +440,7 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return AnimatedTapScale(
       onTap: onTap,
       child: Container(
@@ -441,10 +449,10 @@ class _CategoryChip extends StatelessWidget {
         height: 36,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.onSurface : Colors.transparent,
+          color: isSelected ? theme.colorScheme.onSurface : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isSelected ? Colors.transparent : AppTheme.surfaceBorder,
+            color: isSelected ? Colors.transparent : theme.colorScheme.outlineVariant,
           ),
         ),
         child: Text(
@@ -452,7 +460,7 @@ class _CategoryChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-            color: isSelected ? Colors.white : AppTheme.onSurface,
+            color: isSelected ? Colors.white : theme.colorScheme.onSurface,
           ),
         ),
       ),
@@ -479,7 +487,7 @@ class _ServiceCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          color: AppTheme.cardSurface,
+          color: theme.colorScheme.surfaceContainerLow,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -552,7 +560,7 @@ class _ServiceCard extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
                 decoration: BoxDecoration(
-                  color: AppTheme.cardSurface,
+                  color: theme.colorScheme.surfaceContainerLow,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -562,7 +570,7 @@ class _ServiceCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.onSurface,
+                        color: theme.colorScheme.onSurface,
                         height: 1.1,
                       ),
                       maxLines: 1,
@@ -588,14 +596,14 @@ class _ServiceCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: AppTheme.accent,
+                              color: theme.colorScheme.primary,
                             ),
                           ),
                           Container(
                             width: 26,
                             height: 26,
                             decoration: BoxDecoration(
-                              color: AppTheme.onSurface,
+                              color: theme.colorScheme.onSurface,
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -657,56 +665,88 @@ class _ActiveJobCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final statusColor = job.status.color(context);
 
-    return AnimatedTapScale(
-      scaleFactor: 0.97,
-      onTap: () => _openSheet(context),
-      child: Container(
-        padding: const EdgeInsets.all(14),
+    return Dismissible(
+      key: ValueKey('job_${job.id}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 24),
         decoration: BoxDecoration(
-          color: AppTheme.cardSurface,
+          color: statusColor.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(18),
         ),
-        child: Row(
-          children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: AppTheme.scaffold,
-                  borderRadius: BorderRadius.circular(12),
+        child: Icon(CupertinoIcons.archivebox, color: statusColor),
+      ),
+      confirmDismiss: (_) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Dismiss this request?'),
+            content: Text('Archive "${job.tradeType.displayName}" request?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Keep')),
+              TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Dismiss')),
+            ],
+          ),
+        );
+      },
+      onDismissed: (_) {
+        context.showSnackBar('${job.tradeType.displayName} dismissed', type: SnackBarType.success);
+      },
+      child: AnimatedTapScale(
+        scaleFactor: 0.97,
+        onTap: () => _openSheet(context),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Row(
+            children: [
+              Hero(
+                tag: 'service-icon-${job.id}',
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: theme.scaffoldBackgroundColor,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  ),
+                  child: Icon(job.tradeType.icon, size: 17, color: theme.colorScheme.onSurface),
                 ),
-                child: Icon(job.tradeType.icon, size: 17, color: AppTheme.onSurface),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          job.tradeType.displayName,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            job.tradeType.displayName,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.onSurface,
+                            color: theme.colorScheme.onSurface,
                             letterSpacing: -0.2,
                           ),
+                          ),
                         ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          _statusLabel.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 8,
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                          ),
+                          child: Text(
+                            _statusLabel.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 8,
                             fontWeight: FontWeight.w600,
                             color: statusColor,
                             letterSpacing: 0.5,
@@ -718,13 +758,13 @@ class _ActiveJobCard extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(CupertinoIcons.calendar, size: 10, color: AppTheme.textSecondary),
+                      Icon(CupertinoIcons.calendar, size: 10, color: theme.colorScheme.onSurfaceVariant),
                       const SizedBox(width: 3),
                       Text(
                         _dateLabel,
                         style: TextStyle(
                           fontSize: 10,
-                          color: AppTheme.textSecondary,
+                          color: theme.colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -744,6 +784,7 @@ class _ActiveJobCard extends ConsumerWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -765,7 +806,7 @@ class _ActiveJobCard extends ConsumerWidget {
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   elevation: 0, padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
                 ),
                 child: const Text('Track Technician', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
@@ -803,7 +844,7 @@ class _JobDetailsSheetState extends ConsumerState<_JobDetailsSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: job.status.color(context).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
               ),
               child: Text(job.status.displayName, style: TextStyle(color: job.status.color(context), fontSize: 12, fontWeight: FontWeight.bold)),
             ),

@@ -5,6 +5,8 @@ import 'home_detail_list_view.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../../shared/widgets/custom_pinned_header.dart';
 import '../../../shared/widgets/floating_header_layout.dart';
+import '../../../core/theme.dart';
+import '../../../core/theme_provider.dart';
 
 class ProfileTabView extends ConsumerWidget {
   const ProfileTabView({super.key});
@@ -16,7 +18,7 @@ class ProfileTabView extends ConsumerWidget {
     return Scaffold(
       body: FloatingHeaderLayout(
         header: CustomPinnedHeader(
-          title: 'Home Hub',
+          title: 'Profile',
           actions: [
             GroupedHeaderActions(
               actions: [
@@ -29,7 +31,9 @@ class ProfileTabView extends ConsumerWidget {
           ],
         ),
         bodyBuilder: (context, topPadding) {
-          return CustomScrollView(
+          return RefreshIndicator(
+            onRefresh: () async => Future.delayed(const Duration(milliseconds: 300)),
+            child: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(child: SizedBox(height: topPadding)),
 
@@ -229,7 +233,7 @@ class ProfileTabView extends ConsumerWidget {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                         border: Border.all(
                           color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
                         ),
@@ -240,7 +244,7 @@ class ProfileTabView extends ConsumerWidget {
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
                               color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                             ),
                             child: Icon(CupertinoIcons.clock, size: 18, color: theme.colorScheme.primary),
                           ),
@@ -269,8 +273,105 @@ class ProfileTabView extends ConsumerWidget {
                 ),
               ),
 
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+
+              // ─── Settings ────────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+                  child: Text(
+                    'Settings',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                  child: _ProfileSettingsRow(
+                    icon: CupertinoIcons.bell_fill,
+                    title: 'Notifications',
+                    subtitle: 'Alert preferences',
+                    theme: theme,
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                  child: _ProfileSettingsRow(
+                    icon: CupertinoIcons.creditcard,
+                    title: 'Payment Methods',
+                    subtitle: 'Cards & billing',
+                    theme: theme,
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                  child: Consumer(
+                    builder: (context, ref, _) {
+                      final themeMode = ref.watch(themeModeProvider);
+                      final isDark = themeMode == ThemeMode.dark ||
+                          (themeMode == ThemeMode.system &&
+                              MediaQuery.of(context).platformBrightness == Brightness.dark);
+                      return _ProfileSettingsRow(
+                        icon: isDark ? CupertinoIcons.moon_fill : CupertinoIcons.sun_max_fill,
+                        title: 'Appearance',
+                        subtitle: isDark ? 'Dark mode' : 'Light mode',
+                        theme: theme,
+                        trailing: CupertinoSwitch(
+                          value: isDark,
+                          activeTrackColor: theme.colorScheme.primary,
+                          onChanged: (_) => ref.read(themeModeProvider.notifier).toggleTheme(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                  child: _ProfileSettingsRow(
+                    icon: CupertinoIcons.doc_text,
+                    title: 'Terms & Conditions',
+                    subtitle: 'Platform terms',
+                    theme: theme,
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                  child: _ProfileSettingsRow(
+                    icon: CupertinoIcons.shield,
+                    title: 'Privacy Policy',
+                    subtitle: 'Data handling',
+                    theme: theme,
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                  child: _ProfileSettingsRow(
+                    icon: CupertinoIcons.question_circle,
+                    title: 'Help & Support',
+                    subtitle: 'Get help',
+                    theme: theme,
+                  ),
+                ),
+              ),
+
               const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
+          ),
           );
         },
       ),
@@ -285,7 +386,7 @@ class ProfileTabView extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             border: Border.all(
               color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
             ),
@@ -321,7 +422,7 @@ class ProfileTabView extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         border: Border.all(
           color: isUrgent
               ? Colors.orange.withValues(alpha: 0.3)
@@ -380,7 +481,7 @@ class ProfileTabView extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           border: Border.all(
             color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
           ),
@@ -425,4 +526,75 @@ class _RecordGridItem {
   final VoidCallback onTap;
 
   _RecordGridItem(this.title, this.subtitle, this.icon, this.onTap);
+}
+
+class _ProfileSettingsRow extends StatelessWidget {
+  const _ProfileSettingsRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.theme,
+    this.trailing,
+    this.onTap,
+  });
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final ThemeData theme;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedTapScale(
+      onTap: onTap ?? () {},
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          border: Border.all(
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              ),
+              child: Icon(icon, size: 18, color: theme.colorScheme.primary),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            trailing ?? Icon(CupertinoIcons.chevron_right, size: 14, color: theme.colorScheme.onSurfaceVariant),
+          ],
+        ),
+      ),
+    );
+  }
 }

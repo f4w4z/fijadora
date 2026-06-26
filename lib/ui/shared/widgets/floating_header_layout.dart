@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class FloatingHeaderLayout extends StatefulWidget {
+class FloatingHeaderLayout extends StatelessWidget {
   const FloatingHeaderLayout({
     super.key,
     required this.header,
@@ -10,35 +10,8 @@ class FloatingHeaderLayout extends StatefulWidget {
   final Widget header;
   final Widget Function(BuildContext context, double topPadding) bodyBuilder;
 
-  @override
-  State<FloatingHeaderLayout> createState() => _FloatingHeaderLayoutState();
-}
-
-class _FloatingHeaderLayoutState extends State<FloatingHeaderLayout> {
-  final GlobalKey _headerKey = GlobalKey();
-  double _headerHeight = 130.0; // Sensible default estimate
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _measureHeader());
-  }
-
-  void _measureHeader() {
-    if (!mounted) return;
-    final context = _headerKey.currentContext;
-    if (context != null) {
-      final renderBox = context.findRenderObject() as RenderBox?;
-      if (renderBox != null) {
-        final height = renderBox.size.height;
-        if (height != _headerHeight && height > 0) {
-          setState(() {
-            _headerHeight = height;
-          });
-        }
-      }
-    }
-  }
+  // Estimated header height (SafeArea + padding + title row + optional bottom child)
+  static const double headerHeight = 140.0;
 
   @override
   Widget build(BuildContext context) {
@@ -48,14 +21,14 @@ class _FloatingHeaderLayoutState extends State<FloatingHeaderLayout> {
       fit: StackFit.expand,
       children: [
         // 1. Scrollable content
-        widget.bodyBuilder(context, _headerHeight),
+        bodyBuilder(context, headerHeight),
 
         // 2. Top scrim (gradient background)
         Positioned(
           left: 0,
           right: 0,
           top: 0,
-          height: _headerHeight + 32.0, // bleed fade below header
+          height: headerHeight + 32.0,
           child: IgnorePointer(
             child: Container(
               decoration: BoxDecoration(
@@ -79,7 +52,7 @@ class _FloatingHeaderLayoutState extends State<FloatingHeaderLayout> {
           left: 0,
           right: 0,
           bottom: 0,
-          height: _headerHeight / 2,
+          height: headerHeight / 2,
           child: IgnorePointer(
             child: Container(
               decoration: BoxDecoration(
@@ -103,10 +76,7 @@ class _FloatingHeaderLayoutState extends State<FloatingHeaderLayout> {
           left: 0,
           right: 0,
           top: 0,
-          child: KeyedSubtree(
-            key: _headerKey,
-            child: widget.header,
-          ),
+          child: header,
         ),
       ],
     );
