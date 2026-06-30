@@ -25,7 +25,7 @@ class HomeView extends ConsumerWidget {
 Widget settingsRow(BuildContext context, IconData icon, String title, String subtitle) {
   final theme = Theme.of(context);
   return SizedBox(
-        height: 52,
+        height: 54,
         child: Row(
           children: [
             Container(
@@ -128,9 +128,12 @@ Widget settingsRow(BuildContext context, IconData icon, String title, String sub
                           children: [
                             Text(
                               user.name,
-                              style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.onSurface),
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                color: theme.colorScheme.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 6),
                             Text(
                               user.email,
                               style: TextStyle(
@@ -151,7 +154,7 @@ Widget settingsRow(BuildContext context, IconData icon, String title, String sub
               // ─── Home Address Card ─────────────────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 48, 28, 0),
+                  padding: const EdgeInsets.fromLTRB(28, 36, 28, 0),
                   child: Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -175,12 +178,8 @@ Widget settingsRow(BuildContext context, IconData icon, String title, String sub
                             children: [
                               Text(
                                 'Family Home',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w500,
+                                style: theme.textTheme.titleLarge?.copyWith(
                                   color: theme.colorScheme.onSurface,
-                                  height: 1.1,
-                                  letterSpacing: -0.2,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -205,9 +204,9 @@ Widget settingsRow(BuildContext context, IconData icon, String title, String sub
                           child: const Text(
                             'ALL GOOD',
                             style: TextStyle(
-                              fontSize: 9,
+                              fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              letterSpacing: 1.2,
+                              letterSpacing: 1.0,
                               color: Color(0xFF4CAF50),
                             ),
                           ),
@@ -221,7 +220,7 @@ Widget settingsRow(BuildContext context, IconData icon, String title, String sub
               // ─── Stats Row ─────────────────────────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 20, 28, 0),
+                  padding: const EdgeInsets.fromLTRB(28, 24, 28, 0),
                   child: Row(
                     children: [
                       _StatPill(
@@ -234,7 +233,7 @@ Widget settingsRow(BuildContext context, IconData icon, String title, String sub
                           );
                         },
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 12),
                       _StatPill(
                         icon: CupertinoIcons.device_desktop,
                         value: '4',
@@ -245,7 +244,7 @@ Widget settingsRow(BuildContext context, IconData icon, String title, String sub
                           );
                         },
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 12),
                       _StatPill(
                         icon: CupertinoIcons.doc_text,
                         value: '3',
@@ -264,7 +263,7 @@ Widget settingsRow(BuildContext context, IconData icon, String title, String sub
               // ─── Reminders ──────────────────────────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 56, 28, 0),
+                  padding: const EdgeInsets.fromLTRB(28, 36, 28, 0),
                   child: Text(
                     'Upcoming',
                     style: theme.textTheme.headlineMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
@@ -273,7 +272,7 @@ Widget settingsRow(BuildContext context, IconData icon, String title, String sub
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 20, 28, 0),
+                  padding: const EdgeInsets.fromLTRB(28, 16, 28, 0),
                   child: _ReminderTile(
                     icon: CupertinoIcons.wind,
                     title: 'HVAC Air Filter',
@@ -285,7 +284,7 @@ Widget settingsRow(BuildContext context, IconData icon, String title, String sub
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 10, 28, 0),
+                  padding: const EdgeInsets.fromLTRB(28, 8, 28, 0),
                   child: _ReminderTile(
                     icon: CupertinoIcons.bell_fill,
                     title: 'Smoke Detector',
@@ -299,7 +298,7 @@ Widget settingsRow(BuildContext context, IconData icon, String title, String sub
               // ─── Maintenance History ────────────────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 20, 28, 0),
+                  padding: const EdgeInsets.fromLTRB(28, 16, 28, 0),
                   child: AnimatedTapScale(
                     scaleFactor: 0.97,
                     onTap: () {
@@ -361,7 +360,7 @@ Widget settingsRow(BuildContext context, IconData icon, String title, String sub
               // ─── Settings ────────────────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 48, 28, 0),
+                  padding: const EdgeInsets.fromLTRB(28, 36, 28, 0),
                   child: Text(
                     'Settings',
                     style: theme.textTheme.headlineMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
@@ -370,9 +369,9 @@ Widget settingsRow(BuildContext context, IconData icon, String title, String sub
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 16, 28, 0),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(28, 16, 28, 0),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(18),
@@ -382,7 +381,7 @@ Widget settingsRow(BuildContext context, IconData icon, String title, String sub
                         settingsRow(context, CupertinoIcons.bell_fill, 'Notifications', 'Alert preferences'),
                         Divider(height: 1, color: theme.colorScheme.outlineVariant),
                         SizedBox(
-                          height: 52,
+                          height: 54,
                           child: Row(
                             children: [
                               Container(
@@ -602,9 +601,9 @@ class _ReminderTile extends StatelessWidget {
             child: Text(
               detail.toUpperCase(),
               style: TextStyle(
-                fontSize: 8,
+                fontSize: 10,
                 fontWeight: FontWeight.w600,
-                letterSpacing: 1.0,
+                letterSpacing: 0.8,
                 color: color,
               ),
             ),
