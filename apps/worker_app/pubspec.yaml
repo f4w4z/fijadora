@@ -1,0 +1,22 @@
+name: worker_app
+description: Phoebe Homes - Worker App
+publish_to: 'none'
+version: 1.0.0+1
+
+resolution: workspace
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  phoebe_core:
+    path: ../../packages/phoebe_core
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
