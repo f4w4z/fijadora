@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../domain/models/job_status.dart';
+import '../../../../ui/shared/widgets/animated_tap_scale.dart';
 import '../../services/view_models/jobs_view_model.dart';
 import '../../../shared/utils/notification_helper.dart';
 
@@ -17,6 +18,7 @@ class JobCompletionPage extends ConsumerStatefulWidget {
 class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
   final _formKey = GlobalKey<FormState>();
   final _notesController = TextEditingController();
+  final _partsController = TextEditingController();
   bool _isSubmitting = false;
   bool _photoCaptured = false;
   bool _isCapturing = false;
@@ -24,6 +26,7 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
   @override
   void dispose() {
     _notesController.dispose();
+    _partsController.dispose();
     super.dispose();
   }
 
@@ -33,20 +36,24 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
 
     setState(() => _isSubmitting = true);
     try {
-      await ref.read(jobsViewModelProvider).updateStatus(widget.jobId, JobStatus.waitingApproval);
+      await ref
+          .read(jobsViewModelProvider)
+          .updateStatus(widget.jobId, JobStatus.waitingApproval);
       if (mounted) {
         Navigator.pop(context);
+        context.showSnackBar('Job submitted for approval',
+            type: SnackBarType.success);
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Error completing job: $e', type: SnackBarType.error);
+        context.showSnackBar('Error: $e', type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
-  Future<void> _simulatePhotoCapture() async {
+  Future<void> _capturePhoto() async {
     setState(() => _isCapturing = true);
     await Future.delayed(const Duration(milliseconds: 1500));
     if (mounted) {
@@ -54,7 +61,8 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
         _photoCaptured = true;
         _isCapturing = false;
       });
-      context.showSnackBar('Completion proof photo captured successfully.', type: SnackBarType.success);
+      context.showSnackBar('Photo captured successfully',
+          type: SnackBarType.success);
     }
   }
 
@@ -63,128 +71,247 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
     final theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        surfaceTintColor: Colors.transparent,
         title: Text(
           'Complete Job',
-          style: theme.textTheme.displaySmall?.copyWith(fontSize: 20),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Photo section
+              Text(
+                'Proof of Work',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: 10),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: theme.brightness == Brightness.dark
-                      ? const Color(0xFF1E1E1E)
-                      : const Color(0xFFF9F9F9),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: theme.brightness == Brightness.dark
-                        ? const Color(0xFF333333)
-                        : const Color(0xFFE5E5E5),
-                  ),
+                  color: theme.colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
                   children: [
                     if (_photoCaptured) ...[
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                         child: CachedNetworkImage(
-                          imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=300&auto=format&fit=crop&q=60',
-                          height: 120,
+                          imageUrl:
+                              'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=300&fit=crop&q=60',
+                          height: 160,
                           width: double.infinity,
                           fit: BoxFit.cover,
                         ),
                       ),
                       const SizedBox(height: 12),
-                      const Row(
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(CupertinoIcons.checkmark_circle_fill, color: Colors.green, size: 16),
-                          SizedBox(width: 8),
+                          Icon(CupertinoIcons.checkmark_circle_fill,
+                              size: 16, color: const Color(0xFF2E7D32)),
+                          const SizedBox(width: 8),
                           Text(
                             'Proof of Work Attached',
-                            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
+                            style: TextStyle(
+                              color: const Color(0xFF2E7D32),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
                           ),
                         ],
                       ),
                     ] else ...[
-                      Icon(CupertinoIcons.camera_fill, size: 36, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Completion Photo Proof Required',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      Icon(CupertinoIcons.camera_fill,
+                          size: 40,
+                          color: theme.colorScheme.onSurfaceVariant
+                              .withValues(alpha: 0.4)),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Take a photo of the completed work',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                          color: theme.colorScheme.onSurface,
+                        ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        'Take a photo of completed work to submit.',
-                        style: TextStyle(color: Colors.grey, fontSize: 11),
+                      Text(
+                        'This is required for customer approval',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: _isCapturing ? null : _simulatePhotoCapture,
-                      icon: _isCapturing
-                          ? const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(strokeWidth: 1.5),
-                            )
-                          : Icon(_photoCaptured ? CupertinoIcons.refresh : CupertinoIcons.camera),
-                      label: Text(_isCapturing
-                          ? 'Opening camera...'
-                          : _photoCaptured
-                              ? 'Retake Photo'
-                              : 'Capture Proof'),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                          color: theme.brightness == Brightness.dark
-                              ? const Color(0xFF333333)
-                              : const Color(0xFFCCCCCC),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _isCapturing ? null : _capturePhoto,
+                        icon: _isCapturing
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2),
+                              )
+                            : Icon(_photoCaptured
+                                ? CupertinoIcons.refresh
+                                : CupertinoIcons.camera),
+                        label: Text(
+                          _isCapturing
+                              ? 'Opening camera...'
+                              : _photoCaptured
+                                  ? 'Retake Photo'
+                                  : 'Capture Photo',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
                         ),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        style: OutlinedButton.styleFrom(
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          side: BorderSide(
+                            color: theme.colorScheme.outlineVariant,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
+
+              // Notes section
+              Text(
+                'Resolution Notes',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _notesController,
                 maxLines: 4,
-                decoration: const InputDecoration(
-                  labelText: 'Resolution Notes',
-                  hintText: 'Describe the repairs done, parts replaced, etc...',
+                decoration: InputDecoration(
+                  hintText: 'Describe repairs done, parts replaced, etc...',
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceContainerLow,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.all(16),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
-                    return 'Please provide completion notes';
+                    return 'Please describe the work completed';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isSubmitting || !_photoCaptured ? null : _submitCompletion,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: theme.colorScheme.onPrimary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  elevation: 0,
+
+              // Parts used section
+              Text(
+                'Parts Used (optional)',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                  letterSpacing: -0.3,
                 ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text('Submit for Client Approval'),
               ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _partsController,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  hintText: 'List any parts or materials used...',
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceContainerLow,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.all(16),
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Submit button
+              AnimatedTapScale(
+                onTap: _isSubmitting || !_photoCaptured
+                    ? () {}
+                    : () { _submitCompletion(); },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    color: _isSubmitting || !_photoCaptured
+                        ? theme.colorScheme.onSurfaceVariant
+                            .withValues(alpha: 0.3)
+                        : theme.colorScheme.primary,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            'Submit for Approval',
+                            style: TextStyle(
+                              color: theme.colorScheme.onPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+              if (!_photoCaptured) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Capture a photo first to enable submission',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ],
           ),
         ),

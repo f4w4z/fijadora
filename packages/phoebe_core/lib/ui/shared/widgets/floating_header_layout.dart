@@ -5,13 +5,12 @@ class FloatingHeaderLayout extends StatelessWidget {
     super.key,
     required this.header,
     required this.bodyBuilder,
+    this.headerHeight = 140.0,
   });
 
   final Widget header;
   final Widget Function(BuildContext context, double topPadding) bodyBuilder;
-
-  // Estimated header height (SafeArea + padding + title row + optional bottom child)
-  static const double headerHeight = 140.0;
+  final double headerHeight;
 
   @override
   Widget build(BuildContext context) {

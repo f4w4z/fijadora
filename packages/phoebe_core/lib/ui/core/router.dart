@@ -7,7 +7,7 @@ import '../features/auth/views/register_view.dart';
 import '../features/auth/views/access_denied_view.dart';
 import '../../domain/models/user_role.dart';
 import '../features/home/views/home_shell_view.dart';
-import '../features/worker/views/worker_dashboard_view.dart';
+import '../features/worker/views/worker_shell_view.dart';
 import '../features/admin/views/admin_dashboard_view.dart';
 import '../features/manager/views/manager_dashboard_view.dart';
 
@@ -63,7 +63,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final role = authViewModel.user?.role ?? UserRole.customer;
           if (role == UserRole.worker) {
-            return const WorkerDashboardView();
+            return const WorkerShellView();
           }
           if (role == UserRole.admin) {
             return const AdminDashboardView();
