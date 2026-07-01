@@ -16,6 +16,8 @@ abstract class AuthRepository {
     required String name,
     required UserRole role,
   });
+  List<AppUser> getAllWorkers();
+  Future<void> updateWorkerStatus({required String userId, required String status});
   Future<void> signOut();
   void dispose();
 }
@@ -142,6 +144,14 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
+  List<AppUser> getAllWorkers() => throw UnimplementedError('Supabase workers fetched via DB query');
+
+  @override
+  Future<void> updateWorkerStatus({required String userId, required String status}) async {
+    await _client.from('users').update({'worker_status': status}).eq('id', userId);
+  }
+
+  @override
   void dispose() {
     _authSubscription?.cancel();
     _controller.close();
@@ -151,14 +161,13 @@ class SupabaseAuthRepository implements AuthRepository {
 // 2. Mock Auth Repository Implementation (for testing & fallback)
 class MockAuthRepository implements AuthRepository {
   MockAuthRepository() {
-    // Pre-populate demo worker
     _mockUsers['alex.worker@phoebe.com'] = const AppUser(
       id: 'mock-worker-alex',
       email: 'alex.worker@phoebe.com',
       name: 'Alex Worker',
       role: UserRole.worker,
+      workerStatus: 'pending',
     );
-    // Add initial null state
     _controller.add(null);
   }
 
@@ -196,11 +205,13 @@ class MockAuthRepository implements AuthRepository {
         roleStr = 'manager';
       }
       
+      final role = UserRole.fromString(roleStr);
       final newUser = AppUser(
         id: 'mock-uid-${DateTime.now().millisecondsSinceEpoch}',
         email: email,
         name: name[0].toUpperCase() + name.substring(1),
-        role: UserRole.fromString(roleStr),
+        role: role,
+        workerStatus: role == UserRole.worker ? 'pending' : null,
       );
       _mockUsers[key] = newUser;
       _currentUser = newUser;
@@ -233,12 +244,36 @@ class MockAuthRepository implements AuthRepository {
       email: email,
       name: name,
       role: role,
+      workerStatus: role == UserRole.worker ? 'pending' : null,
     );
 
     _mockUsers[key] = newUser;
     _currentUser = newUser;
     _controller.add(_currentUser);
     return newUser;
+  }
+
+  @override
+  List<AppUser> getAllWorkers() {
+    return _mockUsers.values
+        .where((u) => u.role == UserRole.worker)
+        .toList();
+  }
+
+  @override
+  Future<void> updateWorkerStatus({required String userId, required String status}) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    final key = _mockUsers.entries.firstWhere(
+      (e) => e.value.id == userId,
+      orElse: () => const MapEntry('', AppUser(id: '', email: '', name: '', role: UserRole.customer)),
+    );
+    if (key.key.isEmpty) return;
+    final updated = _mockUsers[key.key]!.copyWith(workerStatus: status);
+    _mockUsers[key.key] = updated;
+    if (_currentUser?.id == userId) {
+      _currentUser = updated;
+      _controller.add(updated);
+    }
   }
 
   @override

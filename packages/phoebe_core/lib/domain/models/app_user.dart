@@ -7,12 +7,14 @@ class AppUser {
   final String email;
   final String name;
   final UserRole role;
+  final String? workerStatus;
 
   const AppUser({
     required this.id,
     required this.email,
     required this.name,
     required this.role,
+    this.workerStatus,
   });
 
   factory AppUser.fromJson(Map<String, dynamic> json) {
@@ -21,6 +23,7 @@ class AppUser {
       email: json['email'] as String? ?? '',
       name: json['name'] as String? ?? '',
       role: UserRole.fromString(json['role'] as String?),
+      workerStatus: json['worker_status'] as String?,
     );
   }
 
@@ -30,6 +33,7 @@ class AppUser {
       'email': email,
       'name': name,
       'role': role.key,
+      'worker_status': workerStatus,
     };
   }
 
@@ -38,12 +42,14 @@ class AppUser {
     String? email,
     String? name,
     UserRole? role,
+    String? workerStatus,
   }) {
     return AppUser(
       id: id ?? this.id,
       email: email ?? this.email,
       name: name ?? this.name,
       role: role ?? this.role,
+      workerStatus: workerStatus ?? this.workerStatus,
     );
   }
 
@@ -55,13 +61,14 @@ class AppUser {
           id == other.id &&
           email == other.email &&
           name == other.name &&
-          role == other.role;
+          role == other.role &&
+          workerStatus == other.workerStatus;
 
   @override
-  int get hashCode => id.hashCode ^ email.hashCode ^ name.hashCode ^ role.hashCode;
+  int get hashCode => id.hashCode ^ email.hashCode ^ name.hashCode ^ role.hashCode ^ workerStatus.hashCode;
 
   @override
   String toString() {
-    return 'AppUser(id: $id, email: $email, name: $name, role: $role)';
+    return 'AppUser(id: $id, email: $email, name: $name, role: $role, workerStatus: $workerStatus)';
   }
 }

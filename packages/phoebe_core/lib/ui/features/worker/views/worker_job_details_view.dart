@@ -57,6 +57,13 @@ class _WorkerJobDetailsViewState
             scrolledUnderElevation: 0,
             expandedHeight: 120,
             pinned: true,
+            leading: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16),
+                child: Icon(CupertinoIcons.chevron_left, size: 22, color: theme.colorScheme.onSurface),
+              ),
+            ),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 padding: const EdgeInsets.fromLTRB(24, 60, 24, 16),
@@ -89,7 +96,7 @@ class _WorkerJobDetailsViewState
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Job #${job.id.substring(0, 8)}',
+                            'Job #${job.id.length > 8 ? job.id.substring(0, 8) : job.id}',
                             style: TextStyle(
                               fontSize: 12,
                               color: theme.colorScheme.onSurfaceVariant,
@@ -382,24 +389,26 @@ class _InfoRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: theme.colorScheme.primary),
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Icon(icon, size: 16, color: theme.colorScheme.primary),
+        ),
         const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: theme.colorScheme.onSurfaceVariant,
-                letterSpacing: 0.3,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: theme.colorScheme.onSurfaceVariant,
+                  letterSpacing: 0.3,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            SizedBox(
-              width: MediaQuery.of(context).size.width - 90,
-              child: Text(
+              const SizedBox(height: 2),
+              Text(
                 value,
                 style: TextStyle(
                   fontSize: 14,
@@ -407,8 +416,8 @@ class _InfoRow extends StatelessWidget {
                   color: valueColor ?? theme.colorScheme.onSurface,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );

@@ -75,6 +75,13 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
       appBar: AppBar(
         backgroundColor: theme.scaffoldBackgroundColor,
         surfaceTintColor: Colors.transparent,
+        leading: GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 16),
+            child: Icon(CupertinoIcons.chevron_left, size: 22, color: theme.colorScheme.onSurface),
+          ),
+        ),
         title: Text(
           'Complete Job',
           style: TextStyle(

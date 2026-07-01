@@ -8,8 +8,8 @@ import '../features/auth/views/access_denied_view.dart';
 import '../../domain/models/user_role.dart';
 import '../features/home/views/home_shell_view.dart';
 import '../features/worker/views/worker_shell_view.dart';
-import '../features/admin/views/admin_dashboard_view.dart';
-import '../features/manager/views/manager_dashboard_view.dart';
+import '../features/worker/views/worker_pending_approval_view.dart';
+import '../features/staff/views/staff_shell_view.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authViewModel = ref.watch(authViewModelProvider);
@@ -38,9 +38,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/';
       }
 
-      final role = authViewModel.user?.role;
-      if (role != null && !appConfig.allowedRoles.contains(role)) {
-        return '/access-denied';
+      final user = authViewModel.user;
+      if (user != null) {
+        if (!appConfig.allowedRoles.contains(user.role)) {
+          return '/access-denied';
+        }
+        if (user.role == UserRole.worker && user.workerStatus == 'pending' && location != '/pending-approval') {
+          return '/pending-approval';
+        }
+        if (user.role == UserRole.worker && (user.workerStatus == 'rejected' || user.workerStatus == null) && location != '/access-denied') {
+          return '/access-denied';
+        }
       }
 
       return null;
@@ -59,17 +67,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AccessDeniedView(),
       ),
       GoRoute(
+        path: '/pending-approval',
+        builder: (context, state) => const WorkerPendingApprovalView(),
+      ),
+      GoRoute(
         path: '/',
         builder: (context, state) {
           final role = authViewModel.user?.role ?? UserRole.customer;
           if (role == UserRole.worker) {
             return const WorkerShellView();
           }
-          if (role == UserRole.admin) {
-            return const AdminDashboardView();
-          }
-          if (role == UserRole.manager) {
-            return const ManagerDashboardView();
+          if (role == UserRole.admin || role == UserRole.manager) {
+            return const StaffShellView();
           }
           return const HomeShellView();
         },

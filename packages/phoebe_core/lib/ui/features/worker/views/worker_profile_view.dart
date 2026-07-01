@@ -7,6 +7,10 @@ import '../../../../ui/shared/widgets/floating_header_layout.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../services/view_models/jobs_view_model.dart';
 import '../../../core/theme_provider.dart';
+import 'worker_notifications_view.dart';
+import 'worker_availability_view.dart';
+import 'worker_help_center_view.dart';
+import 'worker_terms_view.dart';
 
 class WorkerProfileView extends ConsumerWidget {
   const WorkerProfileView({super.key});
@@ -38,7 +42,23 @@ class WorkerProfileView extends ConsumerWidget {
                 GroupedActionItem(
                   icon: CupertinoIcons.square_arrow_right,
                   onTap: () async {
-                    await ref.read(authViewModelProvider.notifier).signOut();
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Sign Out'),
+                        content: const Text('Are you sure you want to sign out?'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: Text('Sign Out', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true && context.mounted) {
+                      await ref.read(authViewModelProvider.notifier).signOut();
+                    }
                   },
                 ),
               ],
@@ -191,6 +211,7 @@ class WorkerProfileView extends ConsumerWidget {
                       title: 'Notifications',
                       subtitle: 'Job alerts & reminders',
                       theme: theme,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WorkerNotificationsView())),
                     ),
                   ),
                 ),
@@ -237,6 +258,7 @@ class WorkerProfileView extends ConsumerWidget {
                       title: 'Availability',
                       subtitle: 'Set working hours & zones',
                       theme: theme,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WorkerAvailabilityView())),
                     ),
                   ),
                 ),
@@ -265,6 +287,7 @@ class WorkerProfileView extends ConsumerWidget {
                       title: 'Help Center',
                       subtitle: 'Guides & FAQs',
                       theme: theme,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WorkerHelpCenterView())),
                     ),
                   ),
                 ),
@@ -277,6 +300,7 @@ class WorkerProfileView extends ConsumerWidget {
                       title: 'Terms of Service',
                       subtitle: 'Platform policies',
                       theme: theme,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WorkerTermsView())),
                     ),
                   ),
                 ),
@@ -359,6 +383,7 @@ class _SettingsRow extends StatelessWidget {
     required this.subtitle,
     required this.theme,
     this.trailing,
+    this.onTap,
   });
 
   final IconData icon;
@@ -366,11 +391,12 @@ class _SettingsRow extends StatelessWidget {
   final String subtitle;
   final ThemeData theme;
   final Widget? trailing;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return AnimatedTapScale(
-      onTap: () {},
+      onTap: onTap ?? () {},
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

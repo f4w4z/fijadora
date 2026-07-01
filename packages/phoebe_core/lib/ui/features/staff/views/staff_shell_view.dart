@@ -5,65 +5,88 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/services/notification_service.dart';
 import '../../../../ui/shared/utils/notification_helper.dart';
-import 'worker_dashboard_view.dart';
-import 'worker_schedule_view.dart';
-import 'worker_profile_view.dart';
+import '../../../../domain/models/user_role.dart';
+import '../../auth/view_models/auth_view_model.dart';
+import 'admin_jobs_view.dart';
+import 'manager_properties_view.dart';
+import 'staff_profile_view.dart';
+import 'staff_admin_dashboard_view.dart';
+import 'staff_workers_view.dart';
+import 'staff_manager_dashboard_view.dart';
+import 'staff_approvals_view.dart';
 
-class WorkerShellView extends ConsumerStatefulWidget {
-  const WorkerShellView({super.key});
+class StaffShellView extends ConsumerStatefulWidget {
+  const StaffShellView({super.key});
 
   @override
-  ConsumerState<WorkerShellView> createState() => _WorkerShellViewState();
+  ConsumerState<StaffShellView> createState() => _StaffShellViewState();
 }
 
-class _WorkerShellViewState extends ConsumerState<WorkerShellView>
+class _StaffShellViewState extends ConsumerState<StaffShellView>
     with TickerProviderStateMixin {
   int _currentIndex = 0;
   final PageController _pageController = PageController(initialPage: 0);
   StreamSubscription<AppNotification>? _notificationSubscription;
 
-  late final List<AnimationController> _bounceControllers = List.generate(_navItems.length, (_) {
-    return AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-  });
-  late final List<Animation<double>> _bounceAnimations = _bounceControllers.map((ctrl) {
-    return TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.82), weight: 18),
-      TweenSequenceItem(tween: Tween(begin: 0.82, end: 1.12), weight: 35),
-      TweenSequenceItem(tween: Tween(begin: 1.12, end: 0.95), weight: 22),
-      TweenSequenceItem(tween: Tween(begin: 0.95, end: 1.0), weight: 25),
-    ]).animate(CurvedAnimation(parent: ctrl, curve: Curves.easeInOut));
-  }).toList();
+  List<_NavItem> _navItems = [];
+  List<Widget> _tabs = [];
+  List<AnimationController> _bounceControllers = [];
+  List<Animation<double>> _bounceAnimations = [];
+  List<_NavItem> get _activeNavItems => _navItems;
+  List<Widget> get _activeTabs => _tabs;
 
-  static const _navItems = [
-    _NavItem(
-      icon: CupertinoIcons.house_alt,
-      activeIcon: CupertinoIcons.house_alt_fill,
-      label: 'Dashboard',
-    ),
-    _NavItem(
-      icon: CupertinoIcons.calendar,
-      activeIcon: CupertinoIcons.calendar,
-      label: 'Schedule',
-    ),
-    _NavItem(
-      icon: CupertinoIcons.person,
-      activeIcon: CupertinoIcons.person_fill,
-      label: 'Profile',
-    ),
-  ];
+  void _initRoleTabs(UserRole role) {
+    final isAdmin = role == UserRole.admin;
 
-  final List<Widget> _tabs = const [
-    WorkerDashboardTab(),
-    WorkerScheduleView(),
-    WorkerProfileView(),
-  ];
+    if (isAdmin) {
+      _navItems = const [
+        _NavItem(icon: CupertinoIcons.chart_bar, activeIcon: CupertinoIcons.chart_bar_fill, label: 'Dashboard'),
+        _NavItem(icon: CupertinoIcons.square_list, activeIcon: CupertinoIcons.square_list_fill, label: 'Jobs'),
+        _NavItem(icon: CupertinoIcons.person_3, activeIcon: CupertinoIcons.person_3_fill, label: 'Workers'),
+        _NavItem(icon: CupertinoIcons.person, activeIcon: CupertinoIcons.person_fill, label: 'Profile'),
+      ];
+      _tabs = [
+        const StaffAdminDashboardView(),
+        const AdminJobsView(),
+        const StaffWorkersView(),
+        const StaffProfileView(),
+      ];
+    } else {
+      _navItems = const [
+        _NavItem(icon: CupertinoIcons.chart_bar, activeIcon: CupertinoIcons.chart_bar_fill, label: 'Dashboard'),
+        _NavItem(icon: CupertinoIcons.building_2_fill, activeIcon: CupertinoIcons.building_2_fill, label: 'Properties'),
+        _NavItem(icon: CupertinoIcons.checkmark_seal, activeIcon: CupertinoIcons.checkmark_seal_fill, label: 'Approvals'),
+        _NavItem(icon: CupertinoIcons.person, activeIcon: CupertinoIcons.person_fill, label: 'Profile'),
+      ];
+      _tabs = [
+        const StaffManagerDashboardView(),
+        const ManagerPropertiesView(),
+        const StaffApprovalsView(),
+        const StaffProfileView(),
+      ];
+    }
+
+    _bounceControllers = List.generate(_navItems.length, (_) {
+      return AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 500),
+      );
+    });
+    _bounceAnimations = _bounceControllers.map((ctrl) {
+      return TweenSequence<double>([
+        TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.82), weight: 18),
+        TweenSequenceItem(tween: Tween(begin: 0.82, end: 1.12), weight: 35),
+        TweenSequenceItem(tween: Tween(begin: 1.12, end: 0.95), weight: 22),
+        TweenSequenceItem(tween: Tween(begin: 0.95, end: 1.0), weight: 25),
+      ]).animate(CurvedAnimation(parent: ctrl, curve: Curves.easeInOut));
+    }).toList();
+  }
 
   @override
   void initState() {
     super.initState();
+    final role = ref.read(authViewModelProvider).user?.role ?? UserRole.admin;
+    _initRoleTabs(role);
     _listenToNotifications();
   }
 
@@ -113,12 +136,15 @@ class _WorkerShellViewState extends ConsumerState<WorkerShellView>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final items = _activeNavItems;
+    final tabs = _activeTabs;
 
     return CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.digit1, control: true): () => _onTabTap(0),
         const SingleActivator(LogicalKeyboardKey.digit2, control: true): () => _onTabTap(1),
         const SingleActivator(LogicalKeyboardKey.digit3, control: true): () => _onTabTap(2),
+        const SingleActivator(LogicalKeyboardKey.digit4, control: true): () => _onTabTap(3),
       },
       child: Focus(
         autofocus: true,
@@ -129,7 +155,7 @@ class _WorkerShellViewState extends ConsumerState<WorkerShellView>
               PageView(
                 controller: _pageController,
                 onPageChanged: _onPageChanged,
-                children: _tabs,
+                children: tabs,
               ),
               Positioned(
                 left: 0,
@@ -140,7 +166,7 @@ class _WorkerShellViewState extends ConsumerState<WorkerShellView>
                   child: Center(
                     child: _FloatingNavBar(
                       currentIndex: _currentIndex,
-                      items: _navItems,
+                      items: items,
                       bounceAnimations: _bounceAnimations,
                       onTap: _onTabTap,
                       theme: theme,

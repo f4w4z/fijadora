@@ -7,6 +7,7 @@ import '../../services/views/services_tab_view.dart';
 import '../../shop/views/shop_tab_view.dart';
 import '../../collections/views/collections_tab_view.dart';
 import '../../../../data/services/notification_service.dart';
+import '../../../../ui/shared/utils/notification_helper.dart';
 import 'home_view.dart';
 
 // ─── Shell ────────────────────────────────────────────────────────────────────
@@ -91,41 +92,9 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
           .notificationsStream
           .listen((notification) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              backgroundColor:
-                  Theme.of(context).colorScheme.primaryContainer,
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    notification.title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onPrimaryContainer,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    notification.body,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onPrimaryContainer,
-                    ),
-                  ),
-                ],
-              ),
-              duration: const Duration(seconds: 4),
-            ),
+          context.showSnackBar(
+            notification.body,
+            title: notification.title,
           );
         }
       });
