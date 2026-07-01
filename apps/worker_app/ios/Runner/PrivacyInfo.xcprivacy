@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyAccessedApiTypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedApiType</key>
+			<string>NSPrivacyAccessedApiType.UserDefaults</string>
+			<key>NSPrivacyAccessedApiTypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedApiType</key>
+			<string>NSPrivacyAccessedApiType.FileTimestamp</string>
+			<key>NSPrivacyAccessedApiTypeReasons</key>
+			<array>
+				<string>0A2A.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedApiType</key>
+			<string>NSPrivacyAccessedApiType.SystemBootTime</string>
+			<key>NSPrivacyAccessedApiTypeReasons</key>
+			<array>
+				<string>35F9.1</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+</dict>
+</plist>

@@ -1,0 +1,33 @@
+{
+  "@@locale": "en",
+  "appName": "Phoebe Staff",
+  "@appName": {
+    "description": "The application name"
+  },
+  "appTagline": "Staff Management Made Simple",
+  "@appTagline": {
+    "description": "The application tagline"
+  },
+  "signIn": "Sign In",
+  "signOut": "Sign Out",
+  "email": "Email",
+  "password": "Password",
+  "dashboard": "Dashboard",
+  "@dashboard": {
+    "description": "Dashboard tab label"
+  },
+  "jobs": "Jobs",
+  "@jobs": {
+    "description": "Jobs tab label"
+  },
+  "workers": "Workers",
+  "@workers": {
+    "description": "Workers tab label"
+  },
+  "profile": "Profile",
+  "settings": "Settings",
+  "noInternet": "No internet connection",
+  "offlineBanner": "You are offline. Some features may be unavailable.",
+  "tryAgain": "Try Again",
+  "errorOccurred": "Oops! Something went wrong."
+}

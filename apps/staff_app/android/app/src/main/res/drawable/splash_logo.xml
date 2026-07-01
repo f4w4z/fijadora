@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple house icon for Phoebe Homes splash -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <group
+        android:translateX="20"
+        android:translateY="20">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M40,80V50L24,60L24,80H12V44L40,24L68,44V80H56V60H52V80H40Z"/>
+    </group>
+</vector>
