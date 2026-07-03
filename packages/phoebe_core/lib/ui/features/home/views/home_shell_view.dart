@@ -23,6 +23,7 @@ class HomeShellView extends ConsumerStatefulWidget {
 class _HomeShellViewState extends ConsumerState<HomeShellView>
     with TickerProviderStateMixin {
   StreamSubscription<AppNotification>? _notificationSubscription;
+  late final PageController _pageController;
 
   late final List<AnimationController> _bounceControllers = List.generate(_navItems.length, (_) {
     return AnimationController(
@@ -72,11 +73,13 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: ref.read(customerTabProvider));
     _listenToNotifications();
   }
 
   @override
   void dispose() {
+    _pageController.dispose();
     _notificationSubscription?.cancel();
     for (final ctrl in _bounceControllers) {
       ctrl.dispose();
@@ -108,10 +111,26 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
     ref.read(customerTabProvider.notifier).state = index;
   }
 
+  void _onPageChanged(int index) {
+    if (index != ref.read(customerTabProvider)) {
+      ref.read(customerTabProvider.notifier).state = index;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final currentIndex = ref.watch(customerTabProvider);
+
+    ref.listen<int>(customerTabProvider, (previous, next) {
+      if (_pageController.hasClients && _pageController.page?.round() != next) {
+        _pageController.animateToPage(
+          next,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
 
     return CallbackShortcuts(
       bindings: {
@@ -126,9 +145,10 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
           body: Stack(
             fit: StackFit.expand,
             children: [
-              // ── Tab content with state preservation ───────────────────────
-              FadeIndexedStack(
-                index: currentIndex,
+              // ── Tab content with swiping ──────────────────────────────────
+              PageView(
+                controller: _pageController,
+                onPageChanged: _onPageChanged,
                 children: _tabs,
               ),
 
