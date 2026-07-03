@@ -55,7 +55,8 @@ void runPhoebeApp(
       try {
         await SupabaseService.instance.initialize();
       } catch (e) {
-        debugPrint('Supabase initialization failed: $e. Running with mock fallback.');
+        debugPrint('Supabase initialization failed: $e.');
+        rethrow;
       }
     }),
   ]);
@@ -150,7 +151,7 @@ class _PhoebeAppState extends ConsumerState<PhoebeApp> with WidgetsBindingObserv
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final router = ref.read(routerProvider);
-      DeepLinkService.instance.init(router);
+      DeepLinkService.instance.init(router, ref);
     });
   }
 

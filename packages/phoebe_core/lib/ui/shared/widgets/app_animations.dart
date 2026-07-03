@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 
 // ─── Standardised animation tokens ─────────────────────────────────────────────
 /// Centralised durations so every screen feels cohesive.
@@ -214,9 +215,9 @@ class _AnimatedAppearanceState extends State<AnimatedAppearance>
 }
 
 // ─── Custom page route with iOS-style slide + fade ─────────────────────────────
-/// Replaces MaterialPageRoute for a consistent, premium transition.
-class AppPageRoute<T> extends PageRouteBuilder<T> {
-  AppPageRoute({
+/// Custom transition page route for Android, web, and other non-iOS platforms.
+class CustomAppPageRoute<T> extends PageRouteBuilder<T> {
+  CustomAppPageRoute({
     required WidgetBuilder builder,
     super.settings,
     super.fullscreenDialog = false,
@@ -258,6 +259,27 @@ class AppPageRoute<T> extends PageRouteBuilder<T> {
         );
 }
 
+// ignore: non_constant_identifier_names
+Route<T> AppPageRoute<T>({
+  required WidgetBuilder builder,
+  RouteSettings? settings,
+  bool fullscreenDialog = false,
+}) {
+  if (defaultTargetPlatform == TargetPlatform.iOS ||
+      defaultTargetPlatform == TargetPlatform.macOS) {
+    return CupertinoPageRoute<T>(
+      builder: builder,
+      settings: settings,
+      fullscreenDialog: fullscreenDialog,
+    );
+  }
+  return CustomAppPageRoute<T>(
+    builder: builder,
+    settings: settings,
+    fullscreenDialog: fullscreenDialog,
+  );
+}
+
 /// Fade-only page route for auth screens and modal-style transitions.
 class AppFadeRoute<T> extends PageRouteBuilder<T> {
   AppFadeRoute({
@@ -278,4 +300,61 @@ class AppFadeRoute<T> extends PageRouteBuilder<T> {
             );
           },
         );
+}
+
+// ─── State-preserving cross-fade indexed stack ─────────────────────────────────
+/// Keeps all tabs alive in bottom navigation and cross-fades them smoothly.
+class FadeIndexedStack extends StatefulWidget {
+  const FadeIndexedStack({
+    super.key,
+    required this.index,
+    required this.children,
+  });
+
+  final int index;
+  final List<Widget> children;
+
+  @override
+  State<FadeIndexedStack> createState() => _FadeIndexedStackState();
+}
+
+class _FadeIndexedStackState extends State<FadeIndexedStack> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(FadeIndexedStack oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.index != oldWidget.index) {
+      _controller.forward(from: 0.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _animation,
+      child: IndexedStack(
+        index: widget.index,
+        children: widget.children,
+      ),
+    );
+  }
 }

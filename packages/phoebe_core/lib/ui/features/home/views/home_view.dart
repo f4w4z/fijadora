@@ -2,11 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/view_models/auth_view_model.dart';
+import '../view_models/home_view_model.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../../shared/widgets/app_animations.dart';
 import '../../profile/views/home_detail_list_view.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 import '../../settings/views/settings_view.dart';
+
 
 class HomeView extends ConsumerWidget {
   const HomeView({super.key});
@@ -14,6 +16,7 @@ class HomeView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authViewModelProvider).user;
+    final propertyAsync = ref.watch(homePropertyProvider);
     final theme = Theme.of(context);
 
     if (user == null) {
@@ -21,6 +24,12 @@ class HomeView extends ConsumerWidget {
         body: Center(child: Text('Loading user session...')),
       );
     }
+
+    final property = propertyAsync.valueOrNull;
+    final propertyName = property?.name;
+    final propertyAddress = property?.address;
+    final rooms = property?.units.expand((u) => u.rooms).toList() ?? <dynamic>[];
+    final appliances = rooms.expand((r) => (r as dynamic).assets?.where((a) => a.type == 'Appliance') ?? []).toList();
 
     return Scaffold(
       body: SafeArea(
@@ -54,7 +63,7 @@ class HomeView extends ConsumerWidget {
               ),
               const SizedBox(height: 28),
 
-              // ─── Profile + Address ─────────────────────────────────────────
+              // ─── Profile ────────────────────────────────────────────
               FadeSlideTransition(
                 delay: const Duration(milliseconds: 50),
                 child: Container(
@@ -96,28 +105,34 @@ class HomeView extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: AppSpacing.sm),
-                      GestureDetector(
-                        onTap: () => Navigator.of(context).push(AppPageRoute(builder: (context) => const HomeDetailListView(type: 'rooms'))),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(8),
+                      if (propertyName != null) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).push(AppPageRoute(builder: (context) => HomeDetailListView(type: 'rooms', property: property!))),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(CupertinoIcons.house_fill, size: 13, color: theme.colorScheme.primary),
                               ),
-                              child: Icon(CupertinoIcons.house_fill, size: 13, color: theme.colorScheme.primary),
-                            ),
-                            const SizedBox(width: 10),
-                            Text('Family Home', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface)),
-                            const SizedBox(width: 6),
-                            Text('123 Main St', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
-                            const Spacer(),
-                            Icon(CupertinoIcons.chevron_right, size: 13, color: theme.colorScheme.onSurfaceVariant),
-                          ],
+                              const SizedBox(width: 10),
+                              Text(propertyName, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface)),
+                              if (propertyAddress != null) ...[
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(propertyAddress, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant), overflow: TextOverflow.ellipsis),
+                                ),
+                              ],
+                              const Spacer(),
+                              Icon(CupertinoIcons.chevron_right, size: 13, color: theme.colorScheme.onSurfaceVariant),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -125,46 +140,21 @@ class HomeView extends ConsumerWidget {
               const SizedBox(height: AppSpacing.xl),
 
               // ─── Stats Row ─────────────────────────────────────────────────
-              FadeSlideTransition(
-                delay: const Duration(milliseconds: 100),
-                child: Row(
-                  children: [
-                    _StatPill(icon: CupertinoIcons.square_grid_2x2, value: '6', label: 'Rooms', onTap: () {
-                      Navigator.of(context).push(AppPageRoute(builder: (context) => const HomeDetailListView(type: 'rooms')));
-                    }),
-                    const SizedBox(width: 10),
-                    _StatPill(icon: CupertinoIcons.device_desktop, value: '4', label: 'Appliances', onTap: () {
-                      Navigator.of(context).push(AppPageRoute(builder: (context) => const HomeDetailListView(type: 'appliances')));
-                    }),
-                    const SizedBox(width: 10),
-                    _StatPill(icon: CupertinoIcons.doc_text, value: '3', label: 'Warranties', onTap: () {
-                      Navigator.of(context).push(AppPageRoute(builder: (context) => const HomeDetailListView(type: 'warranties')));
-                    }),
-                  ],
+              if (property != null)
+                FadeSlideTransition(
+                  delay: const Duration(milliseconds: 100),
+                  child: Row(
+                    children: [
+                      _StatPill(icon: CupertinoIcons.square_grid_2x2, value: '${rooms.length}', label: 'Rooms', onTap: () {
+                        Navigator.of(context).push(AppPageRoute(builder: (context) => HomeDetailListView(type: 'rooms', property: property)));
+                      }),
+                      const SizedBox(width: 10),
+                      _StatPill(icon: CupertinoIcons.device_desktop, value: '${appliances.length}', label: 'Appliances', onTap: () {
+                        Navigator.of(context).push(AppPageRoute(builder: (context) => HomeDetailListView(type: 'appliances', property: property)));
+                      }),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // ─── Upcoming ──────────────────────────────────────────────────
-              FadeSlideTransition(
-                delay: const Duration(milliseconds: 150),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Upcoming', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurfaceVariant, letterSpacing: 0.5)),
-                    const SizedBox(height: 10),
-                    _ReminderTile(
-                      icon: CupertinoIcons.wind, title: 'HVAC Air Filter',
-                      subtitle: 'Replace in 6 days', detail: 'Quarterly', color: const Color(0xFFD4815A),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    _ReminderTile(
-                      icon: CupertinoIcons.bell_fill, title: 'Smoke Detector',
-                      subtitle: 'Test batteries next week', detail: 'Bi-annual', color: theme.colorScheme.primary,
-                    ),
-                  ],
-                ),
-              ),
               const SizedBox(height: AppSpacing.xl),
 
               // ─── Maintenance History ───────────────────────────────────────
@@ -268,54 +258,4 @@ class _StatPill extends StatelessWidget {
   }
 }
 
-class _ReminderTile extends StatelessWidget {
-  const _ReminderTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.detail,
-    required this.color,
-  });
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String detail;
-  final Color color;
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 38, height: 38,
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-            child: Center(child: Icon(icon, size: 17, color: color)),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
-                const SizedBox(height: 3),
-                Text(subtitle, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
-            child: Text(detail.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color, letterSpacing: 0.5)),
-          ),
-        ],
-      ),
-    );
-  }
-}

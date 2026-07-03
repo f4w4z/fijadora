@@ -23,7 +23,20 @@ final wishlistedProductsProvider = Provider<AsyncValue<List<Product>>>((ref) {
   );
 });
 
+// Retry helper - silently reconnects when Supabase realtime disconnects
+Stream<T> _retryOnError<T>(Stream<T> Function() factory) async* {
+  while (true) {
+    try {
+      yield* factory();
+      break;
+    } catch (_) {
+      await Future.delayed(const Duration(seconds: 2));
+    }
+  }
+}
+
 // Helper stream provider for all products
 final productsStreamProvider = StreamProvider<List<Product>>((ref) {
-  return ref.watch(shopRepositoryProvider).streamProducts();
+  final repo = ref.watch(shopRepositoryProvider);
+  return _retryOnError(() => repo.streamProducts());
 });

@@ -21,7 +21,6 @@ Future<T?> showAppBottomSheet<T>({
     ),
     builder: (context) {
       final bottom = MediaQuery.of(context).viewInsets.bottom;
-      final routeAnimation = ModalRoute.of(context)?.animation;
 
       Widget sheetContent = Padding(
         padding: EdgeInsets.only(bottom: bottom),
@@ -101,27 +100,6 @@ Future<T?> showAppBottomSheet<T>({
           ),
         ),
       );
-
-      if (routeAnimation != null) {
-        return AnimatedBuilder(
-          animation: routeAnimation,
-          builder: (context, child) {
-            final scaleCurve = CurvedAnimation(
-              parent: routeAnimation,
-              curve: Curves.easeOutBack,
-              reverseCurve: Curves.easeIn,
-            );
-            return Transform.scale(
-              scale: Tween<double>(begin: 0.94, end: 1.0).evaluate(scaleCurve),
-              child: Opacity(
-                opacity: routeAnimation.value.clamp(0.0, 1.0),
-                child: child,
-              ),
-            );
-          },
-          child: sheetContent,
-        );
-      }
 
       return sheetContent;
     },

@@ -51,6 +51,12 @@ CustomTransitionPage<void> _slidePage(Widget child, GoRouterState state) {
 
 final initialUriProvider = Provider<Uri?>((ref) => null);
 
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+
+final customerTabProvider = StateProvider<int>((ref) => 0);
+final staffTabProvider = StateProvider<int>((ref) => 0);
+final workerTabProvider = StateProvider<int>((ref) => 0);
+
 final routerProvider = Provider<GoRouter>((ref) {
   final authViewModel = ref.read(authViewModelProvider);
   final appConfig = ref.read(appConfigProvider);
@@ -63,14 +69,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         initialUri.fragment.contains('type=recovery')) {
       initialLocation = '/reset-password';
     } else {
-      final path = initialUri.path;
-      if (path.isNotEmpty) {
-        initialLocation = path;
+      final pathWithQuery = initialUri.hasQuery ? '${initialUri.path}?${initialUri.query}' : initialUri.path;
+      if (pathWithQuery.isNotEmpty) {
+        initialLocation = pathWithQuery;
       }
     }
   }
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: initialLocation,
     refreshListenable: authViewModel,
     redirect: (context, state) {

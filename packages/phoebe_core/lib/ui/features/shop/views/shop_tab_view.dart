@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../domain/models/product.dart';
+import '../../collections/view_models/collections_view_model.dart';
 import '../view_models/cart_view_model.dart';
 import '../view_models/wishlist_view_model.dart';
 import 'ai_concierge_page.dart';
@@ -10,6 +11,7 @@ import 'cart_view.dart';
 import 'product_detail_view.dart';
 import 'wishlist_view.dart';
 import '../../../../ui/shared/widgets/animated_tap_scale.dart';
+import '../../../../ui/shared/widgets/app_animations.dart';
 import '../../../../ui/shared/widgets/custom_pinned_header.dart';
 import '../../../../ui/shared/widgets/empty_state_widget.dart';
 import '../../../../ui/shared/widgets/error_state_widget.dart';
@@ -32,8 +34,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> with AutomaticKeepAli
   String _searchQuery = '';
 
   void _showAiConcierge(BuildContext context, List<Product> catalog) {
-    final recommendedIds = ['prod-1', 'prod-2'];
-    final recommended = catalog.where((p) => recommendedIds.contains(p.id)).toList();
+    final recommended = catalog.take(2).toList();
 
     Navigator.push(
       context,
@@ -153,7 +154,8 @@ class _ShopContent extends ConsumerWidget {
     final theme = Theme.of(context);
 
     final categories = ['All Products', ...products.map((p) => p.category).toSet()];
-    final bundleProducts = products.where((p) => p.category == 'Bundles').toList();
+    final featuredCollectionsAsync = ref.watch(featuredCollectionsProvider);
+    final featuredCollections = featuredCollectionsAsync.valueOrNull ?? [];
 
     final query = searchQuery.trim().toLowerCase();
     final filteredProducts = products.where((p) {
@@ -251,7 +253,7 @@ class _ShopContent extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24.0),
 
-                if (bundleProducts.isNotEmpty) ...[
+                if (featuredCollections.isNotEmpty) ...[
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: Text(
@@ -260,7 +262,7 @@ class _ShopContent extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 16.0),
-                  ShopTheLookCarousel(bundles: bundleProducts),
+                  ShopTheLookCarousel(collections: featuredCollections),
                 ],
 
                 Padding(
@@ -358,7 +360,7 @@ class _ShopContent extends ConsumerWidget {
                     return AnimatedTapScale(
                       onTap: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(
+                          AppPageRoute(
                             builder: (context) => ProductDetailView(product: product),
                           ),
                         );
@@ -374,16 +376,19 @@ class _ShopContent extends ConsumerWidget {
                                 children: [
                                   Hero(
                                     tag: 'product-img-${product.id}',
-                                    child: CachedNetworkImage(
-                                      imageUrl: product.imageUrl,
-                                      memCacheWidth: 300,
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) => Container(
-                                        color: theme.colorScheme.surfaceContainerLow,
-                                      ),
-                                      errorWidget: (context, url, error) => Container(
-                                        color: theme.colorScheme.surfaceContainerLow,
-                                        child: const Icon(CupertinoIcons.photo),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(16.0),
+                                      child: CachedNetworkImage(
+                                        imageUrl: product.imageUrl,
+                                        memCacheWidth: 300,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) => Container(
+                                          color: theme.colorScheme.surfaceContainerLow,
+                                        ),
+                                        errorWidget: (context, url, error) => Container(
+                                          color: theme.colorScheme.surfaceContainerLow,
+                                          child: const Icon(CupertinoIcons.photo),
+                                        ),
                                       ),
                                     ),
                                   ),

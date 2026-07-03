@@ -365,11 +365,7 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
                         TextButton.icon(
                           onPressed: _isAiDiagnosing ? null : _runAiDiagnosis,
                           icon: _isAiDiagnosing
-                              ? const SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child: CircularProgressIndicator(strokeWidth: 1.5),
-                                )
+                              ? const SpinningSparkles()
                               : const Icon(CupertinoIcons.sparkles, size: 14),
                           label: Text(_isAiDiagnosing ? 'Diagnosing...' : 'Scan Photo'),
                           style: TextButton.styleFrom(
@@ -462,13 +458,24 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
                             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                           ),
                         ),
-                        child: isCreating
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                              )
-                            : const Text('Submit Request', style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          transitionBuilder: (child, animation) {
+                            return FadeTransition(opacity: animation, child: child);
+                          },
+                          child: isCreating
+                              ? const SizedBox(
+                                  key: ValueKey('submitting_loader'),
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Text(
+                                  'Submit Request',
+                                  key: ValueKey('submit_text'),
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                        ),
                       ),
                     ),
                   ),
@@ -478,6 +485,40 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class SpinningSparkles extends StatefulWidget {
+  const SpinningSparkles({super.key});
+
+  @override
+  State<SpinningSparkles> createState() => _SpinningSparklesState();
+}
+
+class _SpinningSparklesState extends State<SpinningSparkles> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RotationTransition(
+      turns: _controller,
+      child: const Icon(CupertinoIcons.sparkles, size: 14),
     );
   }
 }

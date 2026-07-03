@@ -255,7 +255,7 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> with Automati
               if (activeJobs.isNotEmpty) ...[
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.fromLTRB(context.pagePad, 28, context.pagePad, 0),
+                    padding: EdgeInsets.fromLTRB(context.pagePad, 16, context.pagePad, 0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -295,7 +295,7 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> with Automati
               if (jobs.length > activeJobs.length) ...[
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.fromLTRB(context.pagePad, 28, context.pagePad, 0),
+                    padding: EdgeInsets.fromLTRB(context.pagePad, 16, context.pagePad, 0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -381,7 +381,7 @@ class _ServiceGridState extends State<_ServiceGrid> {
     return Column(
       children: [
         Padding(
-          padding: EdgeInsets.fromLTRB(context.pagePad, 12, context.pagePad, 0),
+          padding: EdgeInsets.fromLTRB(context.pagePad, 4, context.pagePad, 0),
           child: SizedBox(
             height: 36,
             child: ListView.builder(
@@ -406,7 +406,7 @@ class _ServiceGridState extends State<_ServiceGrid> {
           ),
         ),
         Padding(
-          padding: EdgeInsets.fromLTRB(context.pagePad, 12, context.pagePad, 0),
+          padding: EdgeInsets.fromLTRB(context.pagePad, 4, context.pagePad, 0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -422,14 +422,14 @@ class _ServiceGridState extends State<_ServiceGrid> {
           ),
         ),
         Padding(
-          padding: EdgeInsets.fromLTRB(context.pagePad, 4, context.pagePad, 0),
+          padding: EdgeInsets.fromLTRB(context.pagePad, 0, context.pagePad, 0),
           child: GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: context.gridCols,
               crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
+              mainAxisSpacing: 8,
               childAspectRatio: 0.68,
             ),
             itemBuilder: (context, index) {

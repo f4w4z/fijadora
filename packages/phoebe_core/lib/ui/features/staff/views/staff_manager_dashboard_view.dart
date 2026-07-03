@@ -1,13 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../data/repositories/jobs_repository.dart';
 import '../../../../domain/models/job_status.dart';
 import '../../../../domain/models/maintenance_job.dart';
-import '../../../../domain/models/user_role.dart';
-import '../../auth/view_models/auth_view_model.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 
+import '../../../shared/widgets/shimmer_loading.dart';
 import '../../services/view_models/jobs_view_model.dart';
 
 class StaffManagerDashboardView extends ConsumerWidget {
@@ -20,43 +18,69 @@ class StaffManagerDashboardView extends ConsumerWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: jobsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('Error: $err')),
-          data: (jobs) {
-            final pendingApprovals = jobs.where((j) => j.status == JobStatus.waitingApproval).length;
-            final activeJobs = jobs.where((j) => j.status == JobStatus.inProgress || j.status == JobStatus.assigned).length;
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.md, context.pagePad, 0),
+                child: Text('Dashboard', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -0.5, color: theme.colorScheme.onSurface)),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+            ...jobsAsync.maybeWhen(
+              data: (jobs) {
+                final pendingApprovals = jobs.where((j) => j.status == JobStatus.waitingApproval).length;
+                final activeJobs = jobs.where((j) => j.status == JobStatus.inProgress || j.status == JobStatus.assigned).length;
 
-            return CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.md, context.pagePad, 0),
-                    child: Text('Dashboard', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -0.5, color: theme.colorScheme.onSurface)),
+                return [
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(context.pagePad, 0, context.pagePad, 120),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        _SummaryRow(
+                          items: [
+                            _SummaryItem(label: 'Properties', value: '2', icon: CupertinoIcons.building_2_fill, color: theme.colorScheme.primary),
+                            _SummaryItem(label: 'Pending Approvals', value: '$pendingApprovals', icon: CupertinoIcons.clock, color: const Color(0xFFE65100)),
+                            _SummaryItem(label: 'Active Jobs', value: '$activeJobs', icon: CupertinoIcons.hammer_fill, color: const Color(0xFF3F51B5)),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        Text('Recent Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+                        const SizedBox(height: 12),
+                        ...jobs.take(5).map((job) => _ActivityRow(job: job, theme: theme)),
+                      ]),
+                    ),
                   ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(context.pagePad, 0, context.pagePad, 120),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      _SummaryRow(
-                        items: [
-                          _SummaryItem(label: 'Properties', value: '2', icon: CupertinoIcons.building_2_fill, color: theme.colorScheme.primary),
-                          _SummaryItem(label: 'Pending Approvals', value: '$pendingApprovals', icon: CupertinoIcons.clock, color: const Color(0xFFE65100)),
-                          _SummaryItem(label: 'Active Jobs', value: '$activeJobs', icon: CupertinoIcons.hammer_fill, color: const Color(0xFF3F51B5)),
-                        ],
+                ];
+              },
+              orElse: () {
+                if (jobsAsync.hasError) {
+                  return [
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Text('Error: ${jobsAsync.error}', style: TextStyle(color: theme.colorScheme.error)),
                       ),
-                      const SizedBox(height: 24),
-                      Text('Recent Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
-                      const SizedBox(height: 12),
-                      ...jobs.take(5).map((job) => _ActivityRow(job: job, theme: theme)),
-                    ]),
+                    ),
+                  ];
+                }
+                return [
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(context.pagePad, 0, context.pagePad, 120),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        const ShimmerSummaryRow(),
+                        const SizedBox(height: 24),
+                        Text('Recent Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+                        const SizedBox(height: 12),
+                        const ShimmerActivityRow(count: 3),
+                      ]),
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
+                ];
+              },
+            ),
+          ],
         ),
       ),
     );

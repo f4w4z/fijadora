@@ -6,9 +6,11 @@ import '../view_models/collections_view_model.dart';
 import '../widgets/collection_feed_card.dart';
 import 'collection_detail_view.dart';
 import '../../../shared/widgets/app_animations.dart';
+import 'collection_form_page.dart';
 import '../../../shared/widgets/custom_pinned_header.dart';
 import '../../../shared/widgets/floating_header_layout.dart';
 import '../../../core/utilities/responsive_helpers.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 
 class CollectionsTabView extends ConsumerStatefulWidget {
   const CollectionsTabView({super.key});
@@ -64,7 +66,14 @@ class _CollectionsTabViewState extends ConsumerState<CollectionsTabView>
           bottomChild: SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    fullscreenDialog: true,
+                    builder: (context) => const CollectionFormPage(),
+                  ),
+                );
+              },
               icon: const Icon(CupertinoIcons.add, size: 16),
               label: const Text('Make Your Own Collection'),
               style: FilledButton.styleFrom(
@@ -188,9 +197,8 @@ class _BrowseFeed extends StatelessWidget {
       return CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: SizedBox(height: topPadding)),
-          const SliverFillRemaining(
-            hasScrollBody: false,
-            child: Center(child: CupertinoActivityIndicator()),
+          const SliverToBoxAdapter(
+            child: ShimmerCollectionCard(count: 2),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],

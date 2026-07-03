@@ -3,13 +3,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../../../domain/models/product.dart';
-import '../product_detail_view.dart';
+import '../../../../../domain/models/collection.dart';
+import '../../../collections/views/collection_detail_view.dart';
 import '../../../../core/utilities/responsive_helpers.dart';
 
 class ShopTheLookCarousel extends ConsumerStatefulWidget {
-  final List<Product> bundles;
-  const ShopTheLookCarousel({super.key, required this.bundles});
+  final List<Collection> collections;
+  const ShopTheLookCarousel({super.key, required this.collections});
 
   @override
   ConsumerState<ShopTheLookCarousel> createState() => _ShopTheLookCarouselState();
@@ -23,7 +23,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
   @override
   void initState() {
     super.initState();
-    _cardCount = widget.bundles.length;
+    _cardCount = widget.collections.length;
     _positions = {for (int i = 0; i < _cardCount; i++) i: i};
     _startAutoFlip();
   }
@@ -37,9 +37,9 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
   @override
   void didUpdateWidget(ShopTheLookCarousel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.bundles.length != oldWidget.bundles.length) {
+    if (widget.collections.length != oldWidget.collections.length) {
       setState(() {
-        _cardCount = widget.bundles.length;
+        _cardCount = widget.collections.length;
         _positions = {for (int i = 0; i < _cardCount; i++) i: i};
       });
       _timer?.cancel();
@@ -62,7 +62,6 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
 
     final currentPos = _positions[index]!;
     if (currentPos == 0) {
-      // Already front — cycle to next card
       setState(() {
         for (int i = 0; i < _cardCount; i++) {
           final p = _positions[i]!;
@@ -85,12 +84,11 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
   Widget build(BuildContext context) {
     if (_cardCount == 0) return const SizedBox.shrink();
 
-    // Sort bundle card indices so that back-most card is built first, front-most is built last.
     final sortedIndices = List<int>.generate(_cardCount, (i) => i)
       ..sort((a, b) {
         final posA = _positions[a]!;
         final posB = _positions[b]!;
-        return posB.compareTo(posA); // Descending order
+        return posB.compareTo(posA);
       });
 
     return LayoutBuilder(
@@ -107,10 +105,9 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
           child: Stack(
             alignment: Alignment.center,
             children: sortedIndices.map((idx) {
-              final bundle = widget.bundles[idx];
+              final collection = widget.collections[idx];
               final position = _positions[idx]!;
 
-              // Calculate card properties based on position
               double leftOffset = 0;
               double topOffset = 0;
               double scale = 1.0;
@@ -142,7 +139,6 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                   isInteractive = true;
                 }
               } else {
-                // 3 or more cards
                 if (position == 0) {
                   leftOffset = stepOffset;
                   topOffset = 0.0;
@@ -165,7 +161,6 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                   opacity = 1.0;
                   isInteractive = true;
                 } else {
-                  // Hidden card
                   leftOffset = -stepOffset;
                   topOffset = 24.0;
                   scale = 0.0;
@@ -176,7 +171,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
               }
 
               return AnimatedPositioned(
-                key: ValueKey(bundle.id),
+                key: ValueKey(collection.id),
                 duration: const Duration(milliseconds: 350),
                 curve: Curves.easeInOutCubic,
                 left: (parentWidth - cardWidth) / 2 + leftOffset,
@@ -199,7 +194,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                           onTap: () => _bringToFront(idx),
                           behavior: HitTestBehavior.opaque,
                           child: RepaintBoundary(
-                            child: _buildCard(bundle, cardWidth, cardHeight),
+                            child: _buildCard(collection, cardWidth, cardHeight),
                           ),
                         ),
                       ),
@@ -214,7 +209,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
     );
   }
 
-  Widget _buildCard(Product bundle, double width, double height) {
+  Widget _buildCard(Collection collection, double width, double height) {
     return Container(
       width: width,
       height: height,
@@ -234,9 +229,8 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Background Image
             CachedNetworkImage(
-              imageUrl: bundle.imageUrl,
+              imageUrl: collection.coverImageUrl ?? '',
               fit: BoxFit.cover,
               placeholder: (context, url) => Container(
                 color: Colors.grey.shade900,
@@ -253,8 +247,6 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                 child: const Icon(CupertinoIcons.photo, size: 48, color: Colors.white24),
               ),
             ),
-            
-            // Gradient Overlay
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -268,8 +260,6 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                 ),
               ),
             ),
-            
-            // Content
             Padding(
               padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xxl, context.pagePad, AppSpacing.xxl),
               child: Column(
@@ -277,10 +267,10 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                 children: [
                   const Spacer(),
                   Text(
-                    bundle.name,
+                    collection.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.white,
+                    style: const TextStyle(color: Colors.white,
                       fontSize: 20.0,
                       fontWeight: FontWeight.w400,
                       height: 1.15,
@@ -288,7 +278,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                   ),
                   const SizedBox(height: 6.0),
                   Text(
-                    "\$${bundle.price.toStringAsFixed(0)}",
+                    '${collection.itemCount} items',
                     style: TextStyle(color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 13.0,
                       fontWeight: FontWeight.w400,
@@ -299,10 +289,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => ProductDetailView(
-                            product: bundle,
-                            heroTag: 'bundle-img-${bundle.id}',
-                          ),
+                          builder: (context) => CollectionDetailView(collection: collection),
                         ),
                       );
                     },
@@ -312,7 +299,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                         border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                         borderRadius: BorderRadius.circular(100.0),
                       ),
-                      child: Text(
+                      child: const Text(
                         'Explore',
                         style: TextStyle(color: Colors.white,
                           fontSize: 11.0,

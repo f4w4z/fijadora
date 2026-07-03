@@ -174,25 +174,33 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
                       width: double.infinity,
                       child: OutlinedButton.icon(
                         onPressed: _isCapturing ? null : _capturePhoto,
-                        icon: _isCapturing
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2),
-                              )
-                            : Icon(_photoCaptured
-                                ? CupertinoIcons.refresh
-                                : CupertinoIcons.camera),
-                        label: Text(
-                          _isCapturing
-                              ? 'Opening camera...'
-                              : _photoCaptured
-                                  ? 'Retake Photo'
-                                  : 'Capture Photo',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
+                        icon: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          child: _isCapturing
+                              ? const SizedBox(
+                                  key: ValueKey('capturing_icon'),
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Icon(
+                                  _photoCaptured ? CupertinoIcons.refresh : CupertinoIcons.camera,
+                                  key: const ValueKey('normal_icon'),
+                                ),
+                        ),
+                        label: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          child: Text(
+                            _isCapturing
+                                ? 'Opening camera...'
+                                : _photoCaptured
+                                    ? 'Retake Photo'
+                                    : 'Capture Photo',
+                            key: ValueKey<bool>(_isCapturing),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
@@ -288,24 +296,32 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Center(
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(opacity: animation, child: child);
+                      },
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              key: ValueKey('submitting_spinner'),
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              'Submit for Approval',
+                              key: const ValueKey('submit_text'),
+                              style: TextStyle(
+                                color: theme.colorScheme.onPrimary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                                letterSpacing: 0.3,
+                              ),
                             ),
-                          )
-                        : Text(
-                            'Submit for Approval',
-                            style: TextStyle(
-                              color: theme.colorScheme.onPrimary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
+                    ),
                   ),
                 ),
               ),

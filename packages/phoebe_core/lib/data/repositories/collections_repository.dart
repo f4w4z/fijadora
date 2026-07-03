@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
@@ -8,8 +9,14 @@ import '../services/supabase_service.dart';
 
 abstract class CollectionsRepository {
   Stream<List<Collection>> streamCollections();
+  Stream<List<Collection>> streamFeaturedCollections();
   Future<void> toggleFollow(String collectionId, String userId);
   Future<void> toggleLike(String collectionId, String userId);
+  Future<Collection> createCollection(Collection collection);
+  Future<Collection> updateCollection(Collection collection);
+  Future<void> deleteCollection(String id);
+  Future<String> uploadCoverImage(String fileName, Uint8List fileBytes);
+  Future<void> setFeatured(String collectionId, bool isFeatured);
   void dispose();
 }
 
@@ -40,6 +47,14 @@ class SupabaseCollectionsRepository implements CollectionsRepository {
         });
 
     return _controller.stream;
+  }
+
+  @override
+  Stream<List<Collection>> streamFeaturedCollections() {
+    return _controller.stream.map(
+      (collections) => collections.where((c) => c.isFeatured).toList()
+        ..sort((a, b) => a.featuredOrder.compareTo(b.featuredOrder)),
+    );
   }
 
   Future<List<Collection>> _hydrateItems(List<Map<String, dynamic>> collectionsJson) async {
@@ -106,211 +121,103 @@ class SupabaseCollectionsRepository implements CollectionsRepository {
   }
 
   @override
+  Future<Collection> createCollection(Collection collection) async {
+    final now = DateTime.now();
+    final data = {
+      'title': collection.title,
+      'description': collection.description,
+      'cover_image_url': collection.coverImageUrl,
+      'creator_id': collection.creatorId,
+      'creator_name': collection.creatorName,
+      'creator_avatar_url': collection.creatorAvatarUrl,
+      'category': collection.category.name,
+      'is_public': collection.isPublic,
+      'is_featured': collection.isFeatured,
+      'featured_order': collection.featuredOrder,
+      'created_at': now.toIso8601String(),
+    };
+    final result = await _client.from('collections').insert(data).select('id').single();
+    final id = result['id'] as String;
+    for (final item in collection.items) {
+      await _client.from('collection_items').insert({
+        'collection_id': id,
+        'item_type': item.itemType.name,
+        'reference_id': item.referenceId,
+        'label': item.label,
+        'subtitle': item.subtitle,
+        'image_url': item.imageUrl,
+        'note_content': item.noteContent,
+      });
+    }
+    return collection.copyWith(id: id, createdAt: now);
+  }
+
+  @override
+  Future<Collection> updateCollection(Collection collection) async {
+    await _client.from('collections').update({
+      'title': collection.title,
+      'description': collection.description,
+      'cover_image_url': collection.coverImageUrl,
+      'category': collection.category.name,
+      'is_public': collection.isPublic,
+      'is_featured': collection.isFeatured,
+      'featured_order': collection.featuredOrder,
+    }).eq('id', collection.id);
+
+    await _client.from('collection_items').delete().eq('collection_id', collection.id);
+    for (final item in collection.items) {
+      await _client.from('collection_items').insert({
+        'collection_id': collection.id,
+        'item_type': item.itemType.name,
+        'reference_id': item.referenceId,
+        'label': item.label,
+        'subtitle': item.subtitle,
+        'image_url': item.imageUrl,
+        'note_content': item.noteContent,
+      });
+    }
+    return collection;
+  }
+
+  @override
+  Future<void> deleteCollection(String id) async {
+    await _client.from('collection_items').delete().eq('collection_id', id);
+    await _client.from('collection_follows').delete().eq('collection_id', id);
+    await _client.from('collection_likes').delete().eq('collection_id', id);
+    await _client.from('collections').delete().eq('id', id);
+  }
+
+  @override
+  Future<void> setFeatured(String collectionId, bool isFeatured) async {
+    await _client.from('collections').update({
+      'is_featured': isFeatured,
+      'featured_order': isFeatured ? DateTime.now().millisecondsSinceEpoch : 0,
+    }).eq('id', collectionId);
+  }
+
+  @override
+  Future<String> uploadCoverImage(String fileName, Uint8List fileBytes) async {
+    final path = 'collection_covers/$fileName';
+    await _client.storage.from('product-images').uploadBinary(
+      path,
+      fileBytes,
+      fileOptions: const sb.FileOptions(cacheControl: '3600', upsert: true),
+    );
+    final url = _client.storage.from('product-images').getPublicUrl(path);
+    return url;
+  }
+
+  @override
   void dispose() {
     _collectionSub?.cancel();
     _controller.close();
   }
 }
 
-class MockCollectionsRepository implements CollectionsRepository {
-  MockCollectionsRepository() {
-    _populateMockCollections();
-  }
-
-  final _collectionsController = StreamController<List<Collection>>.broadcast();
-  final List<Collection> _mockCollections = [];
-  final Set<String> _followedIds = {};
-  final Set<String> _likedIds = {};
-
-  void _populateMockCollections() {
-    _mockCollections.addAll([
-      Collection(
-        id: 'col-1',
-        title: 'Kitchen Reno Essentials',
-        description: 'Everything you need for a stunning kitchen renovation — from countertops to lighting.',
-        coverImageUrl: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&auto=format&fit=crop&q=80',
-        creatorId: 'user-2',
-        creatorName: 'Alex Chen',
-        creatorAvatarUrl: 'https://i.pravatar.cc/150?u=alex',
-        category: CollectionCategory.kitchen,
-        isPublic: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 3)),
-        items: [
-          const CollectionItem(id: 'ci-1', itemType: CollectionItemType.product, referenceId: 'prod-1', label: 'Noguchi Coffee Table', subtitle: '\$780', imageUrl: 'https://images.unsplash.com/photo-1581428982868-e410dd047a90?w=200&auto=format&fit=crop&q=80'),
-          const CollectionItem(id: 'ci-2', itemType: CollectionItemType.product, referenceId: 'prod-4', label: 'Flos Arco Floor Lamp', subtitle: '\$450', imageUrl: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=200&auto=format&fit=crop&q=80'),
-          const CollectionItem(id: 'ci-3', itemType: CollectionItemType.service, referenceId: 'kitchenDesigns', label: 'Kitchen Design Service', subtitle: 'Professional layout & cabinetry'),
-          const CollectionItem(id: 'ci-4', itemType: CollectionItemType.note, label: 'Tip: Measure twice', noteContent: 'Always confirm your cabinet dimensions before ordering countertops.'),
-        ],
-        followerCount: 248,
-        likeCount: 312,
-      ),
-      Collection(
-        id: 'col-2',
-        title: 'Best Plumbers in Austin',
-        description: 'Curated list of top-rated plumbing professionals verified by the community.',
-        coverImageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop&q=80',
-        creatorId: 'user-3',
-        creatorName: 'Jamie Rivera',
-        creatorAvatarUrl: 'https://i.pravatar.cc/150?u=jamie',
-        category: CollectionCategory.renovation,
-        isPublic: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 7)),
-        items: [
-          const CollectionItem(id: 'ci-5', itemType: CollectionItemType.service, referenceId: 'plumbing', label: 'Plumbing Service', subtitle: '⭐ 4.9 · Emergency available'),
-          const CollectionItem(id: 'ci-6', itemType: CollectionItemType.service, referenceId: 'plumbing', label: 'Drain Masters', subtitle: '⭐ 4.8 · Same-day service'),
-          const CollectionItem(id: 'ci-7', itemType: CollectionItemType.note, label: 'Tip: Check licenses', noteContent: 'Verify all plumbing licenses through the Texas State Board before hiring.'),
-        ],
-        followerCount: 89,
-        likeCount: 134,
-      ),
-      Collection(
-        id: 'col-3',
-        title: 'Winter Home Prep',
-        description: 'Get your home ready for the cold months with these essential checks and upgrades.',
-        coverImageUrl: 'https://images.unsplash.com/photo-1517292987719-0369a794ec0f?w=800&auto=format&fit=crop&q=80',
-        creatorId: 'user-4',
-        creatorName: 'Priya Sharma',
-        creatorAvatarUrl: 'https://i.pravatar.cc/150?u=priya',
-        category: CollectionCategory.seasonal,
-        isPublic: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 14)),
-        items: [
-          const CollectionItem(id: 'ci-8', itemType: CollectionItemType.product, referenceId: 'prod-4', label: 'Smart Thermostat', subtitle: '\$249', imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&auto=format&fit=crop&q=80'),
-          const CollectionItem(id: 'ci-9', itemType: CollectionItemType.service, referenceId: 'acEngineering', label: 'HVAC Inspection', subtitle: 'Annual maintenance check'),
-          const CollectionItem(id: 'ci-10', itemType: CollectionItemType.note, label: 'Checklist: Seal windows', noteContent: 'Use weatherstripping tape on drafty windows. Save up to 15% on heating bills.'),
-        ],
-        followerCount: 156,
-        likeCount: 201,
-      ),
-      Collection(
-        id: 'col-4',
-        title: 'Bathroom Makeover Ideas',
-        description: 'Inspiring bathroom transformations from minimal to spa-like luxury.',
-        coverImageUrl: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=800&auto=format&fit=crop&q=80',
-        creatorId: 'user-5',
-        creatorName: 'Maya Johnson',
-        category: CollectionCategory.bathroom,
-        isPublic: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 10)),
-        items: [
-          const CollectionItem(id: 'ci-11', itemType: CollectionItemType.product, referenceId: 'prod-3', label: 'Minimalist Oak Vanity', subtitle: '\$1,200', imageUrl: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=200&auto=format&fit=crop&q=80'),
-          const CollectionItem(id: 'ci-12', itemType: CollectionItemType.service, referenceId: 'tiling', label: 'Custom Tiling', subtitle: 'Porcelain & ceramic specialists'),
-          const CollectionItem(id: 'ci-13', itemType: CollectionItemType.note, label: 'Budget tip', noteContent: 'Keep plumbing in the same layout to save thousands on renovation costs.'),
-        ],
-        followerCount: 203,
-        likeCount: 278,
-      ),
-      Collection(
-        id: 'col-5',
-        title: 'Energy Saving Tips',
-        description: 'Reduce your utility bills with these community-tested energy efficiency hacks.',
-        coverImageUrl: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=800&auto=format&fit=crop&q=80',
-        creatorId: 'user-6',
-        creatorName: 'Tom Bradley',
-        category: CollectionCategory.energy,
-        isPublic: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 21)),
-        items: [
-          const CollectionItem(id: 'ci-14', itemType: CollectionItemType.product, referenceId: 'prod-4', label: 'Smart Thermostat', subtitle: '\$249', imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&auto=format&fit=crop&q=80'),
-          const CollectionItem(id: 'ci-15', itemType: CollectionItemType.note, label: 'LED swap', noteContent: 'Replace all bulbs with LEDs. Average saving: \$225/year.'),
-          const CollectionItem(id: 'ci-16', itemType: CollectionItemType.note, label: 'Phantom loads', noteContent: 'Use smart power strips to cut standby power usage by 10%.'),
-        ],
-        followerCount: 312,
-        likeCount: 445,
-      ),
-      Collection(
-        id: 'col-6',
-        title: 'Spring Cleaning Bootcamp',
-        description: 'A room-by-room guide to deep cleaning your home this spring.',
-        coverImageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop&q=80',
-        creatorId: 'user-7',
-        creatorName: 'Sarah Kim',
-        category: CollectionCategory.cleaning,
-        isPublic: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 5)),
-        items: [
-          const CollectionItem(id: 'ci-17', itemType: CollectionItemType.service, referenceId: 'cleaning', label: 'Deep Clean Service', subtitle: 'Top-rated in your area'),
-          const CollectionItem(id: 'ci-18', itemType: CollectionItemType.product, referenceId: 'prod-9', label: 'Industrial Shelving', subtitle: '\$1,450', imageUrl: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=200&auto=format&fit=crop&q=80'),
-          const CollectionItem(id: 'ci-19', itemType: CollectionItemType.note, label: 'Schedule', noteContent: 'Start from the top floor and work down. Clean one room completely before moving on.'),
-        ],
-        followerCount: 178,
-        likeCount: 223,
-      ),
-    ]);
-  }
-
-  void _notify() {
-    _collectionsController.add(List<Collection>.from(_mockCollections));
-  }
-
-  @override
-  Stream<List<Collection>> streamCollections() {
-    Timer.run(() => _notify());
-    return _collectionsController.stream;
-  }
-
-  @override
-  Future<void> toggleFollow(String collectionId, String userId) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    final idx = _mockCollections.indexWhere((c) => c.id == collectionId);
-    if (idx == -1) return;
-    if (_followedIds.contains(collectionId)) {
-      _followedIds.remove(collectionId);
-      _mockCollections[idx] = _mockCollections[idx].copyWith(
-        followerCount: _mockCollections[idx].followerCount - 1,
-      );
-    } else {
-      _followedIds.add(collectionId);
-      _mockCollections[idx] = _mockCollections[idx].copyWith(
-        followerCount: _mockCollections[idx].followerCount + 1,
-      );
-    }
-    _notify();
-  }
-
-  @override
-  Future<void> toggleLike(String collectionId, String userId) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    final idx = _mockCollections.indexWhere((c) => c.id == collectionId);
-    if (idx == -1) return;
-    if (_likedIds.contains(collectionId)) {
-      _likedIds.remove(collectionId);
-      _mockCollections[idx] = _mockCollections[idx].copyWith(
-        likeCount: _mockCollections[idx].likeCount - 1,
-      );
-    } else {
-      _likedIds.add(collectionId);
-      _mockCollections[idx] = _mockCollections[idx].copyWith(
-        likeCount: _mockCollections[idx].likeCount + 1,
-      );
-    }
-    _notify();
-  }
-
-  @override
-  void dispose() {
-    _collectionsController.close();
-  }
-}
-
+// 3. Riverpod Provider definition
 final collectionsRepositoryProvider = Provider<CollectionsRepository>((ref) {
-  const url = String.fromEnvironment('SUPABASE_URL', defaultValue: '');
-  const anonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
-
-  CollectionsRepository repo;
-  if (url.isEmpty || anonKey.isEmpty || url.contains('placeholder')) {
-    debugPrint('CollectionsRepository: Using MOCK implementation');
-    repo = MockCollectionsRepository();
-  } else {
-    try {
-      final client = SupabaseService.instance.client;
-      repo = SupabaseCollectionsRepository(client);
-    } catch (e) {
-      debugPrint('CollectionsRepository: Failed to get Supabase client. Falling back to MOCK.');
-      repo = MockCollectionsRepository();
-    }
-  }
-
+  final client = SupabaseService.instance.client;
+  final repo = SupabaseCollectionsRepository(client);
   ref.onDispose(() => repo.dispose());
   return repo;
 });

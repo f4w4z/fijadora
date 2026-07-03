@@ -11,6 +11,8 @@ import '../../../shared/widgets/empty_state_widget.dart';
 import '../../../shared/widgets/error_state_widget.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 
+import '../../../shared/widgets/shimmer_loading.dart';
+
 class WishlistView extends ConsumerWidget {
   const WishlistView({super.key});
 
@@ -25,7 +27,7 @@ class WishlistView extends ConsumerWidget {
         title: const Text('My Wishlist', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
       ),
       body: wishlistAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const ShimmerListPlaceholder(itemCount: 3),
         error: (err, stack) => ErrorStateWidget(
           message: 'Could not load your wishlist.',
           onRetry: () => ref.invalidate(wishlistProvider),

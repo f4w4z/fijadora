@@ -8,6 +8,8 @@ import '../../../shared/utils/notification_helper.dart';
 import 'worker_dashboard_view.dart';
 import 'worker_schedule_view.dart';
 import 'worker_profile_view.dart';
+import '../../../shared/widgets/app_animations.dart';
+import '../../../core/router.dart';
 class WorkerShellView extends ConsumerStatefulWidget {
   const WorkerShellView({super.key});
 
@@ -17,8 +19,6 @@ class WorkerShellView extends ConsumerStatefulWidget {
 
 class _WorkerShellViewState extends ConsumerState<WorkerShellView>
     with TickerProviderStateMixin {
-  int _currentIndex = 0;
-  final PageController _pageController = PageController(initialPage: 0);
   StreamSubscription<AppNotification>? _notificationSubscription;
 
   late final List<AnimationController> _bounceControllers = List.generate(_navItems.length, (_) {
@@ -69,7 +69,6 @@ class _WorkerShellViewState extends ConsumerState<WorkerShellView>
   @override
   void dispose() {
     _notificationSubscription?.cancel();
-    _pageController.dispose();
     for (final ctrl in _bounceControllers) {
       ctrl.dispose();
     }
@@ -93,25 +92,17 @@ class _WorkerShellViewState extends ConsumerState<WorkerShellView>
   }
 
   void _onTabTap(int index) {
-    if (index == _currentIndex) return;
+    final currentIndex = ref.read(workerTabProvider);
+    if (index == currentIndex) return;
     HapticFeedback.lightImpact();
     _bounceControllers[index].forward(from: 0.0);
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOutCubic,
-    );
-  }
-
-  void _onPageChanged(int index) {
-    if (index == _currentIndex) return;
-    _bounceControllers[index].forward(from: 0.0);
-    setState(() => _currentIndex = index);
+    ref.read(workerTabProvider.notifier).state = index;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final currentIndex = ref.watch(workerTabProvider);
 
     return CallbackShortcuts(
       bindings: {
@@ -125,9 +116,8 @@ class _WorkerShellViewState extends ConsumerState<WorkerShellView>
           body: Stack(
             fit: StackFit.expand,
             children: [
-              PageView(
-                controller: _pageController,
-                onPageChanged: _onPageChanged,
+              FadeIndexedStack(
+                index: currentIndex,
                 children: _tabs,
               ),
               Positioned(
@@ -138,7 +128,7 @@ class _WorkerShellViewState extends ConsumerState<WorkerShellView>
                   top: false,
                   child: Center(
                     child: _FloatingNavBar(
-                      currentIndex: _currentIndex,
+                      currentIndex: currentIndex,
                       items: _navItems,
                       bounceAnimations: _bounceAnimations,
                       onTap: _onTabTap,

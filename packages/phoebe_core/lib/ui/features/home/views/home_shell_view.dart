@@ -9,6 +9,8 @@ import '../../collections/views/collections_tab_view.dart';
 import '../../../../data/services/app_notification_service.dart';
 import '../../../shared/utils/notification_helper.dart';
 import 'home_view.dart';
+import '../../../shared/widgets/app_animations.dart';
+import '../../../core/router.dart';
 
 // ─── Shell ────────────────────────────────────────────────────────────────────
 class HomeShellView extends ConsumerStatefulWidget {
@@ -20,8 +22,6 @@ class HomeShellView extends ConsumerStatefulWidget {
 
 class _HomeShellViewState extends ConsumerState<HomeShellView>
     with TickerProviderStateMixin {
-  int _currentIndex = 0;
-  final PageController _pageController = PageController(initialPage: 0);
   StreamSubscription<AppNotification>? _notificationSubscription;
 
   late final List<AnimationController> _bounceControllers = List.generate(_navItems.length, (_) {
@@ -78,7 +78,6 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
   @override
   void dispose() {
     _notificationSubscription?.cancel();
-    _pageController.dispose();
     for (final ctrl in _bounceControllers) {
       ctrl.dispose();
     }
@@ -102,25 +101,17 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
   }
 
   void _onTabTap(int index) {
-    if (index == _currentIndex) return;
+    final currentIndex = ref.read(customerTabProvider);
+    if (index == currentIndex) return;
     HapticFeedback.lightImpact();
     _bounceControllers[index].forward(from: 0.0);
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOutCubic,
-    );
-  }
-
-  void _onPageChanged(int index) {
-    if (index == _currentIndex) return;
-    _bounceControllers[index].forward(from: 0.0);
-    setState(() => _currentIndex = index);
+    ref.read(customerTabProvider.notifier).state = index;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final currentIndex = ref.watch(customerTabProvider);
 
     return CallbackShortcuts(
       bindings: {
@@ -135,10 +126,9 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
           body: Stack(
             fit: StackFit.expand,
             children: [
-              // ── Tab content with swipe gesture ──────────────────────────
-              PageView(
-                controller: _pageController,
-                onPageChanged: _onPageChanged,
+              // ── Tab content with state preservation ───────────────────────
+              FadeIndexedStack(
+                index: currentIndex,
                 children: _tabs,
               ),
 
@@ -153,7 +143,7 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
                     child: SizedBox(
                       width: 330,
                       child: _FloatingNavBar(
-                        currentIndex: _currentIndex,
+                        currentIndex: currentIndex,
                         items: _navItems,
                         bounceAnimations: _bounceAnimations,
                         onTap: _onTabTap,

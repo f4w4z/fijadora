@@ -56,6 +56,8 @@ class Collection {
   final String? creatorAvatarUrl;
   final CollectionCategory category;
   final bool isPublic;
+  final bool isFeatured;
+  final int featuredOrder;
   final DateTime createdAt;
   final List<CollectionItem> items;
   final int followerCount;
@@ -71,6 +73,8 @@ class Collection {
     this.creatorAvatarUrl,
     this.category = CollectionCategory.trending,
     this.isPublic = true,
+    this.isFeatured = false,
+    this.featuredOrder = 0,
     required this.createdAt,
     this.items = const [],
     this.followerCount = 0,
@@ -93,6 +97,8 @@ class Collection {
         orElse: () => CollectionCategory.trending,
       ),
       isPublic: json['is_public'] as bool? ?? true,
+      isFeatured: json['is_featured'] as bool? ?? false,
+      featuredOrder: json['featured_order'] as int? ?? 0,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : DateTime.now(),
@@ -115,6 +121,8 @@ class Collection {
     'creator_avatar_url': creatorAvatarUrl,
     'category': category.name,
     'is_public': isPublic,
+    'is_featured': isFeatured,
+    'featured_order': featuredOrder,
     'created_at': createdAt.toIso8601String(),
     'items': items.map((e) => e.toJson()).toList(),
     'follower_count': followerCount,
@@ -131,6 +139,8 @@ class Collection {
     String? creatorAvatarUrl,
     CollectionCategory? category,
     bool? isPublic,
+    bool? isFeatured,
+    int? featuredOrder,
     DateTime? createdAt,
     List<CollectionItem>? items,
     int? followerCount,
@@ -146,6 +156,8 @@ class Collection {
       creatorAvatarUrl: creatorAvatarUrl ?? this.creatorAvatarUrl,
       category: category ?? this.category,
       isPublic: isPublic ?? this.isPublic,
+      isFeatured: isFeatured ?? this.isFeatured,
+      featuredOrder: featuredOrder ?? this.featuredOrder,
       createdAt: createdAt ?? this.createdAt,
       items: items ?? this.items,
       followerCount: followerCount ?? this.followerCount,

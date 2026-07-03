@@ -1,13 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../data/repositories/jobs_repository.dart';
+import '../../../../data/repositories/auth_repository.dart';
+import '../../../../data/services/app_notification_service.dart';
+import '../../../../domain/models/app_user.dart';
 import '../../../../domain/models/job_status.dart';
 import '../../../../domain/models/maintenance_job.dart';
-import '../../../../domain/models/user_role.dart';
-import '../../auth/view_models/auth_view_model.dart';
 import '../../../core/utilities/responsive_helpers.dart';
-
+import '../../../shared/utils/notification_helper.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 import '../../services/view_models/jobs_view_model.dart';
 
 class StaffAdminDashboardView extends ConsumerWidget {
@@ -20,53 +22,85 @@ class StaffAdminDashboardView extends ConsumerWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: jobsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('Error: $err')),
-          data: (jobs) {
-            final pending = jobs.where((j) => j.status == JobStatus.pending).length;
-            final active = jobs.where((j) =>
-                j.status == JobStatus.assigned ||
-                j.status == JobStatus.workerEnRoute ||
-                j.status == JobStatus.workerArrived ||
-                j.status == JobStatus.inProgress).length;
-            final awaitingApproval = jobs.where((j) => j.status == JobStatus.waitingApproval).length;
-            final completed = jobs.where((j) => j.status == JobStatus.completed).length;
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.md, context.pagePad, 0),
+                child: Text('Dashboard', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -0.5, color: theme.colorScheme.onSurface)),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+            ...jobsAsync.maybeWhen(
+              data: (jobs) {
+                final pending = jobs.where((j) => j.status == JobStatus.pending).length;
+                final active = jobs.where((j) =>
+                    j.status == JobStatus.assigned ||
+                    j.status == JobStatus.workerEnRoute ||
+                    j.status == JobStatus.workerArrived ||
+                    j.status == JobStatus.inProgress).length;
+                final awaitingApproval = jobs.where((j) => j.status == JobStatus.waitingApproval).length;
+                final completed = jobs.where((j) => j.status == JobStatus.completed).length;
 
-            return CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.md, context.pagePad, 0),
-                    child: Text('Dashboard', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -0.5, color: theme.colorScheme.onSurface)),
+                return [
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(context.pagePad, 0, context.pagePad, 120),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        _SummaryGrid(jobs: jobs, pending: pending, active: active, awaitingApproval: awaitingApproval),
+                        const SizedBox(height: 24),
+                        Text('Recent Jobs', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+                        const SizedBox(height: 12),
+                        ...jobs.take(5).map((job) => _JobRow(job: job, theme: theme)),
+                        const SizedBox(height: 16),
+                        Text('Status Summary', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+                        const SizedBox(height: 12),
+                        _StatusBar(
+                          pending: pending,
+                          active: active,
+                          awaitingApproval: awaitingApproval,
+                          completed: completed,
+                          total: jobs.length,
+                        ),
+                        const SizedBox(height: 24),
+                        const _PendingWorkerApprovalsSection(),
+                      ]),
+                    ),
                   ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(context.pagePad, 0, context.pagePad, 120),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      _SummaryGrid(jobs: jobs, pending: pending, active: active, awaitingApproval: awaitingApproval),
-                      const SizedBox(height: 24),
-                      Text('Recent Jobs', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
-                      const SizedBox(height: 12),
-                      ...jobs.take(5).map((job) => _JobRow(job: job, theme: theme)),
-                      const SizedBox(height: 16),
-                      Text('Status Summary', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
-                      const SizedBox(height: 12),
-                      _StatusBar(
-                        pending: pending,
-                        active: active,
-                        awaitingApproval: awaitingApproval,
-                        completed: completed,
-                        total: jobs.length,
+                ];
+              },
+              orElse: () {
+                if (jobsAsync.hasError) {
+                  return [
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Text('Error: ${jobsAsync.error}', style: TextStyle(color: theme.colorScheme.error)),
                       ),
-                    ]),
+                    ),
+                  ];
+                }
+                return [
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(context.pagePad, 0, context.pagePad, 120),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        const ShimmerSummaryRow(),
+                        const SizedBox(height: 24),
+                        Text('Recent Jobs', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+                        const SizedBox(height: 12),
+                        const ShimmerActivityRow(count: 3),
+                        const SizedBox(height: 16),
+                        Text('Status Summary', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+                        const SizedBox(height: 12),
+                        const SkeletonBox(width: double.infinity, height: 120, borderRadius: 12),
+                      ]),
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
+                ];
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -253,6 +287,153 @@ class _StatusBar extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _PendingWorkerApprovalsSection extends ConsumerStatefulWidget {
+  const _PendingWorkerApprovalsSection();
+
+  @override
+  ConsumerState<_PendingWorkerApprovalsSection> createState() => _PendingWorkerApprovalsSectionState();
+}
+
+class _PendingWorkerApprovalsSectionState extends ConsumerState<_PendingWorkerApprovalsSection> {
+  @override
+  void initState() {
+    super.initState();
+    ref.read(authRepositoryProvider).refreshWorkers();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final authWorkers = ref.watch(authRepositoryProvider).getAllWorkers();
+    final pending = authWorkers.where((w) => w.workerStatus == 'pending').toList();
+
+    if (pending.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text('Worker Approvals', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE65100).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text('${pending.length}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFFE65100))),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        ...pending.map((worker) => _DashboardPendingWorkerCard(
+          worker: worker,
+          onStatusChanged: () {
+            ref.read(authRepositoryProvider).refreshWorkers();
+            setState(() {});
+          },
+        )),
+      ],
+    );
+  }
+}
+
+class _DashboardPendingWorkerCard extends ConsumerWidget {
+  const _DashboardPendingWorkerCard({required this.worker, required this.onStatusChanged});
+  final AppUser worker;
+  final VoidCallback onStatusChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE65100).withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: const Color(0xFFE65100).withValues(alpha: 0.1),
+            child: Text(
+              worker.name.isNotEmpty ? worker.name[0].toUpperCase() : 'W',
+              style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFE65100), fontSize: 18),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(worker.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                const SizedBox(height: 2),
+                Text(worker.email, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE65100).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text('PENDING', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: const Color(0xFFE65100))),
+          ),
+          const SizedBox(width: 8),
+          AnimatedTapScale(
+            onTap: () => _approve(context, ref),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF34C759).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(CupertinoIcons.checkmark_alt, size: 18, color: Color(0xFF34C759)),
+            ),
+          ),
+          const SizedBox(width: 4),
+          AnimatedTapScale(
+            onTap: () => _reject(context, ref),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(CupertinoIcons.xmark, size: 18, color: theme.colorScheme.error),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _approve(BuildContext context, WidgetRef ref) async {
+    await ref.read(authRepositoryProvider).updateWorkerStatus(userId: worker.id, status: 'approved');
+    ref.read(notificationServiceProvider).sendNotification(
+      title: 'Worker Approved',
+      body: '${worker.name} can now access the worker app.',
+    );
+    onStatusChanged();
+    if (context.mounted) {
+      context.showSnackBar('${worker.name} approved', type: SnackBarType.success);
+    }
+  }
+
+  void _reject(BuildContext context, WidgetRef ref) async {
+    await ref.read(authRepositoryProvider).updateWorkerStatus(userId: worker.id, status: 'rejected');
+    onStatusChanged();
+    if (context.mounted) {
+      context.showSnackBar('${worker.name} rejected', type: SnackBarType.error);
+    }
   }
 }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -245,9 +246,7 @@ class CartView extends ConsumerWidget {
                         showDialog(
                           context: context,
                           barrierDismissible: false,
-                          builder: (context) => const Center(
-                            child: CircularProgressIndicator(),
-                          ),
+                          builder: (context) => const CheckoutProgressDialog(),
                         );
                         
                         await cartNotifier.checkoutReservation();
@@ -310,6 +309,113 @@ class CartView extends ConsumerWidget {
                 ),
               ),
             ),
+    );
+  }
+}
+
+class CheckoutProgressDialog extends StatefulWidget {
+  const CheckoutProgressDialog({super.key});
+
+  @override
+  State<CheckoutProgressDialog> createState() => _CheckoutProgressDialogState();
+}
+
+class _CheckoutProgressDialogState extends State<CheckoutProgressDialog> {
+  int _messageIndex = 0;
+  late final Timer _timer;
+  final List<String> _messages = [
+    'Reserving items...',
+    'Verifying inventory...',
+    'Generating scheduled job...',
+    'Finalizing details...',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(milliseconds: 900), (timer) {
+      if (mounted) {
+        setState(() {
+          _messageIndex = (_messageIndex + 1) % _messages.length;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 40),
+        padding: const EdgeInsets.all(28),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E).withValues(alpha: 0.9) : Colors.white.withValues(alpha: 0.9),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isDark ? const Color(0xFF2E2E2E) : const Color(0xFFE5E5E5),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 180,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  minHeight: 4,
+                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.25),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                );
+              },
+              child: Text(
+                _messages[_messageIndex],
+                key: ValueKey<int>(_messageIndex),
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: theme.colorScheme.onSurface,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -69,57 +69,6 @@ class StockBadge extends StatelessWidget {
   }
 }
 
-class FeatureButton extends StatelessWidget {
-  const FeatureButton({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    required this.theme,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: theme.brightness == Brightness.dark
-              ? theme.colorScheme.surface
-              : const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: theme.brightness == Brightness.dark
-                ? theme.colorScheme.surfaceContainerHighest
-                : const Color(0xFFE5E5E5),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 20, color: theme.colorScheme.primary),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class QuantityStepperButton extends StatelessWidget {
   const QuantityStepperButton({super.key, required this.icon, this.onTap});
   final IconData icon;

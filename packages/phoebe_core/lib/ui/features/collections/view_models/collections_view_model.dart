@@ -55,3 +55,7 @@ final collectionsViewModelProvider =
   final authRepository = ref.watch(authRepositoryProvider);
   return CollectionsViewModel(repository, authRepository);
 });
+
+final featuredCollectionsProvider = StreamProvider<List<Collection>>((ref) {
+  return ref.watch(collectionsRepositoryProvider).streamFeaturedCollections();
+});

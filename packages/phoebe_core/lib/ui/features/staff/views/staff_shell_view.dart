@@ -8,12 +8,14 @@ import '../../../shared/utils/notification_helper.dart';
 import '../../../../domain/models/user_role.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import 'admin_jobs_view.dart';
+import 'admin_products_view.dart';
 import 'manager_properties_view.dart';
 import 'staff_profile_view.dart';
 import 'staff_admin_dashboard_view.dart';
-import 'staff_workers_view.dart';
 import 'staff_manager_dashboard_view.dart';
 import 'staff_approvals_view.dart';
+import '../../../shared/widgets/app_animations.dart';
+import '../../../core/router.dart';
 class StaffShellView extends ConsumerStatefulWidget {
   const StaffShellView({super.key});
 
@@ -23,8 +25,6 @@ class StaffShellView extends ConsumerStatefulWidget {
 
 class _StaffShellViewState extends ConsumerState<StaffShellView>
     with TickerProviderStateMixin {
-  int _currentIndex = 0;
-  final PageController _pageController = PageController(initialPage: 0);
   StreamSubscription<AppNotification>? _notificationSubscription;
 
   List<_NavItem> _navItems = [];
@@ -41,13 +41,13 @@ class _StaffShellViewState extends ConsumerState<StaffShellView>
       _navItems = const [
         _NavItem(icon: CupertinoIcons.chart_bar, activeIcon: CupertinoIcons.chart_bar_fill, label: 'Dashboard'),
         _NavItem(icon: CupertinoIcons.square_list, activeIcon: CupertinoIcons.square_list_fill, label: 'Jobs'),
-        _NavItem(icon: CupertinoIcons.person_3, activeIcon: CupertinoIcons.person_3_fill, label: 'Workers'),
+        _NavItem(icon: CupertinoIcons.bag, activeIcon: CupertinoIcons.bag_fill, label: 'Shop'),
         _NavItem(icon: CupertinoIcons.person, activeIcon: CupertinoIcons.person_fill, label: 'Profile'),
       ];
       _tabs = [
         const RepaintBoundary(child: StaffAdminDashboardView()),
         const RepaintBoundary(child: AdminJobsView()),
-        const RepaintBoundary(child: StaffWorkersView()),
+        const RepaintBoundary(child: AdminProductsView()),
         const RepaintBoundary(child: StaffProfileView()),
       ];
     } else {
@@ -99,7 +99,6 @@ class _StaffShellViewState extends ConsumerState<StaffShellView>
   @override
   void dispose() {
     _notificationSubscription?.cancel();
-    _pageController.dispose();
     for (final ctrl in _bounceControllers) {
       ctrl.dispose();
     }
@@ -123,20 +122,11 @@ class _StaffShellViewState extends ConsumerState<StaffShellView>
   }
 
   void _onTabTap(int index) {
-    if (index == _currentIndex) return;
+    final currentIndex = ref.read(staffTabProvider);
+    if (index == currentIndex) return;
     HapticFeedback.lightImpact();
     _bounceControllers[index].forward(from: 0.0);
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOutCubic,
-    );
-  }
-
-  void _onPageChanged(int index) {
-    if (index == _currentIndex) return;
-    _bounceControllers[index].forward(from: 0.0);
-    setState(() => _currentIndex = index);
+    ref.read(staffTabProvider.notifier).state = index;
   }
 
   @override
@@ -144,6 +134,7 @@ class _StaffShellViewState extends ConsumerState<StaffShellView>
     final theme = Theme.of(context);
     final items = _activeNavItems;
     final tabs = _activeTabs;
+    final currentIndex = ref.watch(staffTabProvider);
 
     return CallbackShortcuts(
       bindings: {
@@ -158,9 +149,8 @@ class _StaffShellViewState extends ConsumerState<StaffShellView>
           body: Stack(
             fit: StackFit.expand,
             children: [
-              PageView(
-                controller: _pageController,
-                onPageChanged: _onPageChanged,
+              FadeIndexedStack(
+                index: currentIndex,
                 children: tabs,
               ),
               Positioned(
@@ -171,7 +161,7 @@ class _StaffShellViewState extends ConsumerState<StaffShellView>
                   top: false,
                   child: Center(
                     child: _FloatingNavBar(
-                      currentIndex: _currentIndex,
+                      currentIndex: currentIndex,
                       items: items,
                       bounceAnimations: _bounceAnimations,
                       onTap: _onTabTap,

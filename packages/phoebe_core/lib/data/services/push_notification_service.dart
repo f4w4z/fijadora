@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'supabase_service.dart';
+import 'deep_link_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -83,6 +84,10 @@ class PushNotificationService {
       settings,
       onDidReceiveNotificationResponse: (response) {
         debugPrint('PushNotificationService - Local notification tapped: ${response.payload}');
+        final payload = response.payload;
+        if (payload != null && payload.isNotEmpty) {
+          DeepLinkService.instance.handlePath(payload);
+        }
       },
     );
   }

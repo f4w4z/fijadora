@@ -14,6 +14,7 @@ import '../../../shared/widgets/app_bottom_sheet.dart';
 import '../../../shared/utils/date_extensions.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../../core/utilities/responsive_helpers.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 
 class AdminJobsView extends ConsumerStatefulWidget {
   const AdminJobsView({super.key});
@@ -86,13 +87,7 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
               child: StreamBuilder<List<MaintenanceJob>>(
                 stream: jobsRepo.streamJobs(userId: adminUserId, role: UserRole.admin),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
-
+                  final isLoading = snapshot.connectionState == ConnectionState.waiting;
                   final allJobs = snapshot.data ?? [];
                   final jobs = _filterJobs(allJobs);
                   final counts = _buildCounts(allJobs);
@@ -144,7 +139,13 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
                         ),
                       ),
                       const SliverToBoxAdapter(child: SizedBox(height: 12)),
-                      if (jobs.isEmpty)
+                      if (isLoading)
+                        const ShimmerJobCard(itemCount: 3)
+                      else if (snapshot.hasError)
+                        SliverFillRemaining(
+                          child: Center(child: Text('Error: ${snapshot.error}')),
+                        )
+                      else if (jobs.isEmpty)
                         SliverFillRemaining(
                           child: Padding(
                             padding: const EdgeInsets.only(top: 60),

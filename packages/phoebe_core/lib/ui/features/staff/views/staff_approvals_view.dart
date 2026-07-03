@@ -6,11 +6,10 @@ import '../../../../data/services/app_notification_service.dart';
 import '../../../../domain/models/job_status.dart';
 import '../../../shared/utils/notification_helper.dart';
 import '../../../../domain/models/maintenance_job.dart';
-import '../../../../domain/models/user_role.dart';
-import '../../auth/view_models/auth_view_model.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 
+import '../../../shared/widgets/shimmer_loading.dart';
 import '../../services/view_models/jobs_view_model.dart';
 
 class StaffApprovalsView extends ConsumerStatefulWidget {
@@ -28,98 +27,110 @@ class _StaffApprovalsViewState extends ConsumerState<StaffApprovalsView> {
     final jobsRepo = ref.read(jobsRepositoryProvider);
     final jobsAsync = ref.watch(jobsStreamProvider);
 
+    final cachedJobs = jobsAsync.valueOrNull;
+    final approvals = cachedJobs != null
+        ? (cachedJobs.where((j) => j.status == JobStatus.waitingApproval).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
+        : <MaintenanceJob>[];
+
     return Scaffold(
       body: SafeArea(
-        child: jobsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('Error: $err')),
-          data: (jobs) {
-            final approvals = jobs
-                .where((j) => j.status == JobStatus.waitingApproval)
-                .toList()
-              ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.md, context.pagePad, 0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text('Approvals', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -0.5, color: theme.colorScheme.onSurface)),
-                      ),
-                      if (approvals.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.error.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text('${approvals.length} pending', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: theme.colorScheme.error)),
-                        ),
-                    ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.md, context.pagePad, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text('Approvals', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -0.5, color: theme.colorScheme.onSurface)),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: approvals.isEmpty
-                      ? Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(CupertinoIcons.checkmark_seal_fill, size: 48, color: const Color(0xFF34C759).withValues(alpha: 0.3)),
-                                  const SizedBox(height: 12),
-                                  Text('No pending approvals', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
-                                ],
-                              ),
-                            )
-                          : ListView.builder(
-                              padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 120),
-                              itemCount: approvals.length,
-                              itemBuilder: (context, index) {
-                                final job = approvals[index];
-                                return _ApprovalCard(
-                                  job: job,
-                                  onApprove: () async {
-                                    try {
-                                      await jobsRepo.updateJobStatus(jobId: job.id, status: JobStatus.completed);
-                                      notificationService.sendNotification(
-                                        title: 'Job Approved',
-                                        body: '${job.tradeType.displayName} job has been approved',
-                                      );
-                                      if (context.mounted) {
-                                        context.showSnackBar('Job approved', type: SnackBarType.success);
-                                      }
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        context.showSnackBar('Failed to approve: $e', type: SnackBarType.error);
-                                      }
-                                    }
-                                  },
-                                  onReject: () async {
-                                    try {
-                                      await jobsRepo.updateJobStatus(jobId: job.id, status: JobStatus.rejected);
-                                      notificationService.sendNotification(
-                                        title: 'Job Rejected',
-                                        body: '${job.tradeType.displayName} job has been rejected',
-                                      );
-                                      if (context.mounted) {
-                                        context.showSnackBar('Job rejected', type: SnackBarType.success);
-                                      }
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        context.showSnackBar('Failed to reject: $e', type: SnackBarType.error);
-                                      }
-                                    }
-                                  },
-                                );
-                              },
-                            ),
-                ),
-              ],
-            );
-          },
+                  if (approvals.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.error.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text('${approvals.length} pending', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: theme.colorScheme.error)),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: jobsAsync.maybeWhen(
+                data: (jobs) {
+                  final approvalsList = jobs
+                      .where((j) => j.status == JobStatus.waitingApproval)
+                      .toList()
+                    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+                  if (approvalsList.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(CupertinoIcons.checkmark_seal_fill, size: 48, color: const Color(0xFF34C759).withValues(alpha: 0.3)),
+                          const SizedBox(height: 12),
+                          Text('No pending approvals', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 120),
+                    itemCount: approvalsList.length,
+                    itemBuilder: (context, index) {
+                      final job = approvalsList[index];
+                      return _ApprovalCard(
+                        job: job,
+                        onApprove: () async {
+                          try {
+                            await jobsRepo.updateJobStatus(jobId: job.id, status: JobStatus.completed);
+                            notificationService.sendNotification(
+                              title: 'Job Approved',
+                              body: '${job.tradeType.displayName} job has been approved',
+                            );
+                            if (context.mounted) {
+                              context.showSnackBar('Job approved', type: SnackBarType.success);
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              context.showSnackBar('Failed to approve: $e', type: SnackBarType.error);
+                            }
+                          }
+                        },
+                        onReject: () async {
+                          try {
+                            await jobsRepo.updateJobStatus(jobId: job.id, status: JobStatus.rejected);
+                            notificationService.sendNotification(
+                              title: 'Job Rejected',
+                              body: '${job.tradeType.displayName} job has been rejected',
+                            );
+                            if (context.mounted) {
+                              context.showSnackBar('Job rejected', type: SnackBarType.success);
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              context.showSnackBar('Failed to reject: $e', type: SnackBarType.error);
+                            }
+                          }
+                        },
+                      );
+                    },
+                  );
+                },
+                orElse: () {
+                  if (jobsAsync.hasError) {
+                    return Center(child: Text('Error: ${jobsAsync.error}'));
+                  }
+                  return const ShimmerApprovalCard(count: 2);
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

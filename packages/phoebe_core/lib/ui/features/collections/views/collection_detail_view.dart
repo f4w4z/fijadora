@@ -9,6 +9,7 @@ import '../../../shared/widgets/animated_tap_scale.dart';
 import '../view_models/collections_view_model.dart';
 import '../widgets/collection_item_tile.dart';
 import '../../shop/views/product_detail_view.dart';
+import '../../shop/view_models/wishlist_view_model.dart';
 import '../../services/views/new_request_page.dart';
 import '../../../../domain/models/trade_type.dart';
 import '../../../../domain/models/product.dart';
@@ -154,7 +155,7 @@ class CollectionDetailView extends ConsumerWidget {
                     child: Column(
                       children: collection.items.map((item) => CollectionItemTile(
                         item: item,
-                        onTap: () => _onItemTap(context, item),
+                        onTap: () => _onItemTap(context, ref, item),
                       )).toList(),
                     ),
                   ),
@@ -168,16 +169,16 @@ class CollectionDetailView extends ConsumerWidget {
     );
   }
 
-  void _onItemTap(BuildContext context, CollectionItem item) {
+  void _onItemTap(BuildContext context, WidgetRef ref, CollectionItem item) {
     switch (item.itemType) {
       case CollectionItemType.product:
         if (item.referenceId != null) {
+          final catalog = ref.read(productsStreamProvider).valueOrNull ?? [];
+          final product = _resolveProduct(item, catalog);
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => ProductDetailView(
-                product: _dummyProduct(item),
-              ),
+              builder: (_) => ProductDetailView(product: product),
             ),
           );
         }
@@ -198,9 +199,9 @@ class CollectionDetailView extends ConsumerWidget {
   }
 }
 
-// Temporary: resolve product from reference ID
-// In production, this would come from the shop repository
-Product _dummyProduct(CollectionItem item) {
+Product _resolveProduct(CollectionItem item, List<Product> catalog) {
+  final match = catalog.where((p) => p.id == item.referenceId).firstOrNull;
+  if (match != null) return match;
   return Product(
     id: item.referenceId ?? '',
     name: item.label,

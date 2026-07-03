@@ -85,7 +85,10 @@ class _ProductImageGalleryState extends State<ProductImageGallery> {
                       child: index == 0
                           ? Hero(
                               tag: widget.heroTag ?? 'product-img-${widget.product.id}',
-                              child: ProductNetworkImage(url: images[index]),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16.0),
+                                child: ProductNetworkImage(url: images[index]),
+                              ),
                             )
                           : ProductNetworkImage(url: images[index]),
                     );

@@ -5,9 +5,8 @@ import '../../../../data/repositories/shop_repository.dart';
 import '../../../../domain/models/product.dart';
 import '../view_models/cart_view_model.dart';
 import '../view_models/wishlist_view_model.dart';
-import 'ar_view_page.dart';
-import 'product_3d_view_page.dart';
 import 'cart_view.dart';
+import 'room_preview_page.dart';
 import '../../../shared/utils/notification_helper.dart';
 import '../../../shared/widgets/app_bottom_sheet.dart';
 import 'widgets/product_image_gallery.dart';
@@ -15,6 +14,7 @@ import 'widgets/write_review_sheet.dart';
 import 'widgets/product_detail_bottom_bar.dart';
 import 'widgets/product_detail_info_widgets.dart';
 import '../../../core/utilities/responsive_helpers.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 
 class ProductDetailView extends ConsumerStatefulWidget {
   const ProductDetailView({
@@ -166,26 +166,26 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                     ],
                   ),
                   const SizedBox(height: 28),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FeatureButton(
-                          icon: CupertinoIcons.eye,
-                          label: 'AR View',
-                          onTap: () => _simulateARView(context),
-                          theme: theme,
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => RoomPreviewPage(product: widget.product),
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: FeatureButton(
-                          icon: CupertinoIcons.cube,
-                          label: '3D Model',
-                          onTap: () => _simulate3DView(context),
-                          theme: theme,
-                        ),
+                      icon: const Icon(CupertinoIcons.camera_viewfinder, size: 16),
+                      label: const Text(
+                        'See it in your room',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                       ),
-                    ],
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: theme.colorScheme.primary,
+                        side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 28),
                   Text(
@@ -230,12 +230,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                     stream: shopRepo.streamReviews(widget.product.id),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(16),
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        );
+                        return const ShimmerReviewCard(count: 2);
                       }
                       final reviews = snapshot.data ?? [];
                       if (reviews.isEmpty) {
@@ -368,20 +363,6 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
         ),
         const SizedBox(width: 16),
       ],
-    );
-  }
-
-  void _simulateARView(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const ArViewPage()),
-    );
-  }
-
-  void _simulate3DView(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Product3DViewPage()),
     );
   }
 
