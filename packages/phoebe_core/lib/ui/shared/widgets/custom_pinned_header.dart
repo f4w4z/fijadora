@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'animated_tap_scale.dart';
 import '../../core/theme.dart';
+import '../../core/utilities/responsive_helpers.dart';
 
 class CustomPinnedHeader extends StatelessWidget {
   const CustomPinnedHeader({
@@ -21,7 +22,7 @@ class CustomPinnedHeader extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: Container(
-        margin: const EdgeInsets.fromLTRB(24.0, 12.0, 24.0, 4.0),
+        margin: EdgeInsets.fromLTRB(context.pagePad, 12.0, context.pagePad, 4.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -46,7 +47,7 @@ class CustomPinnedHeader extends StatelessWidget {
               ],
             ),
             if (bottomChild != null) ...[
-              const SizedBox(height: 12.0),
+              const SizedBox(height: AppSpacing.md),
               bottomChild!,
             ],
           ],
@@ -133,10 +134,9 @@ class GroupedHeaderActions extends StatelessWidget {
           width: 1.0,
         ),
       ),
-      child: IntrinsicHeight(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(actions.length, (index) {
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(actions.length, (index) {
             final item = actions[index];
             return Row(
               mainAxisSize: MainAxisSize.min,
@@ -176,8 +176,7 @@ class GroupedHeaderActions extends StatelessWidget {
             );
           }),
         ),
-      ),
-    );
+      );
   }
 }
 

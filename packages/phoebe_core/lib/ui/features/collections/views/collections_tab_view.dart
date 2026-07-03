@@ -5,8 +5,10 @@ import '../../../../domain/models/collection.dart';
 import '../view_models/collections_view_model.dart';
 import '../widgets/collection_feed_card.dart';
 import 'collection_detail_view.dart';
-import '../../../../ui/shared/widgets/custom_pinned_header.dart';
-import '../../../../ui/shared/widgets/floating_header_layout.dart';
+import '../../../shared/widgets/app_animations.dart';
+import '../../../shared/widgets/custom_pinned_header.dart';
+import '../../../shared/widgets/floating_header_layout.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 class CollectionsTabView extends ConsumerStatefulWidget {
   const CollectionsTabView({super.key});
@@ -89,7 +91,7 @@ class _CollectionsTabViewState extends ConsumerState<CollectionsTabView>
   void _openDetail(BuildContext context, Collection collection) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      AppPageRoute(
         builder: (_) => CollectionDetailView(collection: collection),
       ),
     );
@@ -104,12 +106,13 @@ class _CollectionsTabViewState extends ConsumerState<CollectionsTabView>
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) {
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xl, context.pagePad, AppSpacing.xxl),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -121,7 +124,7 @@ class _CollectionsTabViewState extends ConsumerState<CollectionsTabView>
                       ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -150,7 +153,8 @@ class _CollectionsTabViewState extends ConsumerState<CollectionsTabView>
                     );
                   }).toList(),
                 ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -210,14 +214,16 @@ class _BrowseFeed extends StatelessWidget {
           SliverToBoxAdapter(child: SizedBox(height: topPadding)),
           SliverFillRemaining(
             hasScrollBody: false,
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(CupertinoIcons.square_list, size: 48, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
-                  const SizedBox(height: 12),
-                  Text('No collections found', style: TextStyle(fontSize: 16, color: theme.colorScheme.onSurfaceVariant)),
-                ],
+            child: AnimatedAppearance(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(CupertinoIcons.square_list, size: 48, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
+                    const SizedBox(height: AppSpacing.md),
+                    Text('No collections found', style: TextStyle(fontSize: 16, color: theme.colorScheme.onSurfaceVariant)),
+                  ],
+                ),
               ),
             ),
           ),
@@ -230,15 +236,18 @@ class _BrowseFeed extends StatelessWidget {
       slivers: [
         SliverToBoxAdapter(child: SizedBox(height: topPadding)),
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.lg, context.pagePad, AppSpacing.xxl),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 final collection = collections[index];
-                return CollectionFeedCard(
-                  collection: collection,
-                  onTap: () => onCollectionTap(collection),
-                  onFollow: () => onFollowTap(collection),
+                return StaggeredListItem(
+                  index: index,
+                  child: CollectionFeedCard(
+                    collection: collection,
+                    onTap: () => onCollectionTap(collection),
+                    onFollow: () => onFollowTap(collection),
+                  ),
                 );
               },
               childCount: collections.length,

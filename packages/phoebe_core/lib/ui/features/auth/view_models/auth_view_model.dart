@@ -62,6 +62,7 @@ class AuthViewModel extends ChangeNotifier {
     required String name,
     required UserRole role,
   }) async {
+    debugPrint('AUTHVM: signUp called email=$email role=$role');
     _setLoading(true);
     _clearError();
     try {
@@ -71,12 +72,15 @@ class AuthViewModel extends ChangeNotifier {
         name: name,
         role: role,
       );
+      debugPrint('AUTHVM: signUpWithEmail succeeded userId=${_user?.id}');
     } catch (e) {
+      debugPrint('AUTHVM: signUpWithEmail failed: $e');
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       notifyListeners();
       rethrow;
     } finally {
       _setLoading(false);
+      debugPrint('AUTHVM: signUp finished, isLoading=false');
     }
   }
 
@@ -86,6 +90,48 @@ class AuthViewModel extends ChangeNotifier {
     try {
       await _authRepository.signOut();
       _user = null;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> forgotPassword({required String email}) async {
+    _setLoading(true);
+    _clearError();
+    try {
+      await _authRepository.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> resendVerification() async {
+    _setLoading(true);
+    _clearError();
+    try {
+      await _authRepository.resendVerificationEmail();
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> updatePassword(String newPassword) async {
+    _setLoading(true);
+    _clearError();
+    try {
+      await _authRepository.updatePassword(newPassword: newPassword);
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       notifyListeners();

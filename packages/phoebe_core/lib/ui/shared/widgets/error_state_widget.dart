@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../core/utilities/responsive_helpers.dart';
+import 'app_animations.dart';
 
 class ErrorStateWidget extends StatelessWidget {
   const ErrorStateWidget({
@@ -14,14 +16,15 @@ class ErrorStateWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Center(
+    return AnimatedAppearance(
+      child: Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 32),
+        padding: EdgeInsets.symmetric(horizontal: context.pagePad * 2, vertical: AppSpacing.xxxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 color: const Color(0xFFD32F2F).withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(28),
@@ -32,7 +35,7 @@ class ErrorStateWidget extends StatelessWidget {
                 color: Color(0xFFD32F2F),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xxl),
             Text(
               'Oops!',
               style: TextStyle(
@@ -43,7 +46,7 @@ class ErrorStateWidget extends StatelessWidget {
                 letterSpacing: -0.3,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               message,
               style: TextStyle(
@@ -56,7 +59,7 @@ class ErrorStateWidget extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xxl),
               SizedBox(
                 height: 48,
                 child: ElevatedButton.icon(
@@ -68,6 +71,7 @@ class ErrorStateWidget extends StatelessWidget {
             ],
           ],
         ),
+      ),
       ),
     );
   }

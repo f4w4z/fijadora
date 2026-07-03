@@ -6,8 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/views/services_tab_view.dart';
 import '../../shop/views/shop_tab_view.dart';
 import '../../collections/views/collections_tab_view.dart';
-import '../../../../data/services/notification_service.dart';
-import '../../../../ui/shared/utils/notification_helper.dart';
+import '../../../../data/services/app_notification_service.dart';
+import '../../../shared/utils/notification_helper.dart';
 import 'home_view.dart';
 
 // ─── Shell ────────────────────────────────────────────────────────────────────
@@ -63,10 +63,10 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
   ];
 
   final List<Widget> _tabs = const [
-    ServicesTabView(),
-    ShopTabView(),
-    CollectionsTabView(),
-    HomeView(),
+    RepaintBoundary(child: ServicesTabView()),
+    RepaintBoundary(child: ShopTabView()),
+    RepaintBoundary(child: CollectionsTabView()),
+    RepaintBoundary(child: HomeView()),
   ];
 
   @override

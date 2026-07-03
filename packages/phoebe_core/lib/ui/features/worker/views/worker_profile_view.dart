@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../ui/shared/widgets/animated_tap_scale.dart';
-import '../../../../ui/shared/widgets/custom_pinned_header.dart';
-import '../../../../ui/shared/widgets/floating_header_layout.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
+import '../../../shared/widgets/custom_pinned_header.dart';
+import '../../../shared/widgets/floating_header_layout.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../services/view_models/jobs_view_model.dart';
 import '../../../core/theme_provider.dart';
@@ -11,6 +11,7 @@ import 'worker_notifications_view.dart';
 import 'worker_availability_view.dart';
 import 'worker_help_center_view.dart';
 import 'worker_terms_view.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 class WorkerProfileView extends ConsumerWidget {
   const WorkerProfileView({super.key});
@@ -77,7 +78,7 @@ class WorkerProfileView extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding:
-                        const EdgeInsets.fromLTRB(24, 4, 24, 0),
+                        EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xs, context.pagePad, 0),
                     child: Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -159,7 +160,7 @@ class WorkerProfileView extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding:
-                        const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                        EdgeInsets.fromLTRB(context.pagePad, AppSpacing.lg, context.pagePad, 0),
                     child: Row(
                       children: [
                         _ProfileStat(
@@ -191,7 +192,7 @@ class WorkerProfileView extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding:
-                        const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                        EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xxl, context.pagePad, 0),
                     child: Text(
                       'Settings',
                       style: TextStyle(
@@ -205,7 +206,7 @@ class WorkerProfileView extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding:
-                        const EdgeInsets.fromLTRB(24, 10, 24, 0),
+                        EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 0),
                     child: _SettingsRow(
                       icon: CupertinoIcons.bell_fill,
                       title: 'Notifications',
@@ -218,7 +219,7 @@ class WorkerProfileView extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding:
-                        const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                        EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 0),
                     child: Consumer(
                       builder: (context, ref, _) {
                         final themeMode =
@@ -252,7 +253,7 @@ class WorkerProfileView extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding:
-                        const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                        EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 0),
                     child: _SettingsRow(
                       icon: CupertinoIcons.location,
                       title: 'Availability',
@@ -267,7 +268,7 @@ class WorkerProfileView extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding:
-                        const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                        EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xxl, context.pagePad, 0),
                     child: Text(
                       'Support',
                       style: TextStyle(
@@ -281,7 +282,7 @@ class WorkerProfileView extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding:
-                        const EdgeInsets.fromLTRB(24, 10, 24, 0),
+                        EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 0),
                     child: _SettingsRow(
                       icon: CupertinoIcons.question_circle,
                       title: 'Help Center',
@@ -294,7 +295,7 @@ class WorkerProfileView extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding:
-                        const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                        EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 0),
                     child: _SettingsRow(
                       icon: CupertinoIcons.doc_text,
                       title: 'Terms of Service',
@@ -309,13 +310,13 @@ class WorkerProfileView extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding:
-                        const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                        EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xxl, context.pagePad, 0),
                     child: _SignOutButton(theme: theme),
                   ),
                 ),
 
-                const SliverToBoxAdapter(
-                    child: SizedBox(height: 140)),
+                SliverToBoxAdapter(
+                    child: SizedBox(height: 20.h(context))),
               ],
             ),
           );

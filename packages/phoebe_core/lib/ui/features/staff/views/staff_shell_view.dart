@@ -3,8 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../data/services/notification_service.dart';
-import '../../../../ui/shared/utils/notification_helper.dart';
+import '../../../../data/services/app_notification_service.dart';
+import '../../../shared/utils/notification_helper.dart';
 import '../../../../domain/models/user_role.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import 'admin_jobs_view.dart';
@@ -14,7 +14,6 @@ import 'staff_admin_dashboard_view.dart';
 import 'staff_workers_view.dart';
 import 'staff_manager_dashboard_view.dart';
 import 'staff_approvals_view.dart';
-
 class StaffShellView extends ConsumerStatefulWidget {
   const StaffShellView({super.key});
 
@@ -46,10 +45,10 @@ class _StaffShellViewState extends ConsumerState<StaffShellView>
         _NavItem(icon: CupertinoIcons.person, activeIcon: CupertinoIcons.person_fill, label: 'Profile'),
       ];
       _tabs = [
-        const StaffAdminDashboardView(),
-        const AdminJobsView(),
-        const StaffWorkersView(),
-        const StaffProfileView(),
+        const RepaintBoundary(child: StaffAdminDashboardView()),
+        const RepaintBoundary(child: AdminJobsView()),
+        const RepaintBoundary(child: StaffWorkersView()),
+        const RepaintBoundary(child: StaffProfileView()),
       ];
     } else {
       _navItems = const [
@@ -59,10 +58,10 @@ class _StaffShellViewState extends ConsumerState<StaffShellView>
         _NavItem(icon: CupertinoIcons.person, activeIcon: CupertinoIcons.person_fill, label: 'Profile'),
       ];
       _tabs = [
-        const StaffManagerDashboardView(),
-        const ManagerPropertiesView(),
-        const StaffApprovalsView(),
-        const StaffProfileView(),
+        const RepaintBoundary(child: StaffManagerDashboardView()),
+        const RepaintBoundary(child: ManagerPropertiesView()),
+        const RepaintBoundary(child: StaffApprovalsView()),
+        const RepaintBoundary(child: StaffProfileView()),
       ];
     }
 
@@ -85,8 +84,15 @@ class _StaffShellViewState extends ConsumerState<StaffShellView>
   @override
   void initState() {
     super.initState();
-    final role = ref.read(authViewModelProvider).user?.role ?? UserRole.admin;
-    _initRoleTabs(role);
+    final role = ref.read(authViewModelProvider).user?.role;
+    if (role == null) {
+      Future.microtask(() {
+        if (mounted) context.showSnackBar('User role not found', type: SnackBarType.error);
+      });
+      _initRoleTabs(UserRole.admin);
+    } else {
+      _initRoleTabs(role);
+    }
     _listenToNotifications();
   }
 

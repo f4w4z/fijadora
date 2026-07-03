@@ -11,6 +11,7 @@ class Product {
   final String category;
   final int inventoryCount;
   final bool isReserved;
+  final DateTime createdAt;
 
   const Product({
     required this.id,
@@ -22,6 +23,7 @@ class Product {
     required this.category,
     required this.inventoryCount,
     this.isReserved = false,
+    required this.createdAt,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -40,6 +42,7 @@ class Product {
       category: json['category'] as String? ?? '',
       inventoryCount: json['inventory_count'] as int? ?? 0,
       isReserved: json['is_reserved'] as bool? ?? false,
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : DateTime.now(),
     );
   }
 
@@ -54,6 +57,7 @@ class Product {
       'category': category,
       'inventory_count': inventoryCount,
       'is_reserved': isReserved,
+      'created_at': createdAt.toIso8601String(),
     };
   }
 
@@ -67,6 +71,7 @@ class Product {
     String? category,
     int? inventoryCount,
     bool? isReserved,
+    DateTime? createdAt,
   }) {
     return Product(
       id: id ?? this.id,
@@ -78,6 +83,7 @@ class Product {
       category: category ?? this.category,
       inventoryCount: inventoryCount ?? this.inventoryCount,
       isReserved: isReserved ?? this.isReserved,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
@@ -93,7 +99,8 @@ class Product {
           imageUrl == other.imageUrl &&
           category == other.category &&
           inventoryCount == other.inventoryCount &&
-          isReserved == other.isReserved;
+          isReserved == other.isReserved &&
+          createdAt == other.createdAt;
 
   @override
   int get hashCode =>
@@ -104,7 +111,8 @@ class Product {
       imageUrl.hashCode ^
       category.hashCode ^
       inventoryCount.hashCode ^
-      isReserved.hashCode;
+      isReserved.hashCode ^
+      createdAt.hashCode;
 
   @override
   String toString() {

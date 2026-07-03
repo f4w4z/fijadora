@@ -1,10 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../ui/shared/widgets/animated_tap_scale.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../../../domain/models/user_role.dart';
 import '../../../core/theme_provider.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 class StaffProfileView extends ConsumerWidget {
   const StaffProfileView({super.key});
@@ -21,7 +22,7 @@ class StaffProfileView extends ConsumerWidget {
           slivers: [
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                  padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 0),
                   child: Text('Profile', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -0.5, color: theme.colorScheme.onSurface)),
                 ),
               ),
@@ -30,7 +31,7 @@ class StaffProfileView extends ConsumerWidget {
               // Staff info card
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
+                  padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xs, context.pagePad, 0),
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -102,7 +103,7 @@ class StaffProfileView extends ConsumerWidget {
               // Settings section
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xxl, context.pagePad, 0),
                   child: Text(
                     'Settings',
                     style: TextStyle(
@@ -115,7 +116,7 @@ class StaffProfileView extends ConsumerWidget {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
+                  padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 0),
                   child: _SettingsRow(
                     icon: CupertinoIcons.bell_fill,
                     title: 'Notifications',
@@ -126,7 +127,7 @@ class StaffProfileView extends ConsumerWidget {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                  padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 0),
                   child: Consumer(
                     builder: (context, ref, _) {
                       final themeMode = ref.watch(themeModeProvider);
@@ -153,7 +154,7 @@ class StaffProfileView extends ConsumerWidget {
               // Account section
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xxl, context.pagePad, 0),
                   child: Text(
                     'Account',
                     style: TextStyle(
@@ -166,7 +167,7 @@ class StaffProfileView extends ConsumerWidget {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
+                  padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 0),
                   child: _SettingsRow(
                     icon: CupertinoIcons.doc_text,
                     title: 'Terms of Service',
@@ -179,12 +180,12 @@ class StaffProfileView extends ConsumerWidget {
               // Sign out
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xxl, context.pagePad, 0),
                   child: _SignOutButton(theme: theme),
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 140)),
+              SliverToBoxAdapter(child: SizedBox(height: 20.h(context))),
             ],
           ),
         ),

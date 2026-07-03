@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../../../domain/models/product.dart';
+import '../../../../core/utilities/responsive_helpers.dart';
 
 class ProductDetailBottomBar extends StatelessWidget {
   const ProductDetailBottomBar({
@@ -39,7 +40,7 @@ class ProductDetailBottomBar extends StatelessWidget {
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: context.pagePad, vertical: AppSpacing.md),
           child: Row(
             children: [
               if (totalCartItems > 0) ...[
@@ -82,7 +83,7 @@ class ProductDetailBottomBar extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
               ],
               Expanded(
                 child: SizedBox(

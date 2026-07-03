@@ -19,65 +19,70 @@ class FloatingHeaderLayout extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // 1. Scrollable content
         bodyBuilder(context, headerHeight),
-
-        // 2. Top scrim (gradient background)
         Positioned(
-          left: 0,
-          right: 0,
-          top: 0,
+          left: 0, right: 0, top: 0,
           height: headerHeight + 32.0,
-          child: IgnorePointer(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    theme.scaffoldBackgroundColor,
-                    theme.scaffoldBackgroundColor.withValues(alpha: 0.90),
-                    theme.scaffoldBackgroundColor.withValues(alpha: 0.0),
-                  ],
-                  stops: const [0.0, 0.65, 1.0],
-                ),
-              ),
-            ),
-          ),
+          child: _TopScrim(color: theme.scaffoldBackgroundColor),
         ),
-
-        // 3. Bottom scrim (gradient fade)
         Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
+          left: 0, right: 0, bottom: 0,
           height: headerHeight / 2,
-          child: IgnorePointer(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    theme.scaffoldBackgroundColor.withValues(alpha: 0.0),
-                    theme.scaffoldBackgroundColor.withValues(alpha: 0.85),
-                    theme.scaffoldBackgroundColor,
-                  ],
-                  stops: const [0.0, 0.5, 1.0],
-                ),
-              ),
-            ),
-          ),
+          child: _BottomScrim(color: theme.scaffoldBackgroundColor),
         ),
-
-        // 4. Floating header
         Positioned(
-          left: 0,
-          right: 0,
-          top: 0,
+          left: 0, right: 0, top: 0,
           child: header,
         ),
       ],
+    );
+  }
+}
+
+class _TopScrim extends StatelessWidget {
+  const _TopScrim({required this.color});
+  final Color color;
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              color,
+              color.withValues(alpha: 0.90),
+              color.withValues(alpha: 0.0),
+            ],
+            stops: const [0.0, 0.65, 1.0],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BottomScrim extends StatelessWidget {
+  const _BottomScrim({required this.color});
+  final Color color;
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              color.withValues(alpha: 0.0),
+              color.withValues(alpha: 0.85),
+              color,
+            ],
+            stops: const [0.0, 0.5, 1.0],
+          ),
+        ),
+      ),
     );
   }
 }

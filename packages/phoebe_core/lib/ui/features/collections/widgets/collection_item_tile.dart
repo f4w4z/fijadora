@@ -54,7 +54,7 @@ class CollectionItemTile extends StatelessWidget {
             width: 48,
             height: 48,
             child: item.imageUrl != null
-                ? CachedNetworkImage(imageUrl: item.imageUrl!, fit: BoxFit.cover)
+                ? CachedNetworkImage(imageUrl: item.imageUrl!, memCacheWidth: 100, fit: BoxFit.cover)
                 : Container(color: theme.colorScheme.surfaceContainer, child: Icon(CupertinoIcons.bag, size: 20, color: theme.colorScheme.onSurfaceVariant)),
           ),
         ),

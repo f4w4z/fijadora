@@ -1,15 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
-class WorkerNotificationsView extends ConsumerStatefulWidget {
+class WorkerNotificationsView extends StatefulWidget {
   const WorkerNotificationsView({super.key});
 
   @override
-  ConsumerState<WorkerNotificationsView> createState() => _WorkerNotificationsViewState();
+  State<WorkerNotificationsView> createState() => _WorkerNotificationsViewState();
 }
 
-class _WorkerNotificationsViewState extends ConsumerState<WorkerNotificationsView> {
+class _WorkerNotificationsViewState extends State<WorkerNotificationsView> {
   bool _newJobAlerts = true;
   bool _jobUpdates = true;
   bool _reminders = true;
@@ -27,7 +27,7 @@ class _WorkerNotificationsViewState extends ConsumerState<WorkerNotificationsVie
         leading: GestureDetector(
           onTap: () => Navigator.pop(context),
           child: Padding(
-            padding: const EdgeInsets.only(left: 16),
+            padding: EdgeInsets.only(left: AppSpacing.lg),
             child: Icon(CupertinoIcons.chevron_left, size: 22, color: theme.colorScheme.onSurface),
           ),
         ),
@@ -37,7 +37,7 @@ class _WorkerNotificationsViewState extends ConsumerState<WorkerNotificationsVie
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
+        padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 40),
         children: [
           _sectionHeader(theme, 'Job Alerts'),
           _toggleRow(

@@ -1,12 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../ui/shared/utils/notification_helper.dart';
-import '../../../../ui/shared/widgets/animated_tap_scale.dart';
-import '../../../../domain/models/trade_type.dart';
+import '../../../shared/utils/notification_helper.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../../../domain/models/app_user.dart';
 import '../../../../data/repositories/auth_repository.dart';
-import '../../../../data/services/notification_service.dart';
+import '../../../../data/services/app_notification_service.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 class StaffWorkersView extends ConsumerStatefulWidget {
   const StaffWorkersView({super.key});
@@ -16,35 +16,10 @@ class StaffWorkersView extends ConsumerStatefulWidget {
 }
 
 class _StaffWorkersViewState extends ConsumerState<StaffWorkersView> {
-  final List<Map<String, dynamic>> _teamWorkers = [
-    {'name': 'Alex Johnson', 'specialty': 'Electrical', 'rating': 4.8, 'available': true, 'vehicle': 'White Ford Transit'},
-    {'name': 'Sarah Smith', 'specialty': 'Plumbing', 'rating': 4.9, 'available': true, 'vehicle': 'Blue Ram ProMaster'},
-    {'name': 'Mike Chen', 'specialty': 'HVAC', 'rating': 4.7, 'available': false, 'vehicle': 'Silver Mercedes Sprinter'},
-    {'name': 'James Wilson', 'specialty': 'General', 'rating': 4.5, 'available': true, 'vehicle': 'Red Chevy Express'},
-  ];
-
-  void _addWorker(String name, String specialty) {
-    setState(() {
-      _teamWorkers.add({
-        'name': name,
-        'specialty': specialty,
-        'rating': 5.0,
-        'available': true,
-        'vehicle': '',
-      });
-    });
-  }
-
-  void _toggleAvailability(int index) {
-    setState(() {
-      _teamWorkers[index]['available'] = !(_teamWorkers[index]['available'] as bool);
-    });
-  }
-
-  void _deleteWorker(int index) {
-    setState(() {
-      _teamWorkers.removeAt(index);
-    });
+  @override
+  void initState() {
+    super.initState();
+    ref.read(authRepositoryProvider).refreshWorkers();
   }
 
   @override
@@ -58,25 +33,8 @@ class _StaffWorkersViewState extends ConsumerState<StaffWorkersView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text('Workers', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -0.5, color: theme.colorScheme.onSurface)),
-                  ),
-                  AnimatedTapScale(
-                    onTap: () => _showAddWorkerSheet(),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(CupertinoIcons.add, color: theme.colorScheme.primary, size: 22),
-                    ),
-                  ),
-                ],
-              ),
+              padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.md, context.pagePad, 0),
+              child: Text('Workers', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -0.5, color: theme.colorScheme.onSurface)),
             ),
             const SizedBox(height: 8),
             Expanded(
@@ -94,7 +52,7 @@ class _StaffWorkersViewState extends ConsumerState<StaffWorkersView> {
     final approved = authWorkers.where((w) => w.workerStatus == 'approved').toList();
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
+      padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 120),
       children: [
         if (pending.isNotEmpty) ...[
           Row(
@@ -112,33 +70,26 @@ class _StaffWorkersViewState extends ConsumerState<StaffWorkersView> {
             ],
           ),
           const SizedBox(height: 10),
-          ...pending.map((worker) => _PendingWorkerCard(worker: worker)),
+          ...pending.map((worker) => _PendingWorkerCard(
+            worker: worker,
+            onStatusChanged: () {
+              ref.read(authRepositoryProvider).refreshWorkers();
+              setState(() {});
+            },
+          )),
           const SizedBox(height: 24),
         ],
         Row(
           children: [
             Text('Team', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
-            if (approved.isNotEmpty) ...[
-              const SizedBox(width: 8),
-              Text('${approved.length} approved', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
-            ],
+            const SizedBox(width: 8),
+            Text('${approved.length} approved', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
           ],
         ),
         const SizedBox(height: 10),
         if (approved.isNotEmpty)
           ...approved.map((worker) => _ApprovedAuthWorkerCard(worker: worker)),
-        ..._teamWorkers.asMap().entries.map((entry) {
-          final index = entry.key;
-          final worker = entry.value;
-          return _TeamWorkerCard(
-            worker: worker,
-            theme: theme,
-            borderColor: borderColor,
-            onToggle: () => _toggleAvailability(index),
-            onDelete: () => _confirmDeleteWorker(index),
-          );
-        }),
-        if (approved.isEmpty && _teamWorkers.isEmpty)
+        if (approved.isEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 40),
             child: Center(
@@ -146,13 +97,7 @@ class _StaffWorkersViewState extends ConsumerState<StaffWorkersView> {
                 children: [
                   Icon(CupertinoIcons.person_3_fill, size: 48, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
                   const SizedBox(height: 12),
-                  Text('No workers yet', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
-                  const SizedBox(height: 8),
-                  TextButton.icon(
-                    onPressed: () => _showAddWorkerSheet(),
-                    icon: const Icon(CupertinoIcons.add, size: 16),
-                    label: const Text('Add Worker'),
-                  ),
+                  Text('No approved workers yet', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
                 ],
               ),
             ),
@@ -161,66 +106,12 @@ class _StaffWorkersViewState extends ConsumerState<StaffWorkersView> {
     );
   }
 
-  void _showAddWorkerSheet() {
-    final nameCtrl = TextEditingController();
-    String specialty = 'Electrical';
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Add Worker'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Worker Name', border: OutlineInputBorder()), autofocus: true),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: specialty,
-                decoration: const InputDecoration(labelText: 'Specialty', border: OutlineInputBorder()),
-                items: TradeType.values.map((t) => DropdownMenuItem(value: t.displayName, child: Text(t.displayName))).toList(),
-                onChanged: (v) { if (v != null) setDialogState(() => specialty = v); },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
-              onPressed: () {
-                if (nameCtrl.text.trim().isEmpty) return;
-                _addWorker(nameCtrl.text.trim(), specialty);
-                Navigator.pop(ctx);
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _confirmDeleteWorker(int index) {
-    final worker = _teamWorkers[index];
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Remove Worker'),
-        content: Text('Remove ${worker['name']} from the team?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () { _deleteWorker(index); Navigator.pop(ctx); },
-            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _PendingWorkerCard extends ConsumerWidget {
-  const _PendingWorkerCard({required this.worker});
+  const _PendingWorkerCard({required this.worker, required this.onStatusChanged});
   final AppUser worker;
+  final VoidCallback onStatusChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -297,6 +188,7 @@ class _PendingWorkerCard extends ConsumerWidget {
       title: 'Worker Approved',
       body: '${worker.name} can now access the worker app.',
     );
+    onStatusChanged();
     if (context.mounted) {
       context.showSnackBar('${worker.name} approved', type: SnackBarType.success);
     }
@@ -304,6 +196,7 @@ class _PendingWorkerCard extends ConsumerWidget {
 
   void _reject(BuildContext context, WidgetRef ref) async {
     await ref.read(authRepositoryProvider).updateWorkerStatus(userId: worker.id, status: 'rejected');
+    onStatusChanged();
     if (context.mounted) {
       context.showSnackBar('${worker.name} rejected', type: SnackBarType.error);
     }
@@ -361,91 +254,3 @@ class _ApprovedAuthWorkerCard extends StatelessWidget {
   }
 }
 
-class _TeamWorkerCard extends StatelessWidget {
-  const _TeamWorkerCard({
-    required this.worker,
-    required this.theme,
-    required this.borderColor,
-    required this.onToggle,
-    required this.onDelete,
-  });
-
-  final Map<String, dynamic> worker;
-  final ThemeData theme;
-  final Color borderColor;
-  final VoidCallback onToggle;
-  final VoidCallback onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: borderColor),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-            child: Text(
-              (worker['name'] as String)[0],
-              style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary, fontSize: 18),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(worker['name'] as String, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: (worker['available'] as bool ? const Color(0xFF34C759) : theme.colorScheme.error).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        worker['available'] as bool ? 'Available' : 'Busy',
-                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: worker['available'] as bool ? const Color(0xFF34C759) : theme.colorScheme.error),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text('${worker['specialty']}  •  ★ ${worker['rating']}', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
-                if ((worker['vehicle'] as String).isNotEmpty)
-                  Text(worker['vehicle'] as String, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7))),
-              ],
-            ),
-          ),
-          PopupMenuButton<String>(
-            iconSize: 18,
-            icon: Icon(CupertinoIcons.ellipsis, color: theme.colorScheme.onSurfaceVariant),
-            onSelected: (value) {
-              if (value == 'toggle') onToggle();
-              if (value == 'delete') onDelete();
-            },
-            itemBuilder: (_) => [
-              PopupMenuItem(
-                value: 'toggle',
-                child: Row(children: [
-                  Icon(worker['available'] as bool ? CupertinoIcons.pause_circle : CupertinoIcons.play_circle, size: 16),
-                  const SizedBox(width: 8),
-                  Text(worker['available'] as bool ? 'Mark Busy' : 'Mark Available'),
-                ]),
-              ),
-              const PopupMenuItem(value: 'delete', child: Row(children: [Icon(CupertinoIcons.trash, size: 16), SizedBox(width: 8), Text('Remove')])),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}

@@ -14,6 +14,7 @@ import 'widgets/product_image_gallery.dart';
 import 'widgets/write_review_sheet.dart';
 import 'widgets/product_detail_bottom_bar.dart';
 import 'widgets/product_detail_info_widgets.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 class ProductDetailView extends ConsumerStatefulWidget {
   const ProductDetailView({
@@ -61,7 +62,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
               heroTag: widget.heroTag,
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
+              padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xxl, context.pagePad, 120),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -96,7 +97,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                       height: 1.15,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -175,7 +176,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                           theme: theme,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: FeatureButton(
                           icon: CupertinoIcons.cube,
@@ -201,7 +202,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppSpacing.xxxl),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -224,7 +225,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   StreamBuilder<List<Map<String, dynamic>>>(
                     stream: shopRepo.streamReviews(widget.product.id),
                     builder: (context, snapshot) {
@@ -249,9 +250,9 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                           child: Row(
                             children: [
                               Icon(CupertinoIcons.star, size: 20, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
-                              const SizedBox(width: 12),
-                              Text(
-                                'No reviews yet. Be the first!',
+                      const SizedBox(width: AppSpacing.md),
+                      Text(
+                        'No reviews yet. Be the first!',
                                 style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
                               ),
                             ],
@@ -387,6 +388,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
   void _showWriteReviewSheet(BuildContext context) {
     showAppBottomSheet(
       context: context,
+      maxHeight: 0.75,
       child: WriteReviewSheet(
         productId: widget.product.id,
         onSubmit: (rating, comment) async {

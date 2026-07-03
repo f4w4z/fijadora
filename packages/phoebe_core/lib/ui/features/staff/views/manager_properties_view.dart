@@ -1,15 +1,18 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../ui/shared/utils/notification_helper.dart';
-import '../../../../ui/shared/widgets/animated_tap_scale.dart';
-import '../../manager/views/maintenance_history_page.dart';
+import '../../../shared/utils/notification_helper.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../../../data/repositories/jobs_repository.dart';
-import '../../../../data/services/notification_service.dart';
+import '../../../../data/repositories/properties_repository.dart';
+import '../../../../data/services/app_notification_service.dart';
 import '../../../../domain/models/maintenance_job.dart';
 import '../../../../domain/models/job_status.dart';
+import '../../../../domain/models/property.dart';
 import '../../../../domain/models/trade_type.dart';
 import '../../auth/view_models/auth_view_model.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 
 class ManagerPropertiesView extends ConsumerStatefulWidget {
@@ -21,86 +24,43 @@ class ManagerPropertiesView extends ConsumerStatefulWidget {
 
 class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
   final Set<String> _expandedUnits = {};
+  StreamSubscription<List<Property>>? _sub;
+  List<Map<String, dynamic>> _properties = [];
 
-  final List<Map<String, dynamic>> _properties = [
-    {
-      'id': 'prop-1',
-      'name': 'Greenwood Apartments',
-      'address': '742 Evergreen Terrace, Springfield',
-      'units': [
-        {
-          'number': '302',
-          'rooms': [
-            {
-              'name': 'Kitchen',
-              'assets': [
-                {'name': 'Bosch Dishwasher', 'type': 'Appliance', 'status': 'Healthy'},
-                {'name': 'Samsung Refrigerator', 'type': 'Appliance', 'status': 'Healthy'},
-              ]
-            },
-            {
-              'name': 'Living Room',
-              'assets': [
-                {'name': 'Noguchi Coffee Table', 'type': 'Furniture', 'status': 'Good Condition'},
-                {'name': 'Carrier AC Unit', 'type': 'Appliance', 'status': 'Needs Service'},
-              ]
-            }
-          ]
-        },
-        {
-          'number': '304',
-          'rooms': [
-            {
-              'name': 'Kitchen',
-              'assets': [
-                {'name': 'Kitchen Sink Washer', 'type': 'Plumbing', 'status': 'Leaking'},
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      'id': 'prop-2',
-      'name': 'Oakwood Heights',
-      'address': 'Apartment 4B, Oakwood Heights, NY',
-      'units': [
-        {
-          'number': '4B',
-          'rooms': [
-            {
-              'name': 'Kitchen',
-              'assets': [
-                {'name': 'Kitchen Sink Pipe', 'type': 'Plumbing', 'status': 'Repaired'},
-              ]
-            },
-            {
-              'name': 'Living Room',
-              'assets': [
-                {'name': 'Ceiling Light Switch', 'type': 'Electrical', 'status': 'Flickering'},
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ];
+  @override
+  void initState() {
+    super.initState();
+    final repo = ref.read(propertiesRepositoryProvider);
+    final userId = ref.read(authViewModelProvider).user?.id ?? '';
+    _sub = repo.streamProperties(userId).listen((props) {
+      if (!mounted) return;
+      setState(() {
+        _properties = props.map(_propertyToMap).toList();
+      });
+    });
+  }
 
-  final Map<String, List<Map<String, dynamic>>> _mockHistory = {
-    'Bosch Dishwasher': [
-      {'date': '12/04/2026', 'action': 'Replaced heating element', 'technician': 'Alex Johnson'},
-      {'date': '01/10/2025', 'action': 'Regular maintenance & cleaning', 'technician': 'Sarah Smith'},
-    ],
-    'Carrier AC Unit': [
-      {'date': '15/06/2026', 'action': 'Compressor checked, diagnosed wear', 'technician': 'Alex Johnson'},
-      {'date': '10/05/2025', 'action': 'Cleaned air filters', 'technician': 'Alex Johnson'},
-    ],
-    'Kitchen Sink Pipe': [
-      {'date': '20/06/2026', 'action': 'Replaced broken washer and joint seal', 'technician': 'Alex Johnson'},
-    ],
-    'Ceiling Light Switch': [
-      {'date': '22/06/2026', 'action': 'Replaced flickering rocker switch', 'technician': 'Sarah Smith'},
-    ]
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
+  static Map<String, dynamic> _propertyToMap(Property p) => {
+    'id': p.id,
+    'name': p.name,
+    'address': p.address,
+    'units': p.units.map((u) => {
+      'number': u.number,
+      'rooms': u.rooms.map((r) => {
+        'name': r.name,
+        'assets': r.assets.map((a) => {
+          'name': a.name,
+          'type': a.type,
+          'status': a.status,
+        }).toList(),
+      }).toList(),
+    }).toList(),
   };
 
   void _addProperty(String name, String address) {
@@ -200,7 +160,7 @@ class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
         ],
       ),
     );
-    if (dispatchMode == null || !context.mounted) return;
+    if (dispatchMode == null || !mounted) return;
 
     final user = ref.read(authViewModelProvider).user;
     if (user == null) return;
@@ -210,71 +170,78 @@ class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
     );
     final addressController = TextEditingController(text: property['address'] as String);
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Raise Maintenance Job'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Property: ${property['name']}', style: const TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 4),
-            Text('Asset: ${asset['name']} ($roomName, Unit $unitNumber)'),
-            const SizedBox(height: 4),
-            Text('Dispatch: ${dispatchMode == 'admin' ? 'Admin Queue' : 'Open to Workers'}'),
-            const SizedBox(height: 12),
-            TextField(
-              controller: descController,
-              decoration: const InputDecoration(
-                labelText: 'Issue Description',
-                border: OutlineInputBorder(),
+    try {
+      if (!mounted) return;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Raise Maintenance Job'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Property: ${property['name']}', style: const TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              Text('Asset: ${asset['name']} ($roomName, Unit $unitNumber)'),
+              const SizedBox(height: 4),
+              Text('Dispatch: ${dispatchMode == 'admin' ? 'Admin Queue' : 'Open to Workers'}'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descController,
+                decoration: const InputDecoration(
+                  labelText: 'Issue Description',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
               ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: addressController,
-              decoration: const InputDecoration(
-                labelText: 'Address',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 8),
+              TextField(
+                controller: addressController,
+                decoration: const InputDecoration(
+                  labelText: 'Address',
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Raise Job')),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Raise Job')),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
-
-    final tradeType = _inferTradeType(asset['type'] as String);
-    final job = MaintenanceJob(
-      id: 'job-${DateTime.now().millisecondsSinceEpoch}',
-      description: descController.text,
-      tradeType: tradeType,
-      status: JobStatus.pending,
-      scheduleDateTime: DateTime.now().add(const Duration(hours: 2)),
-      address: addressController.text,
-      images: const [],
-      customerId: 'manager-${user.id}',
-      createdAt: DateTime.now(),
-    );
-
-    try {
-      await ref.read(jobsRepositoryProvider).createJob(job: job);
-      ref.read(notificationServiceProvider).sendNotification(
-        title: 'New Maintenance Request',
-        body: '${property['name']}: ${asset['name']} needs ${tradeType.displayName.toLowerCase()} service',
       );
-      if (context.mounted) {
-        context.showSnackBar('Job raised for ${asset['name']} (${dispatchMode == 'admin' ? 'admin dispatch' : 'open to workers'})', type: SnackBarType.success);
+      if (confirmed != true || !mounted) return;
+
+      final tradeType = _inferTradeType(asset['type'] as String);
+      final job = MaintenanceJob(
+        id: 'job-${DateTime.now().millisecondsSinceEpoch}',
+        description: descController.text,
+        tradeType: tradeType,
+        status: JobStatus.pending,
+        scheduleDateTime: DateTime.now().add(const Duration(hours: 2)),
+        address: addressController.text,
+        images: const [],
+        customerId: user.id,
+        createdAt: DateTime.now(),
+      );
+
+      if (!mounted) return;
+      try {
+        await ref.read(jobsRepositoryProvider).createJob(job: job);
+        ref.read(notificationServiceProvider).sendNotification(
+          title: 'New Maintenance Request',
+          body: '${property['name']}: ${asset['name']} needs ${tradeType.displayName.toLowerCase()} service',
+        );
+        if (mounted) {
+          context.showSnackBar('Job raised for ${asset['name']} (${dispatchMode == 'admin' ? 'admin dispatch' : 'open to workers'})', type: SnackBarType.success);
+        }
+      } catch (e) {
+        if (mounted) {
+          context.showSnackBar('Failed to raise job: $e', type: SnackBarType.error);
+        }
       }
-    } catch (e) {
-      if (context.mounted) {
-        context.showSnackBar('Failed to raise job: $e', type: SnackBarType.error);
-      }
+    } finally {
+      descController.dispose();
+      addressController.dispose();
     }
   }
 
@@ -317,7 +284,7 @@ class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+              padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.md, context.pagePad, 0),
               child: Row(
                 children: [
                   Expanded(
@@ -359,7 +326,7 @@ class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
                   : CustomScrollView(
                       slivers: [
                         SliverPadding(
-                          padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
+                          padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 120),
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
@@ -443,7 +410,10 @@ class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      nameCtrl.dispose();
+      addrCtrl.dispose();
+    });
   }
 
   void _showEditPropertySheet(int index) {
@@ -474,7 +444,10 @@ class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      nameCtrl.dispose();
+      addrCtrl.dispose();
+    });
   }
 
   void _confirmDeleteProperty(int index) {
@@ -515,7 +488,7 @@ class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
           ),
         ],
       ),
-    );
+    ).then((_) => ctrl.dispose());
   }
 
   void _confirmDeleteUnit(int propIndex, int unitIndex) {
@@ -556,7 +529,7 @@ class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
           ),
         ],
       ),
-    );
+    ).then((_) => ctrl.dispose());
   }
 
   void _showAddAssetSheet(int propIndex, int unitIndex, int roomIndex) {
@@ -601,7 +574,7 @@ class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
           ],
         ),
       ),
-    );
+    ).then((_) => nameCtrl.dispose());
   }
 
   void _showEditAssetSheet(int propIndex, int unitIndex, int roomIndex, int assetIndex) {
@@ -650,7 +623,7 @@ class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
           ],
         ),
       ),
-    );
+    ).then((_) => nameCtrl.dispose());
   }
 
   void _confirmDeleteAsset(int propIndex, int unitIndex, int roomIndex, int assetIndex) {
@@ -676,16 +649,7 @@ class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
   }
 
   void _showAssetHistorySheet(String assetName) {
-    final history = _mockHistory[assetName] ?? [];
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MaintenanceHistoryPage(
-          assetName: assetName,
-          history: history,
-        ),
-      ),
-    );
+    context.showSnackBar('Maintenance history coming soon', type: SnackBarType.info);
   }
 }
 
@@ -1134,9 +1098,10 @@ class _UnitRoomsSection extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(asset['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -1162,8 +1127,9 @@ class _UnitRoomsSection extends StatelessWidget {
               title: Text('Delete', style: TextStyle(color: theme.colorScheme.error)),
               onTap: () { Navigator.pop(ctx); onDeleteAsset(roomIndex, assetIndex); },
             ),
-            const SizedBox(height: 8),
-          ],
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );

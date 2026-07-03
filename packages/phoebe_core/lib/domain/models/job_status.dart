@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 enum JobStatus {
   pending,
+  quoted,
   assigned,
   workerEnRoute,
   workerArrived,
@@ -9,12 +10,17 @@ enum JobStatus {
   waitingApproval,
   completed,
   rejected,
-  cancelled;
+  cancelled,
+  onHold,
+  rescheduled,
+  awaitingParts;
 
   String get displayName {
     switch (this) {
       case JobStatus.pending:
         return 'Pending';
+      case JobStatus.quoted:
+        return 'Quoted';
       case JobStatus.assigned:
         return 'Assigned';
       case JobStatus.workerEnRoute:
@@ -31,6 +37,12 @@ enum JobStatus {
         return 'Rejected';
       case JobStatus.cancelled:
         return 'Cancelled';
+      case JobStatus.onHold:
+        return 'On Hold';
+      case JobStatus.rescheduled:
+        return 'Rescheduled';
+      case JobStatus.awaitingParts:
+        return 'Awaiting Parts';
     }
   }
 
@@ -38,12 +50,15 @@ enum JobStatus {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (this) {
       case JobStatus.pending:
+      case JobStatus.quoted:
         return isDark ? const Color(0xFFFFD54F) : const Color(0xFFF57F17); // Amber
       case JobStatus.assigned:
+      case JobStatus.rescheduled:
         return isDark ? const Color(0xFF64B5F6) : const Color(0xFF1976D2); // Blue
       case JobStatus.workerEnRoute:
       case JobStatus.workerArrived:
       case JobStatus.inProgress:
+      case JobStatus.awaitingParts:
         return isDark ? const Color(0xFF7986CB) : const Color(0xFF3F51B5); // Indigo
       case JobStatus.waitingApproval:
         return isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100); // Orange
@@ -51,6 +66,7 @@ enum JobStatus {
         return isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32); // Green
       case JobStatus.rejected:
       case JobStatus.cancelled:
+      case JobStatus.onHold:
         return isDark ? const Color(0xFFE57373) : const Color(0xFFC62828); // Red
     }
   }

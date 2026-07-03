@@ -4,7 +4,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/models/collection.dart';
 import '../../../../domain/models/collection_item.dart';
-import '../../../../ui/shared/widgets/animated_tap_scale.dart';
+import '../../../core/utilities/responsive_helpers.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
 import '../view_models/collections_view_model.dart';
 import '../widgets/collection_item_tile.dart';
 import '../../shop/views/product_detail_view.dart';
@@ -74,19 +75,19 @@ class CollectionDetailView extends ConsumerWidget {
                       borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
                       child: CachedNetworkImage(
                         imageUrl: collection.coverImageUrl!,
-                        height: 220,
+                        height: 30.h(context),
                         fit: BoxFit.cover,
-                        placeholder: (_, __) => Container(height: 220, color: theme.colorScheme.surfaceContainer),
-                        errorWidget: (_, __, ___) => Container(height: 220, color: theme.colorScheme.surfaceContainer),
+        placeholder: (_, _) => Container(height: 30.h(context), color: theme.colorScheme.surfaceContainer),
+        errorWidget: (_, _, _) => Container(height: 30.h(context), color: theme.colorScheme.surfaceContainer),
                       ),
                     ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                    padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xl, context.pagePad, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(collection.title, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface, letterSpacing: -0.3)),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppSpacing.sm),
                         Row(
                           children: [
                             CircleAvatar(
@@ -96,7 +97,7 @@ class CollectionDetailView extends ConsumerWidget {
                                   ? Text(collection.creatorName.isNotEmpty ? collection.creatorName[0].toUpperCase() : '?', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface))
                                   : null,
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppSpacing.sm),
                             Text('by ${collection.creatorName}', style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant)),
                             const Spacer(),
                             Icon(CupertinoIcons.heart, size: 14, color: theme.colorScheme.onSurfaceVariant),
@@ -105,10 +106,10 @@ class CollectionDetailView extends ConsumerWidget {
                           ],
                         ),
                         if (collection.description.isNotEmpty) ...[
-                          const SizedBox(height: 12),
+                          const SizedBox(height: AppSpacing.md),
                           Text(collection.description, style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant, height: 1.4)),
                         ],
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
                         Row(
                           children: [
                             Container(
@@ -142,14 +143,14 @@ class CollectionDetailView extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: AppSpacing.xxl),
                         Text('Items', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.md),
                       ],
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: EdgeInsets.symmetric(horizontal: context.pagePad),
                     child: Column(
                       children: collection.items.map((item) => CollectionItemTile(
                         item: item,
@@ -209,5 +210,6 @@ Product _dummyProduct(CollectionItem item) {
     imageUrls: item.imageUrl != null ? [item.imageUrl!] : [],
     category: '',
     inventoryCount: 0,
+    createdAt: DateTime.now(),
   );
 }

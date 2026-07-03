@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../../shared/utils/notification_helper.dart';
+import '../../../../shared/widgets/star_rating.dart';
+import '../../../../core/utilities/responsive_helpers.dart';
 
 class WriteReviewSheet extends StatefulWidget {
   const WriteReviewSheet({
@@ -44,30 +46,18 @@ class _WriteReviewSheetState extends State<WriteReviewSheet> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         Text(
           'Share your experience with this piece.',
           style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
         ),
-        const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(5, (i) {
-            final val = i + 1;
-            return GestureDetector(
-              onTap: () => setState(() => _rating = val.toDouble()),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Icon(
-                  val <= _rating ? CupertinoIcons.star_fill : CupertinoIcons.star,
-                  size: 34,
-                  color: Colors.amber,
-                ),
-              ),
-            );
-          }),
+        const SizedBox(height: AppSpacing.xl),
+        StarRating(
+          rating: _rating,
+          onChanged: (v) => setState(() => _rating = v),
+          size: 34,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.xl),
         TextField(
           controller: _controller,
           maxLines: 3,
@@ -76,7 +66,7 @@ class _WriteReviewSheetState extends State<WriteReviewSheet> {
             hintText: 'Share your thoughts about this piece...',
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xxl),
         Row(
           children: [
             Expanded(
@@ -85,7 +75,7 @@ class _WriteReviewSheetState extends State<WriteReviewSheet> {
                 child: const Text('Cancel'),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               flex: 2,
               child: ElevatedButton(
@@ -105,7 +95,7 @@ class _WriteReviewSheetState extends State<WriteReviewSheet> {
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: theme.colorScheme.onPrimary,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: const Text('Submit Review', style: TextStyle(fontWeight: FontWeight.bold)),

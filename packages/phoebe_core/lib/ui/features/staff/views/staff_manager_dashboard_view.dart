@@ -6,6 +6,9 @@ import '../../../../domain/models/job_status.dart';
 import '../../../../domain/models/maintenance_job.dart';
 import '../../../../domain/models/user_role.dart';
 import '../../auth/view_models/auth_view_model.dart';
+import '../../../core/utilities/responsive_helpers.dart';
+
+import '../../services/view_models/jobs_view_model.dart';
 
 class StaffManagerDashboardView extends ConsumerWidget {
   const StaffManagerDashboardView({super.key});
@@ -13,14 +16,14 @@ class StaffManagerDashboardView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final jobsRepo = ref.watch(jobsRepositoryProvider);
+    final jobsAsync = ref.watch(jobsStreamProvider);
 
     return Scaffold(
       body: SafeArea(
-        child: StreamBuilder<List<MaintenanceJob>>(
-          stream: jobsRepo.streamJobs(userId: 'manager', role: ref.read(authViewModelProvider).user?.role ?? UserRole.manager),
-          builder: (context, snapshot) {
-            final jobs = snapshot.data ?? [];
+        child: jobsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(child: Text('Error: $err')),
+          data: (jobs) {
             final pendingApprovals = jobs.where((j) => j.status == JobStatus.waitingApproval).length;
             final activeJobs = jobs.where((j) => j.status == JobStatus.inProgress || j.status == JobStatus.assigned).length;
 
@@ -28,13 +31,13 @@ class StaffManagerDashboardView extends ConsumerWidget {
               slivers: [
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                    padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.md, context.pagePad, 0),
                     child: Text('Dashboard', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -0.5, color: theme.colorScheme.onSurface)),
                   ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 20)),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+                  padding: EdgeInsets.fromLTRB(context.pagePad, 0, context.pagePad, 120),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
                       _SummaryRow(
@@ -173,6 +176,7 @@ class _ActivityRow extends StatelessWidget {
   IconData _statusIcon(JobStatus status) {
     switch (status) {
       case JobStatus.pending: return CupertinoIcons.clock;
+      case JobStatus.quoted: return CupertinoIcons.doc_text;
       case JobStatus.assigned: return CupertinoIcons.person_fill;
       case JobStatus.workerEnRoute: return CupertinoIcons.location;
       case JobStatus.workerArrived: return CupertinoIcons.house_fill;
@@ -181,6 +185,9 @@ class _ActivityRow extends StatelessWidget {
       case JobStatus.completed: return CupertinoIcons.checkmark_alt_circle_fill;
       case JobStatus.rejected: return CupertinoIcons.xmark_circle_fill;
       case JobStatus.cancelled: return CupertinoIcons.xmark_circle_fill;
+      case JobStatus.onHold: return CupertinoIcons.pause_fill;
+      case JobStatus.rescheduled: return CupertinoIcons.calendar;
+      case JobStatus.awaitingParts: return CupertinoIcons.clock;
     }
   }
 }

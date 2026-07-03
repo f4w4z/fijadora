@@ -7,7 +7,7 @@ import '../../../../domain/models/maintenance_job.dart';
 import '../../../../domain/models/trade_type.dart';
 import '../../../../domain/models/user_role.dart';
 import '../../auth/view_models/auth_view_model.dart';
-import '../../../../data/services/notification_service.dart';
+import '../../../../data/services/app_notification_service.dart';
 import '../../../../data/services/telemetry_service.dart';
 
 class JobsViewModel extends ChangeNotifier {
@@ -151,13 +151,10 @@ class JobsViewModel extends ChangeNotifier {
 // Riverpod Provider for JobsViewModel
 final jobsViewModelProvider = ChangeNotifierProvider<JobsViewModel>((ref) {
   final repository = ref.watch(jobsRepositoryProvider);
-  final authViewModel = ref.watch(authViewModelProvider);
+  final userId = ref.watch(authViewModelProvider.select((vm) => vm.user?.id ?? ''));
+  final role = ref.watch(authViewModelProvider.select((vm) => vm.user?.role ?? UserRole.customer));
   final notificationService = ref.watch(notificationServiceProvider);
   final telemetryService = ref.watch(telemetryServiceProvider);
-  
-  final user = authViewModel.user;
-  final userId = user?.id ?? '';
-  final role = user?.role ?? UserRole.customer;
 
   return JobsViewModel(
     jobsRepository: repository,
@@ -166,4 +163,17 @@ final jobsViewModelProvider = ChangeNotifierProvider<JobsViewModel>((ref) {
     userId: userId,
     role: role,
   );
+});
+
+// Shared StreamProvider for caching and sharing the jobs stream
+final jobsStreamProvider = StreamProvider.autoDispose<List<MaintenanceJob>>((ref) {
+  final repository = ref.watch(jobsRepositoryProvider);
+  final userId = ref.watch(authViewModelProvider.select((vm) => vm.user?.id ?? ''));
+  final role = ref.watch(authViewModelProvider.select((vm) => vm.user?.role ?? UserRole.customer));
+
+  if (userId.isEmpty) {
+    return const Stream.empty();
+  }
+
+  return repository.streamJobs(userId: userId, role: role);
 });

@@ -1,14 +1,115 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import '../../domain/models/collection.dart';
 import '../../domain/models/collection_item.dart';
+import '../services/supabase_service.dart';
 
 abstract class CollectionsRepository {
   Stream<List<Collection>> streamCollections();
   Future<void> toggleFollow(String collectionId, String userId);
   Future<void> toggleLike(String collectionId, String userId);
   void dispose();
+}
+
+class SupabaseCollectionsRepository implements CollectionsRepository {
+  SupabaseCollectionsRepository(this._client);
+
+  final sb.SupabaseClient _client;
+  StreamSubscription<List<Map<String, dynamic>>>? _collectionSub;
+  final _controller = StreamController<List<Collection>>.broadcast();
+
+  @override
+  Stream<List<Collection>> streamCollections() {
+    _collectionSub = _client
+        .from('collections')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false)
+        .listen((data) async {
+          try {
+            final collections = await _hydrateItems(data);
+            if (!_controller.isClosed) {
+              _controller.add(collections);
+            }
+          } catch (e) {
+            debugPrint('SupabaseCollectionsRepository - hydrate error: $e');
+          }
+        }, onError: (e) {
+          debugPrint('SupabaseCollectionsRepository - stream error: $e');
+        });
+
+    return _controller.stream;
+  }
+
+  Future<List<Collection>> _hydrateItems(List<Map<String, dynamic>> collectionsJson) async {
+    return Future.wait(collectionsJson.map((json) async {
+      final itemsData = await _client
+          .from('collection_items')
+          .select()
+          .eq('collection_id', json['id'] as String);
+      json['items'] = itemsData
+          .map((e) => CollectionItem.fromJson(e))
+          .toList();
+      return Collection.fromJson(json);
+    }));
+  }
+
+  @override
+  Future<void> toggleFollow(String collectionId, String userId) async {
+    final existing = await _client
+        .from('collection_follows')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('collection_id', collectionId)
+        .maybeSingle();
+
+    if (existing != null) {
+      await _client
+          .from('collection_follows')
+          .delete()
+          .eq('user_id', userId)
+          .eq('collection_id', collectionId);
+      await _client.rpc('decrement_collection_follow', params: {'col_id': collectionId});
+    } else {
+      await _client.from('collection_follows').insert({
+        'user_id': userId,
+        'collection_id': collectionId,
+      });
+      await _client.rpc('increment_collection_follow', params: {'col_id': collectionId});
+    }
+  }
+
+  @override
+  Future<void> toggleLike(String collectionId, String userId) async {
+    final existing = await _client
+        .from('collection_likes')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('collection_id', collectionId)
+        .maybeSingle();
+
+    if (existing != null) {
+      await _client
+          .from('collection_likes')
+          .delete()
+          .eq('user_id', userId)
+          .eq('collection_id', collectionId);
+      await _client.rpc('decrement_collection_like', params: {'col_id': collectionId});
+    } else {
+      await _client.from('collection_likes').insert({
+        'user_id': userId,
+        'collection_id': collectionId,
+      });
+      await _client.rpc('increment_collection_like', params: {'col_id': collectionId});
+    }
+  }
+
+  @override
+  void dispose() {
+    _collectionSub?.cancel();
+    _controller.close();
+  }
 }
 
 class MockCollectionsRepository implements CollectionsRepository {
@@ -193,8 +294,23 @@ class MockCollectionsRepository implements CollectionsRepository {
 }
 
 final collectionsRepositoryProvider = Provider<CollectionsRepository>((ref) {
-  debugPrint('CollectionsRepository: Using MOCK implementation');
-  final repo = MockCollectionsRepository();
+  const url = String.fromEnvironment('SUPABASE_URL', defaultValue: '');
+  const anonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
+
+  CollectionsRepository repo;
+  if (url.isEmpty || anonKey.isEmpty || url.contains('placeholder')) {
+    debugPrint('CollectionsRepository: Using MOCK implementation');
+    repo = MockCollectionsRepository();
+  } else {
+    try {
+      final client = SupabaseService.instance.client;
+      repo = SupabaseCollectionsRepository(client);
+    } catch (e) {
+      debugPrint('CollectionsRepository: Failed to get Supabase client. Falling back to MOCK.');
+      repo = MockCollectionsRepository();
+    }
+  }
+
   ref.onDispose(() => repo.dispose());
   return repo;
 });

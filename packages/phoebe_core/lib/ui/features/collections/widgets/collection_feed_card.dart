@@ -2,7 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../domain/models/collection.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 import '../../../core/theme.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
 
 class CollectionFeedCard extends StatelessWidget {
   const CollectionFeedCard({
@@ -21,11 +23,12 @@ class CollectionFeedCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: GestureDetector(
-        onTap: onTap,
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      child: AnimatedTapScale(
+        onTap: onTap ?? () {},
+        scaleFactor: 0.97,
         child: Container(
-          height: 200,
+          height: 25.h(context),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           ),
@@ -36,9 +39,9 @@ class CollectionFeedCard extends StatelessWidget {
               if (collection.coverImageUrl != null)
                 CachedNetworkImage(
                   imageUrl: collection.coverImageUrl!,
-                  fit: BoxFit.cover,
-                  placeholder: (_, __) => Container(color: theme.colorScheme.surfaceContainer),
-                  errorWidget: (_, __, ___) => Container(color: theme.colorScheme.surfaceContainer, child: const Center(child: Icon(CupertinoIcons.photo, size: 32))),
+                  memCacheWidth: 400,
+                  placeholder: (_, _) => Container(color: theme.colorScheme.surfaceContainer),
+                  errorWidget: (_, _, _) => Container(color: theme.colorScheme.surfaceContainer, child: const Center(child: Icon(CupertinoIcons.photo, size: 32))),
                 )
               else
                 Container(color: theme.colorScheme.primary.withValues(alpha: 0.08), child: Center(child: Icon(CupertinoIcons.square_list, size: 40, color: theme.colorScheme.primary.withValues(alpha: 0.4)))),

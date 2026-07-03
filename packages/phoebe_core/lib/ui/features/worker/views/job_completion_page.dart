@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../domain/models/job_status.dart';
-import '../../../../ui/shared/widgets/animated_tap_scale.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../services/view_models/jobs_view_model.dart';
 import '../../../shared/utils/notification_helper.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 class JobCompletionPage extends ConsumerStatefulWidget {
   const JobCompletionPage({super.key, required this.jobId});
@@ -78,7 +79,7 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
         leading: GestureDetector(
           onTap: () => Navigator.pop(context),
           child: Padding(
-            padding: const EdgeInsets.only(left: 16),
+            padding: EdgeInsets.only(left: AppSpacing.lg),
             child: Icon(CupertinoIcons.chevron_left, size: 22, color: theme.colorScheme.onSurface),
           ),
         ),
@@ -92,7 +93,7 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
+        padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 40),
         child: Form(
           key: _formKey,
           child: Column(

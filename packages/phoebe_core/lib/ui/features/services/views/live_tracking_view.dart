@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../shared/utils/notification_helper.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 class LiveTrackingView extends StatefulWidget {
   const LiveTrackingView({super.key, required this.jobId, required this.address});
@@ -221,14 +222,14 @@ class _LiveTrackingViewState extends State<LiveTrackingView> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   Divider(
                     height: 1,
                     color: theme.brightness == Brightness.dark
                         ? const Color(0xFF222222)
                         : const Color(0xFFE5E5E5),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   // Worker info row
                   Row(
                     children: [
@@ -270,7 +271,7 @@ class _LiveTrackingViewState extends State<LiveTrackingView> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.xl),
                   // CTA button
                   Row(
                     children: [

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 import '../../../shared/utils/notification_helper.dart';
 
 class ApplianceDetailPage extends StatelessWidget {
@@ -28,13 +29,13 @@ class ApplianceDetailPage extends StatelessWidget {
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(context.pagePad),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (icon != null)
               Icon(icon, size: 48, color: theme.colorScheme.primary),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Row(
               children: [
                 Container(
@@ -59,16 +60,16 @@ class ApplianceDetailPage extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xxl),
             const Text('Specifications', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               'Model Ref: ${subtitle.contains('|') ? subtitle.split('|').first.trim() : subtitle}\nPower consumption: Standard eco-mode\nEnrolled in: SmartHome Diagnostics',
               style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13, height: 1.5),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xxl),
             const Text('Recent History', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Row(
               children: [
                 const Icon(CupertinoIcons.clock, size: 14, color: Colors.grey),
@@ -79,7 +80,7 @@ class ApplianceDetailPage extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSpacing.xxxl),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);

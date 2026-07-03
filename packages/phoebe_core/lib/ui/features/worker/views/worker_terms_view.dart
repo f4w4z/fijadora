@@ -1,12 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
-class WorkerTermsView extends ConsumerWidget {
+class WorkerTermsView extends StatelessWidget {
   const WorkerTermsView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -17,7 +17,7 @@ class WorkerTermsView extends ConsumerWidget {
         leading: GestureDetector(
           onTap: () => Navigator.pop(context),
           child: Padding(
-            padding: const EdgeInsets.only(left: 16),
+            padding: EdgeInsets.only(left: AppSpacing.lg),
             child: Icon(CupertinoIcons.chevron_left, size: 22, color: theme.colorScheme.onSurface),
           ),
         ),
@@ -27,7 +27,7 @@ class WorkerTermsView extends ConsumerWidget {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
+        padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 40),
         children: [
           Text(
             'Terms of Service',

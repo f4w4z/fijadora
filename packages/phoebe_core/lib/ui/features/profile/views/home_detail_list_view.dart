@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
 import 'appliance_detail_page.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 import '../../../shared/utils/notification_helper.dart';
 
 class HomeDetailListView extends StatelessWidget {
@@ -43,7 +44,7 @@ class HomeDetailListView extends StatelessWidget {
               ),
             )
           : ListView.builder(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(context.pagePad),
               itemCount: items.length,
               itemBuilder: (context, index) {
                 final item = items[index];
@@ -56,7 +57,7 @@ class HomeDetailListView extends StatelessWidget {
                     }
                   },
                   child: Container(
-                    margin: const EdgeInsets.only(bottom: 16.0),
+                    margin: const EdgeInsets.only(bottom: AppSpacing.lg),
                     padding: const EdgeInsets.all(16.0),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surface,
@@ -81,7 +82,7 @@ class HomeDetailListView extends StatelessWidget {
                                 item.title,
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                               ),
-                              const SizedBox(height: 4.0),
+                              const SizedBox(height: AppSpacing.xs),
                               Text(
                                 item.subtitle,
                                 style: TextStyle(

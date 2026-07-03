@@ -1,15 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
-class WorkerAvailabilityView extends ConsumerStatefulWidget {
+class WorkerAvailabilityView extends StatefulWidget {
   const WorkerAvailabilityView({super.key});
 
   @override
-  ConsumerState<WorkerAvailabilityView> createState() => _WorkerAvailabilityViewState();
+  State<WorkerAvailabilityView> createState() => _WorkerAvailabilityViewState();
 }
 
-class _WorkerAvailabilityViewState extends ConsumerState<WorkerAvailabilityView> {
+class _WorkerAvailabilityViewState extends State<WorkerAvailabilityView> {
   bool _acceptingJobs = true;
 
   final Map<int, TimeOfDay> _startTimes = {};
@@ -67,7 +67,7 @@ class _WorkerAvailabilityViewState extends ConsumerState<WorkerAvailabilityView>
         leading: GestureDetector(
           onTap: () => Navigator.pop(context),
           child: Padding(
-            padding: const EdgeInsets.only(left: 16),
+            padding: EdgeInsets.only(left: AppSpacing.lg),
             child: Icon(CupertinoIcons.chevron_left, size: 22, color: theme.colorScheme.onSurface),
           ),
         ),
@@ -77,7 +77,7 @@ class _WorkerAvailabilityViewState extends ConsumerState<WorkerAvailabilityView>
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
+        padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 40),
         children: [
           Container(
             padding: const EdgeInsets.all(16),

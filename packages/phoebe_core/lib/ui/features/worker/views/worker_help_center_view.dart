@@ -1,16 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/utils/notification_helper.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
-class WorkerHelpCenterView extends ConsumerStatefulWidget {
+class WorkerHelpCenterView extends StatefulWidget {
   const WorkerHelpCenterView({super.key});
 
   @override
-  ConsumerState<WorkerHelpCenterView> createState() => _WorkerHelpCenterViewState();
+  State<WorkerHelpCenterView> createState() => _WorkerHelpCenterViewState();
 }
 
-class _WorkerHelpCenterViewState extends ConsumerState<WorkerHelpCenterView> {
+class _WorkerHelpCenterViewState extends State<WorkerHelpCenterView> {
   int? _expandedFaq;
 
   final _faqs = [
@@ -35,7 +35,7 @@ class _WorkerHelpCenterViewState extends ConsumerState<WorkerHelpCenterView> {
         leading: GestureDetector(
           onTap: () => Navigator.pop(context),
           child: Padding(
-            padding: const EdgeInsets.only(left: 16),
+            padding: EdgeInsets.only(left: AppSpacing.lg),
             child: Icon(CupertinoIcons.chevron_left, size: 22, color: theme.colorScheme.onSurface),
           ),
         ),
@@ -45,7 +45,7 @@ class _WorkerHelpCenterViewState extends ConsumerState<WorkerHelpCenterView> {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
+        padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 40),
         children: [
           Text(
             'Frequently Asked Questions',

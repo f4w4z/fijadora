@@ -4,10 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/models/trade_type.dart';
 import '../view_models/jobs_view_model.dart';
 import '../../../../data/services/gemini_service.dart';
-import '../../../../ui/core/theme.dart';
-import '../../../../ui/shared/widgets/app_bottom_sheet.dart';
+import '../../../core/theme.dart';
+import '../../../shared/widgets/app_bottom_sheet.dart';
 import '../../../shared/utils/date_extensions.dart';
 import '../../../shared/utils/notification_helper.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 class NewRequestPage extends ConsumerStatefulWidget {
   final TradeType? initialTrade;
@@ -38,7 +39,7 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
     try {
       final gemini = ref.read(geminiServiceProvider);
       final diagnosis = await gemini.diagnoseImage(
-        imagePath: 'mock_photo.jpg',
+        imageBytes: null,
         tradeType: _selectedTrade,
       );
 
@@ -97,19 +98,20 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
   Future<void> _showTradePicker() async {
     final selected = await showAppBottomSheet<TradeType>(
       context: context,
+      maxHeight: 0.75,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text('Select Trade Type', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             'Choose the type of repair or service you need.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           ...TradeType.values.map((trade) {
             final isActive = trade == _selectedTrade;
             return InkWell(
@@ -279,7 +281,7 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                padding: EdgeInsets.symmetric(horizontal: context.pagePad, vertical: 16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -349,7 +351,7 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -377,7 +379,7 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     TextFormField(
                       controller: _descriptionController,
                       maxLines: 4,
@@ -392,7 +394,7 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
                     TextFormField(
                       controller: _addressController,
                       decoration: const InputDecoration(
@@ -406,7 +408,7 @@ class _NewRequestPageState extends ConsumerState<NewRequestPage> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
                     Row(
                       children: [
                         Expanded(

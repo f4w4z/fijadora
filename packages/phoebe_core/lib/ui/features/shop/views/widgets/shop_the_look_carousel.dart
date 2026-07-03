@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../../domain/models/product.dart';
 import '../product_detail_view.dart';
+import '../../../../core/utilities/responsive_helpers.dart';
 
 class ShopTheLookCarousel extends ConsumerStatefulWidget {
   final List<Product> bundles;
@@ -102,7 +103,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
 
         return Container(
           height: containerHeight,
-          margin: const EdgeInsets.symmetric(vertical: 8.0),
+          margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
           child: Stack(
             alignment: Alignment.center,
             children: sortedIndices.map((idx) {
@@ -197,7 +198,9 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
                         child: GestureDetector(
                           onTap: () => _bringToFront(idx),
                           behavior: HitTestBehavior.opaque,
-                          child: _buildCard(bundle, cardWidth, cardHeight),
+                          child: RepaintBoundary(
+                            child: _buildCard(bundle, cardWidth, cardHeight),
+                          ),
                         ),
                       ),
                     ),
@@ -268,7 +271,7 @@ class _ShopTheLookCarouselState extends ConsumerState<ShopTheLookCarousel> {
             
             // Content
             Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xxl, context.pagePad, AppSpacing.xxl),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

@@ -25,9 +25,15 @@ class SupabaseJobsRepository implements JobsRepository {
 
   @override
   Stream<List<MaintenanceJob>> streamJobs({required String userId, required UserRole role}) {
-    // Determine filter column based on role
+    if (role == UserRole.admin || role == UserRole.manager) {
+      return _client
+          .from('jobs')
+          .stream(primaryKey: ['id'])
+          .order('created_at', ascending: false)
+          .map((data) => data.map((json) => MaintenanceJob.fromJson(json)).toList());
+    }
+
     final filterColumn = role == UserRole.worker ? 'worker_id' : 'customer_id';
-    
     return _client
         .from('jobs')
         .stream(primaryKey: ['id'])
@@ -38,9 +44,12 @@ class SupabaseJobsRepository implements JobsRepository {
 
   @override
   Future<MaintenanceJob> createJob({required MaintenanceJob job}) async {
+    final json = job.toJson();
+    json.remove('id');
+    json.remove('created_at');
     final response = await _client
         .from('jobs')
-        .insert(job.toJson())
+        .insert(json)
         .select()
         .single();
     return MaintenanceJob.fromJson(response);
@@ -82,13 +91,25 @@ class SupabaseJobsRepository implements JobsRepository {
   }
 }
 
+class _MockSubscription {
+  final String userId;
+  final UserRole role;
+  final void Function(List<MaintenanceJob>) callback;
+
+  _MockSubscription(this.userId, this.role, this.callback);
+
+  void notify(List<MaintenanceJob> jobs) {
+    callback(jobs);
+  }
+}
+
 // 2. Mock Jobs Repository Implementation (for testing & fallback)
 class MockJobsRepository implements JobsRepository {
   MockJobsRepository() {
     _populateInitialMockJobs();
   }
 
-  final _controller = StreamController<List<MaintenanceJob>>.broadcast();
+  final List<_MockSubscription> _activeSubscriptions = [];
   final List<MaintenanceJob> _mockJobs = [];
 
   void _saveToHive() {
@@ -184,30 +205,65 @@ class MockJobsRepository implements JobsRepository {
         customerId: 'mock-customer',
         createdAt: DateTime.now().subtract(const Duration(days: 2)),
       ),
+      MaintenanceJob(
+        id: 'job-8',
+        description: 'Customer submitted approval review for completed bathroom tiling work.',
+        tradeType: TradeType.tiling,
+        status: JobStatus.waitingApproval,
+        scheduleDateTime: DateTime.now().subtract(const Duration(hours: 6)),
+        address: 'Apartment 4B, Oakwood Heights, NY',
+        images: const ['https://images.unsplash.com/photo-1622372738946-62e02505f1a4?w=400&h=300&fit=crop'],
+        customerId: 'mock-customer',
+        workerId: 'mock-worker-alex',
+        createdAt: DateTime.now().subtract(const Duration(hours: 24)),
+      ),
     ]);
     _saveToHive();
   }
 
-  void _notifyListeners(String userId, UserRole role) {
-    final filtered = _getFilteredJobs(userId, role);
-    _controller.add(filtered);
+  void _notifyListeners() {
+    for (final sub in _activeSubscriptions) {
+      sub.notify(_getFilteredJobs(sub.userId, sub.role));
+    }
   }
 
   List<MaintenanceJob> _getFilteredJobs(String userId, UserRole role) {
+    List<MaintenanceJob> filtered;
     if (role == UserRole.worker) {
-      return _mockJobs.where((j) => j.workerId == userId || j.workerId == null || j.workerId!.isEmpty).toList();
+      filtered = _mockJobs.where((j) => j.workerId == userId || j.workerId == null || j.workerId!.isEmpty).toList();
+    } else if (role == UserRole.admin || role == UserRole.manager) {
+      filtered = _mockJobs;
+    } else {
+      filtered = _mockJobs.where((j) => j.customerId == userId).toList();
     }
     // Sort by created date descending
-    final list = List<MaintenanceJob>.from(_mockJobs);
+    final list = List<MaintenanceJob>.from(filtered);
     list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return list;
   }
 
   @override
   Stream<List<MaintenanceJob>> streamJobs({required String userId, required UserRole role}) {
-    // Push the current cached values immediately to start the stream
-    Timer.run(() => _notifyListeners(userId, role));
-    return _controller.stream;
+    late final StreamController<List<MaintenanceJob>> localController;
+    
+    final subscription = _MockSubscription(userId, role, (jobsList) {
+      if (!localController.isClosed) {
+        localController.add(jobsList);
+      }
+    });
+
+    localController = StreamController<List<MaintenanceJob>>(
+      onListen: () {
+        _activeSubscriptions.add(subscription);
+        subscription.notify(_getFilteredJobs(userId, role));
+      },
+      onCancel: () {
+        _activeSubscriptions.remove(subscription);
+        localController.close();
+      },
+    );
+
+    return localController.stream;
   }
 
   @override
@@ -219,7 +275,7 @@ class MockJobsRepository implements JobsRepository {
     );
     _mockJobs.add(newJob);
     _saveToHive();
-    _notifyListeners(job.customerId, UserRole.customer);
+    _notifyListeners();
     return newJob;
   }
 
@@ -233,7 +289,7 @@ class MockJobsRepository implements JobsRepository {
     final updated = _mockJobs[index].copyWith(status: status);
     _mockJobs[index] = updated;
     _saveToHive();
-    _notifyListeners(updated.customerId, UserRole.customer);
+    _notifyListeners();
     return updated;
   }
 
@@ -257,13 +313,13 @@ class MockJobsRepository implements JobsRepository {
     );
     _mockJobs[index] = updated;
     _saveToHive();
-    _notifyListeners(updated.customerId, UserRole.customer);
+    _notifyListeners();
     return updated;
   }
 
   @override
   void dispose() {
-    _controller.close();
+    _activeSubscriptions.clear();
   }
 }
 

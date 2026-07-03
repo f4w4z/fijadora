@@ -315,6 +315,7 @@ class _ProductFullscreenGalleryState extends State<ProductFullscreenGallery> {
                           borderRadius: BorderRadius.circular(7),
                           child: CachedNetworkImage(
                             imageUrl: widget.images[i],
+                            memCacheWidth: 120,
                             fit: BoxFit.cover,
                             errorWidget: (c, u, e) => Container(
                               color: Colors.white12,

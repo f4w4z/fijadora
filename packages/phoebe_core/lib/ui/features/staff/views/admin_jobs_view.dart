@@ -1,16 +1,19 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../data/repositories/auth_repository.dart';
 import '../../../../data/repositories/jobs_repository.dart';
-import '../../../../data/services/notification_service.dart';
+import '../../../../data/services/app_notification_service.dart';
 import '../../../../domain/models/job_status.dart';
 import '../../../../domain/models/maintenance_job.dart';
 import '../../../../domain/models/trade_type.dart';
 import '../../../../domain/models/user_role.dart';
-import '../../../../ui/shared/utils/notification_helper.dart';
-import '../../../../ui/shared/widgets/animated_tap_scale.dart';
-import '../../../../ui/shared/widgets/app_bottom_sheet.dart';
+import '../../../shared/utils/notification_helper.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
+import '../../../shared/widgets/app_bottom_sheet.dart';
 import '../../../shared/utils/date_extensions.dart';
+import '../../auth/view_models/auth_view_model.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 class AdminJobsView extends ConsumerStatefulWidget {
   const AdminJobsView({super.key});
@@ -23,11 +26,13 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
   JobStatus? _activeFilter;
   String _searchQuery = '';
 
-  final List<Map<String, String>> _mockWorkers = [
-    {'id': 'mock-worker-alex', 'name': 'Alex Johnson (Plumbing/HVAC)'},
-    {'id': 'mock-worker-sarah', 'name': 'Sarah Smith (Electrical)'},
-    {'id': 'mock-worker-bob', 'name': 'Bob Davis (Carpentry/Painting)'},
-  ];
+  List<Map<String, String>> get _workers {
+    final authWorkers = ref.read(authRepositoryProvider).getAllWorkers();
+    return authWorkers.map((w) => {
+      'id': w.id,
+      'name': w.name,
+    }).toList();
+  }
 
   List<MaintenanceJob> _filterJobs(List<MaintenanceJob> jobs) {
     var filtered = jobs;
@@ -49,6 +54,8 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final jobsRepo = ref.watch(jobsRepositoryProvider);
+    final authUser = ref.watch(authViewModelProvider).user;
+    final adminUserId = authUser?.id ?? '';
 
     return Scaffold(
       body: SafeArea(
@@ -56,12 +63,12 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+              padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.md, context.pagePad, 0),
               child: Text('Jobs', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -0.5, color: theme.colorScheme.onSurface)),
             ),
             const SizedBox(height: 12),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: EdgeInsets.symmetric(horizontal: context.pagePad),
               child: SizedBox(
                 height: 36,
                 child: CupertinoSearchTextField(
@@ -77,7 +84,7 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
             const SizedBox(height: 16),
             Expanded(
               child: StreamBuilder<List<MaintenanceJob>>(
-                stream: jobsRepo.streamJobs(userId: 'admin', role: UserRole.admin),
+                stream: jobsRepo.streamJobs(userId: adminUserId, role: UserRole.admin),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -94,7 +101,7 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
                     slivers: [
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.only(left: 24),
+                          padding: EdgeInsets.only(left: context.pagePad),
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: Row(
@@ -152,13 +159,13 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
                         )
                       else
                         SliverPadding(
-                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+                          padding: EdgeInsets.fromLTRB(context.pagePad, 0, context.pagePad, 120),
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
                                 return JobCard(
                                   job: jobs[index],
-                                  workers: _mockWorkers,
+                                  workers: _workers,
                                 );
                               },
                               childCount: jobs.length,
@@ -181,12 +188,16 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
     for (final j in jobs) {
       switch (j.status) {
         case JobStatus.pending:
+        case JobStatus.quoted:
         case JobStatus.assigned:
           pending++;
         case JobStatus.workerEnRoute:
         case JobStatus.workerArrived:
         case JobStatus.inProgress:
         case JobStatus.waitingApproval:
+        case JobStatus.onHold:
+        case JobStatus.rescheduled:
+        case JobStatus.awaitingParts:
           active++;
         case JobStatus.completed:
           completed++;
@@ -277,15 +288,28 @@ class JobCard extends ConsumerStatefulWidget {
 class _JobCardState extends ConsumerState<JobCard> {
   bool _isAssigning = false;
 
+  String _workerName(String? workerId) {
+    if (workerId == null || workerId.isEmpty) return 'Unassigned';
+    final match = widget.workers.cast<Map<String, String>?>().firstWhere(
+      (w) => w!['id'] == workerId,
+      orElse: () => null,
+    );
+    return match?['name'] ?? workerId;
+  }
+
   Color _statusColor(JobStatus status) {
     switch (status) {
       case JobStatus.pending:
+      case JobStatus.quoted:
       case JobStatus.assigned:
         return Colors.orange;
       case JobStatus.workerEnRoute:
       case JobStatus.workerArrived:
       case JobStatus.inProgress:
       case JobStatus.waitingApproval:
+      case JobStatus.onHold:
+      case JobStatus.rescheduled:
+      case JobStatus.awaitingParts:
         return Colors.blue;
       case JobStatus.completed:
         return Colors.green;
@@ -299,6 +323,8 @@ class _JobCardState extends ConsumerState<JobCard> {
     switch (status) {
       case JobStatus.pending:
         return 'Pending';
+      case JobStatus.quoted:
+        return 'Quoted';
       case JobStatus.assigned:
         return 'Assigned';
       case JobStatus.workerEnRoute:
@@ -315,6 +341,12 @@ class _JobCardState extends ConsumerState<JobCard> {
         return 'Rejected';
       case JobStatus.cancelled:
         return 'Cancelled';
+      case JobStatus.onHold:
+        return 'On Hold';
+      case JobStatus.rescheduled:
+        return 'Rescheduled';
+      case JobStatus.awaitingParts:
+        return 'Awaiting Parts';
     }
   }
 
@@ -347,6 +379,7 @@ class _JobCardState extends ConsumerState<JobCard> {
     final theme = Theme.of(context);
     showAppBottomSheet(
       context: context,
+      maxHeight: 0.75,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -494,7 +527,7 @@ class _JobCardState extends ConsumerState<JobCard> {
             children: [
               Icon(CupertinoIcons.calendar_today, size: 12, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
               const SizedBox(width: 5),
-              Text(job.scheduleDateTime.formattedDateTime, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+              Text(job.scheduleDateTime?.formattedDateTime ?? 'Not scheduled', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
             ],
           ),
           const SizedBox(height: 12),
@@ -509,7 +542,7 @@ class _JobCardState extends ConsumerState<JobCard> {
                     ),
                     const SizedBox(width: 5),
                     Text(
-                      isUnassigned ? 'Unassigned' : '${job.workerId}',
+                      isUnassigned ? 'Unassigned' : _workerName(job.workerId),
                       style: TextStyle(fontSize: 12, fontWeight: isUnassigned ? FontWeight.w600 : FontWeight.w500, color: isUnassigned ? Colors.orange.shade700 : theme.colorScheme.onSurfaceVariant),
                       overflow: TextOverflow.ellipsis,
                     ),

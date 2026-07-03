@@ -155,12 +155,13 @@ class _ShopContent extends ConsumerWidget {
     final categories = ['All Products', ...products.map((p) => p.category).toSet()];
     final bundleProducts = products.where((p) => p.category == 'Bundles').toList();
 
+    final query = searchQuery.trim().toLowerCase();
     final filteredProducts = products.where((p) {
       final matchesCategory = selectedCategory == 'All Products' || p.category == selectedCategory;
-      final matchesSearch = searchQuery.isEmpty ||
-          p.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          p.description.toLowerCase().contains(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
+      if (!matchesCategory) return false;
+      if (query.isEmpty) return true;
+      return p.name.toLowerCase().contains(query) ||
+          p.description.toLowerCase().contains(query);
     }).toList();
 
     return RefreshIndicator(

@@ -3,19 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import '../../../../data/repositories/jobs_repository.dart';
-import '../../../../data/services/notification_service.dart';
+import '../../../../data/services/app_notification_service.dart';
 import '../../../../domain/models/job_status.dart';
 import '../../../../domain/models/maintenance_job.dart';
-import '../../../../ui/shared/widgets/animated_tap_scale.dart';
-import '../../../../ui/shared/widgets/custom_pinned_header.dart';
-import '../../../../ui/shared/widgets/floating_header_layout.dart';
-import '../../../../ui/shared/widgets/empty_state_widget.dart';
-import '../../admin/view_models/dispatch_provider.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
+import '../../../shared/widgets/custom_pinned_header.dart';
+import '../../../shared/widgets/floating_header_layout.dart';
+import '../../../shared/widgets/empty_state_widget.dart';
+import '../view_models/dispatch_provider.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../services/view_models/jobs_view_model.dart';
 import '../../../shared/utils/date_extensions.dart';
 import '../../../shared/utils/notification_helper.dart';
 import 'worker_job_details_view.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 final _dashboardFilterProvider = StateProvider<String>((ref) => 'All');
 final _searchQueryProvider = StateProvider<String>((ref) => '');
@@ -99,17 +100,19 @@ class _WorkerDashboardTabState extends ConsumerState<WorkerDashboardTab>
 
     final todayJobs = myJobs.where((j) {
       final now = DateTime.now();
-      return j.scheduleDateTime.year == now.year &&
-          j.scheduleDateTime.month == now.month &&
-          j.scheduleDateTime.day == now.day;
+      return j.scheduleDateTime != null &&
+          j.scheduleDateTime!.year == now.year &&
+          j.scheduleDateTime!.month == now.month &&
+          j.scheduleDateTime!.day == now.day;
     }).toList();
 
     final completedToday = myJobs
         .where((j) =>
             j.status == JobStatus.completed &&
-            j.scheduleDateTime.year == DateTime.now().year &&
-            j.scheduleDateTime.month == DateTime.now().month &&
-            j.scheduleDateTime.day == DateTime.now().day)
+            j.scheduleDateTime != null &&
+            j.scheduleDateTime!.year == DateTime.now().year &&
+            j.scheduleDateTime!.month == DateTime.now().month &&
+            j.scheduleDateTime!.day == DateTime.now().day)
         .length;
 
     final firstName = user?.name.isNotEmpty == true
@@ -159,7 +162,7 @@ class _WorkerDashboardTabState extends ConsumerState<WorkerDashboardTab>
                 // Greeting
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+                    padding: EdgeInsets.fromLTRB(context.pagePad, 0, context.pagePad, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -171,7 +174,7 @@ class _WorkerDashboardTabState extends ConsumerState<WorkerDashboardTab>
                             color: theme.colorScheme.onSurface,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: AppSpacing.xs),
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 500),
                           transitionBuilder: (child, animation) {
@@ -197,7 +200,7 @@ class _WorkerDashboardTabState extends ConsumerState<WorkerDashboardTab>
                 // Stats row
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                    padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.lg, context.pagePad, 0),
                     child: Row(
                       children: [
                         _StatCard(
@@ -231,7 +234,7 @@ class _WorkerDashboardTabState extends ConsumerState<WorkerDashboardTab>
                 // Filter chips
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                    padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.lg, context.pagePad, 0),
                     child: SizedBox(
                       height: 36,
                       child: ListView(
@@ -261,9 +264,9 @@ class _WorkerDashboardTabState extends ConsumerState<WorkerDashboardTab>
                     dispatchMode == DispatchModel.adminAssigned)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                      padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xxl, context.pagePad, 0),
                       child: Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: const EdgeInsets.all(AppSpacing.xxl),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(16),
@@ -300,14 +303,14 @@ class _WorkerDashboardTabState extends ConsumerState<WorkerDashboardTab>
                 if (filteredJobs.isNotEmpty) ...[
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            filter == 'All'
-                                ? 'All Jobs'
-                                : filter,
+                    padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xl, context.pagePad, 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          filter == 'All'
+                              ? 'All Jobs'
+                              : filter,
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
@@ -327,7 +330,7 @@ class _WorkerDashboardTabState extends ConsumerState<WorkerDashboardTab>
                     ),
                   ),
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
+                    padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 0),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
@@ -352,7 +355,7 @@ class _WorkerDashboardTabState extends ConsumerState<WorkerDashboardTab>
                 if (filteredJobs.isEmpty)
                   SliverToBoxAdapter(
                     child: SizedBox(
-                      height: 240,
+                      height: 35.h(context),
                       child: EmptyStateWidget(
                         icon: CupertinoIcons.hammer,
                         title: filter == 'Available'
@@ -365,7 +368,8 @@ class _WorkerDashboardTabState extends ConsumerState<WorkerDashboardTab>
                     ),
                   ),
 
-                const SliverToBoxAdapter(child: SizedBox(height: 140)),
+                SliverToBoxAdapter(child: SizedBox(height: 20.h(context))),
+
               ],
             ),
           );
@@ -596,7 +600,7 @@ class _WorkerJobCard extends ConsumerWidget {
                     size: 13, color: theme.colorScheme.onSurfaceVariant),
                 const SizedBox(width: 6),
                 Text(
-                  job.scheduleDateTime.formattedShort,
+                  job.scheduleDateTime?.formattedShort ?? 'Not scheduled',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -634,15 +638,16 @@ void _showJobPreview(BuildContext context, WidgetRef ref, MaintenanceJob job, St
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
     builder: (ctx) {
       return Container(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
+        padding: EdgeInsets.fromLTRB(ctx.pagePad, AppSpacing.xl, ctx.pagePad, 40),
         decoration: BoxDecoration(
           color: theme.scaffoldBackgroundColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Center(
               child: Container(
                 width: 36, height: 4,
@@ -699,7 +704,7 @@ void _showJobPreview(BuildContext context, WidgetRef ref, MaintenanceJob job, St
               children: [
                 Icon(CupertinoIcons.calendar, size: 14, color: theme.colorScheme.onSurfaceVariant),
                 const SizedBox(width: 8),
-                Text(job.scheduleDateTime.formattedShort, style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant)),
+                Text(job.scheduleDateTime?.formattedShort ?? 'Not scheduled', style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant)),
               ],
             ),
             const SizedBox(height: 16),
@@ -763,7 +768,8 @@ void _showJobPreview(BuildContext context, WidgetRef ref, MaintenanceJob job, St
                 },
               ),
             ),
-          ],
+            ],
+          ),
         ),
       );
     },

@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme_provider.dart';
+import '../../../core/utilities/responsive_helpers.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
 
 class SettingsView extends ConsumerWidget {
   const SettingsView({super.key});
@@ -17,21 +19,46 @@ class SettingsView extends ConsumerWidget {
         surfaceTintColor: Colors.transparent,
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
+        padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 40),
         children: [
           _section(context, 'General'),
-          _SettingsRow(icon: CupertinoIcons.bell_fill, title: 'Notifications', subtitle: 'Alert preferences'),
+          _SettingsRow(
+            icon: CupertinoIcons.bell_fill,
+            title: 'Notifications',
+            subtitle: 'Alert preferences',
+            onTap: () {},
+          ),
           const Divider(height: 1, indent: 44),
           const _AppearanceRow(),
           const Divider(height: 1, indent: 44),
-          _SettingsRow(icon: CupertinoIcons.creditcard, title: 'Payment Methods', subtitle: 'Cards & billing'),
+          _SettingsRow(
+            icon: CupertinoIcons.creditcard,
+            title: 'Payment Methods',
+            subtitle: 'Cards & billing',
+            onTap: () {},
+          ),
           const SizedBox(height: 28),
           _section(context, 'About'),
-          _SettingsRow(icon: CupertinoIcons.doc_text, title: 'Terms & Conditions', subtitle: 'Platform terms'),
+          _SettingsRow(
+            icon: CupertinoIcons.doc_text,
+            title: 'Terms & Conditions',
+            subtitle: 'Platform terms',
+            onTap: () {},
+          ),
           const Divider(height: 1, indent: 44),
-          _SettingsRow(icon: CupertinoIcons.shield, title: 'Privacy Policy', subtitle: 'Data handling'),
+          _SettingsRow(
+            icon: CupertinoIcons.shield,
+            title: 'Privacy Policy',
+            subtitle: 'Data handling',
+            onTap: () {},
+          ),
           const Divider(height: 1, indent: 44),
-          _SettingsRow(icon: CupertinoIcons.question_circle, title: 'Help & Support', subtitle: 'Get help'),
+          _SettingsRow(
+            icon: CupertinoIcons.question_circle,
+            title: 'Help & Support',
+            subtitle: 'Get help',
+            onTap: () {},
+          ),
         ],
       ),
     );
@@ -55,16 +82,24 @@ class SettingsView extends ConsumerWidget {
 }
 
 class _SettingsRow extends StatelessWidget {
-  const _SettingsRow({required this.icon, required this.title, this.subtitle});
+  const _SettingsRow({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    required this.onTap,
+  });
 
   final IconData icon;
   final String title;
   final String? subtitle;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return GestureDetector(
+    return AnimatedTapScale(
+      onTap: onTap,
+      scaleFactor: 0.98,
       child: SizedBox(
         height: 50,
         child: Row(

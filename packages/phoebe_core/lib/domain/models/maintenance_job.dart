@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'job_status.dart';
 import 'trade_type.dart';
@@ -8,7 +9,7 @@ class MaintenanceJob {
   final String description;
   final TradeType tradeType;
   final JobStatus status;
-  final DateTime scheduleDateTime;
+  final DateTime? scheduleDateTime;
   final String address;
   final List<String> images;
   final String customerId;
@@ -20,7 +21,7 @@ class MaintenanceJob {
     required this.description,
     required this.tradeType,
     required this.status,
-    required this.scheduleDateTime,
+    this.scheduleDateTime,
     required this.address,
     required this.images,
     required this.customerId,
@@ -34,9 +35,9 @@ class MaintenanceJob {
       description: json['description'] as String? ?? '',
       tradeType: TradeType.fromString(json['trade_type'] as String?),
       status: JobStatus.fromString(json['status'] as String?),
-      scheduleDateTime: DateTime.parse(json['schedule_date_time'] as String),
+      scheduleDateTime: json['schedule_date_time'] != null ? DateTime.parse(json['schedule_date_time'] as String) : null,
       address: json['address'] as String? ?? '',
-      images: (json['images'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [],
+      images: _parseImages(json['images']),
       customerId: json['customer_id'] as String? ?? '',
       workerId: json['worker_id'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
@@ -49,7 +50,7 @@ class MaintenanceJob {
       'description': description,
       'trade_type': tradeType.name,
       'status': status.name,
-      'schedule_date_time': scheduleDateTime.toIso8601String(),
+      'schedule_date_time': scheduleDateTime?.toIso8601String(),
       'address': address,
       'images': images,
       'customer_id': customerId,
@@ -93,7 +94,7 @@ class MaintenanceJob {
           description == other.description &&
           tradeType == other.tradeType &&
           status == other.status &&
-          scheduleDateTime == other.scheduleDateTime &&
+          scheduleDateTime == other.scheduleDateTime && // ignore: null_argument
           address == other.address &&
           listEquals(images, other.images) &&
           customerId == other.customerId &&
@@ -117,4 +118,16 @@ class MaintenanceJob {
   String toString() {
     return 'MaintenanceJob(id: $id, description: $description, tradeType: $tradeType, status: $status)';
   }
+}
+
+List<String> _parseImages(dynamic value) {
+  if (value == null) return const [];
+  if (value is List) return value.map((e) => e.toString()).toList();
+  if (value is String) {
+    try {
+      final parsed = jsonDecode(value);
+      if (parsed is List) return parsed.map((e) => e.toString()).toList();
+    } catch (_) {}
+  }
+  return const [];
 }

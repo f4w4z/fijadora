@@ -8,19 +8,21 @@ import '../../../../domain/models/job_status.dart';
 import '../../../../domain/models/trade_type.dart';
 import '../view_models/jobs_view_model.dart';
 import '../../auth/view_models/auth_view_model.dart';
-import '../../../../ui/shared/widgets/animated_tap_scale.dart';
-import '../../../../ui/shared/widgets/app_bottom_sheet.dart';
-import '../../../../ui/shared/widgets/custom_pinned_header.dart';
-import '../../../../ui/shared/widgets/empty_state_widget.dart';
-import '../../../../ui/shared/widgets/floating_header_layout.dart';
-import '../../../../ui/features/services/views/new_request_page.dart';
-import '../../../../ui/features/services/views/job_details_page.dart';
-import '../../../../ui/features/services/views/live_tracking_view.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
+import '../../../shared/widgets/app_animations.dart';
+import '../../../shared/widgets/app_bottom_sheet.dart';
+import '../../../shared/widgets/custom_pinned_header.dart';
+import '../../../shared/widgets/empty_state_widget.dart';
+import '../../../shared/widgets/floating_header_layout.dart';
+import 'new_request_page.dart';
+import 'job_details_page.dart';
+import 'live_tracking_view.dart';
 import '../../../shared/utils/date_extensions.dart';
 import '../../../core/theme.dart';
 import '../../../shared/utils/notification_helper.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
-final _quotes = [
+const _quotes = [
   'Your home runs on care',
   'Service made simple',
   'Every fix matters',
@@ -90,7 +92,6 @@ class ServicesTabView extends ConsumerStatefulWidget {
 
 class _ServicesTabViewState extends ConsumerState<ServicesTabView> with AutomaticKeepAliveClientMixin {
   int _quoteIndex = 0;
-  TradeType? _selectedTrade;
 
   @override
   void initState() {
@@ -132,6 +133,9 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> with Automati
       j.status == JobStatus.inProgress ||
       j.status == JobStatus.waitingApproval,
     ).toList();
+
+    final activeJobsSet = activeJobs.toSet();
+    final pastJobs = jobs.where((j) => !activeJobsSet.contains(j)).toList();
 
     final trades = TradeType.values;
 
@@ -199,10 +203,6 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> with Automati
             ),
           ),
         bodyBuilder: (context, topPadding) {
-          final filteredTrades = _selectedTrade == null
-              ? trades
-              : trades.where((t) => t == _selectedTrade).toList();
-
           return RefreshIndicator(
             onRefresh: () async => ref.read(jobsViewModelProvider).refresh(),
             child: CustomScrollView(
@@ -212,7 +212,7 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> with Automati
               // Hero greeting
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                  padding: EdgeInsets.fromLTRB(context.pagePad, 16, context.pagePad, 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -248,88 +248,14 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> with Automati
                 ),
               ),
 
-              // Service category chips
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-                  child: SizedBox(
-                    height: 36,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: trades.length + 1,
-                      itemBuilder: (context, index) {
-                        if (index == 0) {
-                          return _CategoryChip(
-                            label: 'All',
-                            isSelected: _selectedTrade == null,
-                            onTap: () => setState(() => _selectedTrade = null),
-                          );
-                        }
-                        final trade = trades[index - 1];
-                        return _CategoryChip(
-                          label: trade.displayName,
-                          isSelected: _selectedTrade == trade,
-                          onTap: () => setState(() => _selectedTrade = trade),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-
-              // Service grid
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'All Services',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface, letterSpacing: -0.3),
-                      ),
-                      TextButton(
-                        onPressed: () => _showNewRequest(context),
-                        child: Text('See All', style: TextStyle(color: theme.colorScheme.primary, fontSize: 13)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 0.68,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final trade = filteredTrades[index];
-                      return _ServiceCard(
-                        trade: trade,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => NewRequestPage(initialTrade: trade),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    childCount: filteredTrades.length,
-                  ),
-                ),
-              ),
+              // Service category chips + grid
+              SliverToBoxAdapter(child: _ServiceGrid(trades: trades)),
 
               // Active requests section
               if (activeJobs.isNotEmpty) ...[
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+                    padding: EdgeInsets.fromLTRB(context.pagePad, 28, context.pagePad, 0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -346,14 +272,17 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> with Automati
                   ),
                 ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                  padding: EdgeInsets.fromLTRB(context.pagePad, 8, context.pagePad, 0),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final job = activeJobs[index];
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: index == activeJobs.length - 1 ? 0 : 10),
-                          child: _ActiveJobCard(job: job, index: index),
+                        return StaggeredListItem(
+                          index: index,
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: index == activeJobs.length - 1 ? 0 : 10),
+                            child: _ActiveJobCard(job: job, index: index),
+                          ),
                         );
                       },
                       childCount: activeJobs.length,
@@ -366,7 +295,7 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> with Automati
               if (jobs.length > activeJobs.length) ...[
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+                    padding: EdgeInsets.fromLTRB(context.pagePad, 28, context.pagePad, 0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -383,15 +312,17 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> with Automati
                   ),
                 ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                  padding: EdgeInsets.fromLTRB(context.pagePad, 8, context.pagePad, 0),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        final pastJobs = jobs.where((j) => !activeJobs.contains(j)).toList();
                         final job = pastJobs[index];
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: index == pastJobs.length - 1 ? 0 : 10),
-                          child: _ActiveJobCard(job: job, index: index),
+                        return StaggeredListItem(
+                          index: index,
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: index == pastJobs.length - 1 ? 0 : 10),
+                            child: _ActiveJobCard(job: job, index: index),
+                          ),
                         );
                       },
                       childCount: jobs.length - activeJobs.length,
@@ -403,7 +334,7 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> with Automati
               if (jobs.isEmpty)
                 SliverToBoxAdapter(
                   child: SizedBox(
-                    height: 280,
+                    height: 35.h(context),
                     child: EmptyStateWidget(
                       icon: CupertinoIcons.hammer,
                       title: 'No requests yet',
@@ -422,10 +353,109 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> with Automati
   }
 
   void _showNewRequest(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const NewRequestPage()));
+    Navigator.push(context, AppPageRoute(builder: (_) => const NewRequestPage()));
   }
 
   void _scrollToMyRequests() {}
+}
+
+class _ServiceGrid extends StatefulWidget {
+  final List<TradeType> trades;
+  const _ServiceGrid({required this.trades});
+
+  @override
+  State<_ServiceGrid> createState() => _ServiceGridState();
+}
+
+class _ServiceGridState extends State<_ServiceGrid> {
+  TradeType? _selectedTrade;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final trades = widget.trades;
+    final filteredTrades = _selectedTrade == null
+        ? trades
+        : trades.where((t) => t == _selectedTrade).toList();
+
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(context.pagePad, 12, context.pagePad, 0),
+          child: SizedBox(
+            height: 36,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: trades.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return _CategoryChip(
+                    label: 'All',
+                    isSelected: _selectedTrade == null,
+                    onTap: () => setState(() => _selectedTrade = null),
+                  );
+                }
+                final trade = trades[index - 1];
+                return _CategoryChip(
+                  label: trade.displayName,
+                  isSelected: _selectedTrade == trade,
+                  onTap: () => setState(() => _selectedTrade = trade),
+                );
+              },
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(context.pagePad, 12, context.pagePad, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'All Services',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface, letterSpacing: -0.3),
+              ),
+              TextButton(
+                onPressed: () => _showNewRequest(context),
+                child: Text('See All', style: TextStyle(color: theme.colorScheme.primary, fontSize: 13)),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(context.pagePad, 4, context.pagePad, 0),
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: context.gridCols,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.68,
+            ),
+            itemBuilder: (context, index) {
+              final trade = filteredTrades[index];
+              return _ServiceCard(
+                trade: trade,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    AppPageRoute(
+                      builder: (_) => NewRequestPage(initialTrade: trade),
+                    ),
+                  );
+                },
+              );
+            },
+            itemCount: filteredTrades.length,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showNewRequest(BuildContext context) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const NewRequestPage()));
+  }
 }
 
 class _CategoryChip extends StatelessWidget {
@@ -443,7 +473,9 @@ class _CategoryChip extends StatelessWidget {
     final theme = Theme.of(context);
     return AnimatedTapScale(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: AppDurations.fast,
+        curve: AppCurves.defaultCurve,
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14),
         height: 36,
@@ -502,7 +534,10 @@ class _ServiceCard extends StatelessWidget {
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                     child: CachedNetworkImage(
                       imageUrl: _serviceImages[trade]!,
+                      memCacheWidth: 360,
                       fit: BoxFit.cover,
+                      fadeInDuration: AppDurations.normal,
+                      fadeOutDuration: AppDurations.fast,
                       placeholder: (context, url) => Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
@@ -631,19 +666,22 @@ class _ActiveJobCard extends ConsumerWidget {
   final int index;
 
   String get _dateLabel {
-    if (job.status == JobStatus.completed) return 'Completed ${job.scheduleDateTime.formattedShort}';
+    final dt = job.scheduleDateTime?.formattedShort ?? '';
+    if (job.status == JobStatus.completed) return 'Completed $dt';
     if (job.status == JobStatus.cancelled) return 'Cancelled';
     if (job.status == JobStatus.rejected) return 'Rejected';
-    return job.scheduleDateTime.formattedShort;
+    return dt;
   }
 
-  String get _daysLabel {
+  String _daysLabel(DateTime now) {
+    final dt = job.scheduleDateTime;
+    if (dt == null) return '';
     if (job.status == JobStatus.completed || job.status == JobStatus.cancelled || job.status == JobStatus.rejected) {
-      final days = DateTime.now().difference(job.scheduleDateTime).inDays;
+      final days = now.difference(dt).inDays;
       if (days == 0) return 'Today';
       return '${days}d ago';
     }
-    final days = job.scheduleDateTime.difference(DateTime.now()).inDays;
+    final days = dt.difference(now).inDays;
     if (days == 0) return 'Today';
     if (days < 0) return 'Overdue';
     return '${days}d left';
@@ -659,7 +697,11 @@ class _ActiveJobCard extends ConsumerWidget {
       case JobStatus.cancelled: return 'Cancelled';
       case JobStatus.rejected: return 'Rejected';
       case JobStatus.pending: return 'Pending';
+      case JobStatus.quoted: return 'Quoted';
       case JobStatus.assigned: return 'Assigned';
+      case JobStatus.onHold: return 'On Hold';
+      case JobStatus.rescheduled: return 'Rescheduled';
+      case JobStatus.awaitingParts: return 'Awaiting Parts';
     }
   }
 
@@ -667,6 +709,7 @@ class _ActiveJobCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final statusColor = job.status.color(context);
+    final now = DateTime.now();
 
     return Dismissible(
       key: ValueKey('job_${job.id}'),
@@ -755,7 +798,7 @@ class _ActiveJobCard extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.xs),
                   Row(
                     children: [
                       Icon(CupertinoIcons.calendar, size: 10, color: theme.colorScheme.onSurfaceVariant),
@@ -770,7 +813,7 @@ class _ActiveJobCard extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        _daysLabel,
+                        _daysLabel(now),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -798,7 +841,7 @@ class _ActiveJobCard extends ConsumerWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(
+                  Navigator.push(context, AppPageRoute(
                     builder: (_) => LiveTrackingView(jobId: job.id, address: job.address),
                   ));
                 },
@@ -812,6 +855,7 @@ class _ActiveJobCard extends ConsumerWidget {
               ),
             )
           : null,
+      maxHeight: 0.75,
     );
   }
 }
@@ -850,22 +894,22 @@ class _JobDetailsSheetState extends ConsumerState<_JobDetailsSheet> {
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xxl),
         Text('Description', style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 6),
         Text(job.description, style: theme.textTheme.bodyLarge),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         Text('Address / Location', style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 6),
         Text(job.address, style: theme.textTheme.bodyMedium),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         Text('Scheduled Time', style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 6),
-        Text(job.scheduleDateTime.formattedFull, style: theme.textTheme.bodyMedium),
+        Text(job.scheduleDateTime?.formattedFull ?? '', style: theme.textTheme.bodyMedium),
         if (job.status == JobStatus.waitingApproval) ...[
           CustomerReviewPanel(jobId: job.id),
         ],
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xxl),
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(

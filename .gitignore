@@ -41,3 +41,13 @@ app.*.symbols
 
 # Obfuscation related
 app.*.map.json
+
+# Firebase configuration & service accounts
+GoogleService-Info*.plist
+google-services*.json
+*-adminsdk-*.json
+
+# Local scripts and run files
+run.bat
+run.ps1
+

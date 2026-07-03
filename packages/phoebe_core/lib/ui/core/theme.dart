@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppTheme {
   AppTheme._();
 
-  // Radius system
+  // Radius system — static for now; could be made adaptive per-screen via responsive_helpers.dart
   static const double radiusSm = 12.0;
   static const double radiusMd = 16.0;
   static const double radiusLg = 24.0;
@@ -53,7 +53,6 @@ class AppTheme {
         outline: surfaceBorder,
       ),
       textTheme: base.textTheme.apply(
-        fontFamily: 'SF Pro Display',
         fontFamilyFallback: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
       ).copyWith(
         displayLarge: const TextStyle(
@@ -280,7 +279,6 @@ class AppTheme {
         outline: darkSurfaceBorder,
       ),
       textTheme: base.textTheme.apply(
-        fontFamily: 'SF Pro Display',
         fontFamilyFallback: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
       ).copyWith(
         displayLarge: const TextStyle(fontSize: 48, fontWeight: FontWeight.w300, color: darkOnSurface, height: 1.0, letterSpacing: -0.5),

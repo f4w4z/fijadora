@@ -1,3 +1,4 @@
+import 'package:app_links/app_links.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,8 @@ void runPhoebeApp(
   AppConfig config, {
   FirebaseOptions? firebaseOptions,
 }) async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final binding = WidgetsFlutterBinding.ensureInitialized();
+  binding.deferFirstFrame(); // Keep native splash screen visible while initializing
 
   await CrashReportingService.init();
 
@@ -37,27 +39,72 @@ void runPhoebeApp(
     return true;
   };
 
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.dark,
-    systemNavigationBarColor: Colors.transparent,
-    systemNavigationBarIconBrightness: Brightness.dark,
-  ));
+  // Run Hive and Supabase initializations in parallel!
+  await Future.wait([
+    Future(() async {
+      try {
+        await Hive.initFlutter();
+        await Hive.openBox('cached_jobs');
+        await Hive.openBox('app_preferences');
+        debugPrint('Hive initialized (cached_jobs, app_preferences).');
+      } catch (e) {
+        debugPrint('Hive initialization failed: $e');
+      }
+    }),
+    Future(() async {
+      try {
+        await SupabaseService.instance.initialize();
+      } catch (e) {
+        debugPrint('Supabase initialization failed: $e. Running with mock fallback.');
+      }
+    }),
+  ]);
 
+  // Synchronously configure the initial status bar and navigation bar brightness
+  // using the saved user theme from Hive, preventing dark/light overlay flashes on startup.
   try {
-    await Hive.initFlutter();
-    await Hive.openBox('cached_jobs');
-    await Hive.openBox('app_preferences');
-    debugPrint('Hive initialized (cached_jobs, app_preferences).');
+    final box = Hive.box('app_preferences');
+    final storedTheme = box.get('theme_mode', defaultValue: 'system') as String;
+    final isDark = storedTheme == 'dark' ||
+        (storedTheme == 'system' && PlatformDispatcher.instance.platformBrightness == Brightness.dark);
+
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+    ));
   } catch (e) {
-    debugPrint('Hive initialization failed: $e');
+    debugPrint('Failed to set initial SystemUI style: $e');
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ));
   }
 
+  // Retrieve initial deep link during startup
+  Uri? initialUri;
   try {
-    await SupabaseService.instance.initialize();
+    initialUri = await AppLinks().getInitialLink();
+    if (initialUri != null) {
+      debugPrint('runPhoebeApp - Initial link fetched at startup: $initialUri');
+      if (initialUri.toString().contains('type=recovery') ||
+          initialUri.toString().contains('access_token') ||
+          initialUri.fragment.contains('type=recovery')) {
+        try {
+          await SupabaseService.instance.client.auth.getSessionFromUrl(initialUri);
+          debugPrint('runPhoebeApp - Successfully parsed Supabase recovery session from link');
+        } catch (e) {
+          debugPrint('runPhoebeApp - Failed to process recovery session: $e');
+        }
+      }
+    }
   } catch (e) {
-    debugPrint('Supabase initialization failed: $e. Running with mock fallback.');
+    debugPrint('runPhoebeApp - Failed to fetch initial link: $e');
   }
 
   try {
@@ -70,21 +117,23 @@ void runPhoebeApp(
     debugPrint('Failed to log telemetry launch: $e');
   }
 
-  final pushService = PushNotificationService.instance;
-  try {
-    await pushService.init(options: firebaseOptions);
-  } catch (e) {
+  // Initialize push notification services in the background so it doesn't block the UI
+  PushNotificationService.instance.init(options: firebaseOptions).catchError((e) {
     debugPrint('Push notification initialization failed: $e');
-  }
+  });
 
   runApp(
     ProviderScope(
       overrides: [
         appConfigProvider.overrideWithValue(config),
+        initialUriProvider.overrideWithValue(initialUri),
       ],
       child: const PhoebeApp(),
     ),
   );
+
+  // Allow the first frame to render now that runApp was called with all dependencies loaded
+  binding.allowFirstFrame();
 }
 
 class PhoebeApp extends ConsumerStatefulWidget {
@@ -137,12 +186,12 @@ class _PhoebeAppState extends ConsumerState<PhoebeApp> with WidgetsBindingObserv
 
     final isDark = themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system &&
-            MediaQuery.of(context).platformBrightness == Brightness.dark);
+            MediaQuery.platformBrightnessOf(context) == Brightness.dark);
 
-    final textScale = MediaQuery.of(context).textScaler.scale(1.0).clamp(0.85, 1.3);
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0).clamp(0.85, 1.3);
 
-    return MediaQuery(
-      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
+    return _TextScaleWrapper(
+      textScale: textScale,
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: isDark
             ? const SystemUiOverlayStyle(
@@ -175,18 +224,35 @@ class _PhoebeAppState extends ConsumerState<PhoebeApp> with WidgetsBindingObserv
   }
 }
 
+class _TextScaleWrapper extends StatelessWidget {
+  const _TextScaleWrapper({required this.textScale, required this.child});
+  final double textScale;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
+      child: child,
+    );
+  }
+}
+
 class _PlatformScrollBehavior extends ScrollBehavior {
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) {
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.iOS:
-      case TargetPlatform.macOS:
-        return const BouncingScrollPhysics();
-      case TargetPlatform.android:
-      case TargetPlatform.fuchsia:
-      case TargetPlatform.linux:
-      case TargetPlatform.windows:
-        return const ClampingScrollPhysics();
-    }
+    return defaultTargetPlatform == TargetPlatform.iOS || 
+           defaultTargetPlatform == TargetPlatform.macOS
+        ? const BouncingScrollPhysics()
+        : const ClampingScrollPhysics();
+  }
+
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return child;
   }
 }

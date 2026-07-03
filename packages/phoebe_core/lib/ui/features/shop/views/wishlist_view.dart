@@ -9,6 +9,7 @@ import 'product_detail_view.dart';
 import '../../../shared/utils/notification_helper.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
 import '../../../shared/widgets/error_state_widget.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 class WishlistView extends ConsumerWidget {
   const WishlistView({super.key});
@@ -39,7 +40,7 @@ class WishlistView extends ConsumerWidget {
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.all(24.0),
+            padding: EdgeInsets.symmetric(horizontal: context.pagePad, vertical: AppSpacing.xxl),
             itemCount: products.length,
             itemBuilder: (context, index) {
               final product = products[index];
@@ -72,6 +73,7 @@ class WishlistView extends ConsumerWidget {
                           height: 72,
                           child: CachedNetworkImage(
                             imageUrl: product.imageUrl,
+                            memCacheWidth: 150,
                             fit: BoxFit.cover,
                             placeholder: (context, url) => Container(color: theme.colorScheme.surfaceContainerHighest),
                             errorWidget: (context, url, error) => Container(

@@ -3,12 +3,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../data/services/notification_service.dart';
-import '../../../../ui/shared/utils/notification_helper.dart';
+import '../../../../data/services/app_notification_service.dart';
+import '../../../shared/utils/notification_helper.dart';
 import 'worker_dashboard_view.dart';
 import 'worker_schedule_view.dart';
 import 'worker_profile_view.dart';
-
 class WorkerShellView extends ConsumerStatefulWidget {
   const WorkerShellView({super.key});
 
@@ -56,9 +55,9 @@ class _WorkerShellViewState extends ConsumerState<WorkerShellView>
   ];
 
   final List<Widget> _tabs = const [
-    WorkerDashboardTab(),
-    WorkerScheduleView(),
-    WorkerProfileView(),
+    RepaintBoundary(child: WorkerDashboardTab()),
+    RepaintBoundary(child: WorkerScheduleView()),
+    RepaintBoundary(child: WorkerProfileView()),
   ];
 
   @override

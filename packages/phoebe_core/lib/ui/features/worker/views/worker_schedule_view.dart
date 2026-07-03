@@ -2,12 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/models/maintenance_job.dart';
-import '../../../../ui/shared/widgets/animated_tap_scale.dart';
-import '../../../../ui/shared/widgets/custom_pinned_header.dart';
-import '../../../../ui/shared/widgets/floating_header_layout.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
+import '../../../shared/widgets/custom_pinned_header.dart';
+import '../../../shared/widgets/floating_header_layout.dart';
 import '../../services/view_models/jobs_view_model.dart';
 import '../../../shared/utils/date_extensions.dart';
 import 'worker_job_details_view.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 const _weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -71,19 +72,21 @@ class _WorkerScheduleViewState extends ConsumerState<WorkerScheduleView>
 
     final jobsOnDay = jobs.where((j) {
       final d = j.scheduleDateTime;
-      return d.year == selected.year &&
+      return d != null &&
+          d.year == selected.year &&
           d.month == selected.month &&
           d.day == selected.day;
     }).toList();
 
     final monthJobs = jobs.where((j) {
-      return j.scheduleDateTime.year == _focusedMonth.year &&
-          j.scheduleDateTime.month == _focusedMonth.month;
+      return j.scheduleDateTime != null &&
+          j.scheduleDateTime!.year == _focusedMonth.year &&
+          j.scheduleDateTime!.month == _focusedMonth.month;
     }).toList();
 
     final daysWithJobs = <int>{};
     for (final j in monthJobs) {
-      daysWithJobs.add(j.scheduleDateTime.day);
+      daysWithJobs.add(j.scheduleDateTime!.day);
     }
 
     final daysInMonth =
@@ -163,7 +166,7 @@ class _WorkerScheduleViewState extends ConsumerState<WorkerScheduleView>
                     ),
                   ),
                 ),
-                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
 
                 // Weekday labels
                 SliverToBoxAdapter(
@@ -188,7 +191,7 @@ class _WorkerScheduleViewState extends ConsumerState<WorkerScheduleView>
                     ),
                   ),
                 ),
-                const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                SliverToBoxAdapter(child: SizedBox(height: AppSpacing.sm)),
 
                 // Calendar grid
                 SliverToBoxAdapter(
@@ -204,7 +207,7 @@ class _WorkerScheduleViewState extends ConsumerState<WorkerScheduleView>
                     behavior: HitTestBehavior.translucent,
                     child: Padding(
                       padding:
-                          const EdgeInsets.symmetric(horizontal: 24),
+                          EdgeInsets.symmetric(horizontal: context.pagePad),
                       child: Column(
                         children: List.generate(
                             totalCells ~/ 7, (rowIndex) {
@@ -384,8 +387,8 @@ class _WorkerScheduleViewState extends ConsumerState<WorkerScheduleView>
                   ),
                 ),
 
-                const SliverToBoxAdapter(
-                    child: SizedBox(height: 140)),
+                SliverToBoxAdapter(
+                    child: SizedBox(height: 20.h(context))),
               ],
             ),
           );
@@ -449,7 +452,7 @@ class _ScheduleJobCard extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    job.scheduleDateTime.formattedShort,
+                    job.scheduleDateTime?.formattedShort ?? 'Not scheduled',
                     style: TextStyle(
                       fontSize: 11,
                       color: theme.colorScheme.onSurfaceVariant,

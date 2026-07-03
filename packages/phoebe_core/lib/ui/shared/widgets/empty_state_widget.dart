@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/utilities/responsive_helpers.dart';
+import 'app_animations.dart';
 
 class EmptyStateWidget extends StatelessWidget {
   const EmptyStateWidget({
@@ -19,21 +21,22 @@ class EmptyStateWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Center(
+    return AnimatedAppearance(
+      child: Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 32),
+        padding: EdgeInsets.symmetric(horizontal: context.pagePad * 2, vertical: AppSpacing.xxxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.xxl),
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(28),
               ),
               child: Icon(icon, size: 48, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xxl),
             Text(
               title,
               style: TextStyle(
@@ -45,7 +48,7 @@ class EmptyStateWidget extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               message,
               style: TextStyle(
@@ -58,7 +61,7 @@ class EmptyStateWidget extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xxl),
               SizedBox(
                 height: 48,
                 child: ElevatedButton(
@@ -69,6 +72,7 @@ class EmptyStateWidget extends StatelessWidget {
             ],
           ],
         ),
+      ),
       ),
     );
   }

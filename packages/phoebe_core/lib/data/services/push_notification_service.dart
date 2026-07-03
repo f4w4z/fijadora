@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'supabase_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -46,10 +47,14 @@ class PushNotificationService {
 
     _fcmToken = await messaging.getToken();
     debugPrint('PushNotificationService - FCM Token: $_fcmToken');
+    if (_fcmToken != null) {
+      await _storeToken(_fcmToken!);
+    }
 
     messaging.onTokenRefresh.listen((token) {
       _fcmToken = token;
       debugPrint('PushNotificationService - Token refreshed: $token');
+      _storeToken(token);
     });
 
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
@@ -155,6 +160,20 @@ class PushNotificationService {
         AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(
       androidChannel,
     );
+  }
+
+  Future<void> _storeToken(String token) async {
+    try {
+      final client = SupabaseService.instance.client;
+      final user = client.auth.currentUser;
+      if (user == null) return;
+      await client.from('fcm_tokens').upsert({
+        'user_id': user.id,
+        'token': token,
+      }, onConflict: 'user_id,token');
+    } catch (e) {
+      debugPrint('PushNotificationService - Failed to store FCM token: $e');
+    }
   }
 
   void dispose() {

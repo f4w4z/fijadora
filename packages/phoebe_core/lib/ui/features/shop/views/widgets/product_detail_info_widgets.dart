@@ -1,5 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:phoebe_core/ui/shared/widgets/star_rating.dart';
+import '../../../../core/utilities/responsive_helpers.dart';
 
 class FloatingIconButton extends StatelessWidget {
   const FloatingIconButton({
@@ -160,8 +161,19 @@ class ReviewCard extends StatelessWidget {
   final Map<String, dynamic> review;
   final double rating;
 
+  String _formatReviewDate(String isoDate) {
+    try {
+      final dt = DateTime.parse(isoDate);
+      return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+    } catch (_) {
+      return '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final userName = review['user_name'] as String? ?? 'User';
+    final createdAt = review['created_at'] as String? ?? '';
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -183,7 +195,7 @@ class ReviewCard extends StatelessWidget {
                     radius: 14,
                     backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
                     child: Text(
-                      (review['user'] as String? ?? 'G')[0].toUpperCase(),
+                      userName[0].toUpperCase(),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -191,9 +203,9 @@ class ReviewCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Text(
-                    review['user'] as String? ?? 'Guest User',
+                    userName,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
@@ -201,27 +213,19 @@ class ReviewCard extends StatelessWidget {
                   ),
                 ],
               ),
-              Text(
-                review['date'] as String? ?? '',
-                style: TextStyle(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 11,
+              if (createdAt.isNotEmpty)
+                Text(
+                  _formatReviewDate(createdAt),
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontSize: 11,
+                  ),
                 ),
-              ),
             ],
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: List.generate(5, (i) => Padding(
-              padding: const EdgeInsets.only(right: 2),
-              child: Icon(
-                i < rating ? CupertinoIcons.star_fill : CupertinoIcons.star,
-                size: 12,
-                color: Colors.amber,
-              ),
-            )),
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
+          StarRating(rating: rating, onChanged: null, size: 12),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             review['comment'] as String? ?? '',
             style: theme.textTheme.bodyMedium?.copyWith(

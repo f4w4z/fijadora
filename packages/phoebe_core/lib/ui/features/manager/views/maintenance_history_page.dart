@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 class MaintenanceHistoryPage extends StatelessWidget {
   const MaintenanceHistoryPage({
@@ -26,7 +27,7 @@ class MaintenanceHistoryPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+            padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xl, context.pagePad, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -73,7 +74,7 @@ class MaintenanceHistoryPage extends StatelessWidget {
                     ),
                   )
                 : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+                    padding: EdgeInsets.fromLTRB(context.pagePad, 0, context.pagePad, 40),
                     itemCount: history.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {

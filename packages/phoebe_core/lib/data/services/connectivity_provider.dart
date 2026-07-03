@@ -29,6 +29,3 @@ final connectivityProvider = StreamProvider<ConnectivityStatus>((ref) {
   return controller.stream;
 });
 
-final isOnlineProvider = Provider<bool>((ref) {
-  return ref.watch(connectivityProvider).valueOrNull == ConnectivityStatus.connected;
-});

@@ -3,9 +3,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../ui/shared/widgets/animated_tap_scale.dart';
-import '../../../../ui/shared/utils/notification_helper.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
+import '../../../shared/widgets/app_animations.dart';
+import '../../../shared/utils/notification_helper.dart';
 import '../view_models/auth_view_model.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 class LoginView extends ConsumerStatefulWidget {
   const LoginView({super.key});
@@ -57,41 +59,49 @@ class _LoginViewState extends ConsumerState<LoginView> {
     final viewModel = ref.watch(authViewModelProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final viewportHeight = MediaQuery.sizeOf(context).height -
+        MediaQuery.paddingOf(context).top -
+        MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
-                ),
-                child: IntrinsicHeight(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Spacer(flex: 3),
+        child: SizedBox(
+          height: viewportHeight,
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.symmetric(horizontal: context.pagePad),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: viewportHeight * 0.06),
 
-                        // Custom Geometric Premium Logo Component
-                        const _PremiumLogo(),
-                        const SizedBox(height: 12.0),
-                        
-                        Text(
-                          'Zero-stress property management & marketplace',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            letterSpacing: 0.2,
+                        FadeSlideTransition(
+                          delay: const Duration(milliseconds: 0),
+                          child: const _PremiumLogo(),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        FadeSlideTransition(
+                          delay: const Duration(milliseconds: 50),
+                          child: Text(
+                            'Zero-stress property management & marketplace',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              letterSpacing: 0.2,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
                         ),
 
-                        const Spacer(flex: 3),
+                        const SizedBox(height: 32),
 
+                        FadeSlideTransition(
+                          delay: const Duration(milliseconds: 100),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                         // Email Input Section
                         Row(
                           children: [
@@ -105,7 +115,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8.0),
+                        const SizedBox(height: AppSpacing.sm),
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -124,8 +134,16 @@ class _LoginViewState extends ConsumerState<LoginView> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 20.0),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
 
+                        FadeSlideTransition(
+                          delay: const Duration(milliseconds: 150),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                         // Password Input Section
                         Row(
                           children: [
@@ -139,7 +157,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8.0),
+                        const SizedBox(height: AppSpacing.sm),
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
@@ -171,35 +189,60 @@ class _LoginViewState extends ConsumerState<LoginView> {
                           },
                         ),
 
-                        const SizedBox(height: 32.0),
+                        const SizedBox(height: AppSpacing.sm),
+
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => context.push('/forgot-password'),
+                            child: Text('Forgot Password?', style: TextStyle(fontSize: 13, color: theme.colorScheme.primary)),
+                          ),
+                        ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: AppSpacing.lg),
 
                         // Primary Sign In Button
-                        AnimatedTapScale(
+                        FadeSlideTransition(
+                          delay: const Duration(milliseconds: 200),
+                          child: AnimatedTapScale(
                           onTap: viewModel.isLoading ? () {} : _handleLogin,
                           child: SizedBox(
                             height: 56,
                             child: ElevatedButton(
                               onPressed: viewModel.isLoading ? null : _handleLogin,
-                              child: viewModel.isLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                      ),
-                                    )
-                                  : const Text('Sign In'),
+                              child: AnimatedSwitcher(
+                                duration: AppDurations.fast,
+                                switchInCurve: AppCurves.defaultCurve,
+                                switchOutCurve: AppCurves.defaultCurve,
+                                transitionBuilder: (child, animation) {
+                                  return FadeTransition(opacity: animation, child: child);
+                                },
+                                child: viewModel.isLoading
+                                    ? const SizedBox(
+                                        key: ValueKey('login_loading'),
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                        ),
+                                      )
+                                    : const Text('Sign In', key: ValueKey('login_text')),
+                              ),
                             ),
                           ),
                         ),
+                        ),
 
                         if (!kReleaseMode) ...[
-                          const SizedBox(height: 28.0),
+                          const SizedBox(height: 20.0),
 
                           // Demo Accounts Section Redesign
                           Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: isDark
                                   ? theme.colorScheme.primary.withValues(alpha: 0.08)
@@ -224,7 +267,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: AppSpacing.sm),
                                 Column(
                                   children: [
                                     Row(
@@ -238,7 +281,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                                             onTap: () => _useCredentials('customer@phoebe.com'),
                                           ),
                                         ),
-                                        const SizedBox(width: 10),
+                                        const SizedBox(width: 8),
                                         Expanded(
                                           child: _DemoAccountCard(
                                             roleName: 'Service Worker',
@@ -250,7 +293,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 10),
+                                    const SizedBox(height: 8),
                                     Row(
                                       children: [
                                         Expanded(
@@ -262,7 +305,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                                             onTap: () => _useCredentials('phoebe.admin@phoebe.com'),
                                           ),
                                         ),
-                                        const SizedBox(width: 10),
+                                        const SizedBox(width: 8),
                                         Expanded(
                                           child: _DemoAccountCard(
                                             roleName: 'Property Manager',
@@ -280,7 +323,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                             ),
                           ),
 
-                          const SizedBox(height: 28.0),
+                          const SizedBox(height: 20.0),
                         ],
 
                         // Sign Up Link Row
@@ -309,7 +352,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                           ],
                         ),
 
-                        const Spacer(flex: 4),
+                        const SizedBox(height: 32),
 
                         // Premium Footer Branding
                         Text(
@@ -323,17 +366,14 @@ class _LoginViewState extends ConsumerState<LoginView> {
                           ),
                         ),
                         const SizedBox(height: 16.0),
-                      ],
-                    ),
+                    ],
                   ),
                 ),
               ),
-            );
-          },
-        ),
-      ),
-    );
-  }
+            ),
+          ),
+        );
+      }
 }
 
 class _PremiumLogo extends StatelessWidget {

@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/models/job_status.dart';
 import '../../../../domain/models/maintenance_job.dart';
-import '../../../../ui/shared/widgets/animated_tap_scale.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../services/view_models/jobs_view_model.dart';
 import '../../../shared/utils/date_extensions.dart';
 import 'job_completion_page.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 const _statusSteps = [
   JobStatus.assigned,
@@ -60,13 +61,13 @@ class _WorkerJobDetailsViewState
             leading: GestureDetector(
               onTap: () => Navigator.pop(context),
               child: Padding(
-                padding: const EdgeInsets.only(left: 16),
+                padding: EdgeInsets.only(left: AppSpacing.lg),
                 child: Icon(CupertinoIcons.chevron_left, size: 22, color: theme.colorScheme.onSurface),
               ),
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                padding: const EdgeInsets.fromLTRB(24, 60, 24, 16),
+                padding: EdgeInsets.fromLTRB(context.pagePad, 60, context.pagePad, AppSpacing.lg),
                 child: Row(
                   children: [
                     Container(
@@ -131,7 +132,7 @@ class _WorkerJobDetailsViewState
 
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+              padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -141,7 +142,7 @@ class _WorkerJobDetailsViewState
                       currentIndex: _currentStepIndex,
                       theme: theme,
                     ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: AppSpacing.xxl),
 
                   // Info card
                   Container(
@@ -163,7 +164,7 @@ class _WorkerJobDetailsViewState
                         _InfoRow(
                           icon: CupertinoIcons.calendar,
                           label: 'Scheduled',
-                          value: job.scheduleDateTime.formattedFull,
+                          value: job.scheduleDateTime?.formattedFull ?? 'Not scheduled',
                           theme: theme,
                         ),
                         if (job.status == JobStatus.completed) ...[
@@ -179,7 +180,7 @@ class _WorkerJobDetailsViewState
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: AppSpacing.xl),
 
                   // Description
                   Text(
@@ -208,12 +209,12 @@ class _WorkerJobDetailsViewState
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: AppSpacing.xl),
 
                   // Active timer
                   if (job.status == JobStatus.inProgress) ...[
                     const _ActiveTimerCard(),
-                    const SizedBox(height: 20),
+                    SizedBox(height: AppSpacing.xl),
                   ],
 
                   // Action controls
@@ -234,7 +235,7 @@ class _WorkerJobDetailsViewState
                       );
                     },
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: AppSpacing.lg),
 
                   // Body cam notice
                   Container(

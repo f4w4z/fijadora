@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/utilities/responsive_helpers.dart';
 
 class SkeletonBox extends StatefulWidget {
   const SkeletonBox({
@@ -104,13 +105,13 @@ class ShimmerListPlaceholder extends StatelessWidget {
                   SkeletonBox(width: 60, height: 18, borderRadius: 12),
                 ],
               ),
-              SizedBox(height: 12),
+              SizedBox(height: AppSpacing.md),
               SkeletonBox(width: double.infinity, height: 16),
-              SizedBox(height: 8),
+              SizedBox(height: AppSpacing.sm),
               SkeletonBox(width: 200, height: 16),
-              SizedBox(height: 16),
+              SizedBox(height: AppSpacing.lg),
               Divider(height: 1),
-              SizedBox(height: 16),
+              SizedBox(height: AppSpacing.lg),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -134,12 +135,12 @@ class ShimmerProductGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      padding: EdgeInsets.symmetric(horizontal: context.pagePad),
       sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16.0,
-          mainAxisSpacing: 24.0,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: context.gridCols,
+          crossAxisSpacing: AppGrid.spacing(context),
+          mainAxisSpacing: AppGrid.spacing(context),
           childAspectRatio: 0.72,
         ),
         delegate: SliverChildBuilderDelegate(
@@ -153,9 +154,9 @@ class ShimmerProductGrid extends StatelessWidget {
                     borderRadius: 16.0,
                   ),
                 ),
-                SizedBox(height: 10),
+                SizedBox(height: AppSpacing.md),
                 SkeletonBox(width: 120, height: 16, borderRadius: 4),
-                SizedBox(height: 4),
+                SizedBox(height: AppSpacing.xs),
                 SkeletonBox(width: 60, height: 14, borderRadius: 4),
               ],
             );
@@ -175,12 +176,12 @@ class ShimmerServiceGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
+      padding: EdgeInsets.fromLTRB(context.pagePad, 4, context.pagePad, 0),
       sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: context.gridCols,
+          crossAxisSpacing: AppGrid.spacing(context),
+          mainAxisSpacing: AppGrid.spacing(context),
           childAspectRatio: 0.68,
         ),
         delegate: SliverChildBuilderDelegate(
@@ -203,9 +204,9 @@ class ShimmerServiceGrid extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SkeletonBox(width: 100, height: 14, borderRadius: 4),
-                        SizedBox(height: 6),
+                        SizedBox(height: AppSpacing.sm),
                         SkeletonBox(width: double.infinity, height: 10, borderRadius: 4),
-                        SizedBox(height: 4),
+                        SizedBox(height: AppSpacing.xs),
                         SkeletonBox(width: 80, height: 10, borderRadius: 4),
                         Spacer(),
                         Row(
@@ -241,7 +242,7 @@ class ShimmerJobCard extends StatelessWidget {
         (context, index) {
           return Padding(
             padding: EdgeInsets.only(
-              left: 24, right: 24,
+              left: context.pagePad, right: context.pagePad,
               bottom: index == itemCount - 1 ? 0 : 10,
             ),
             child: Container(
@@ -253,7 +254,7 @@ class ShimmerJobCard extends StatelessWidget {
               child: const Row(
                 children: [
                   SkeletonBox(width: 38, height: 38, borderRadius: 12),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,17 +264,17 @@ class ShimmerJobCard extends StatelessWidget {
                             Expanded(
                               child: SkeletonBox(height: 14, borderRadius: 4),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             SkeletonBox(width: 50, height: 14, borderRadius: 6),
                           ],
                         ),
-                        SizedBox(height: 8),
+                        SizedBox(height: AppSpacing.sm),
                         Row(
                           children: [
                             SkeletonBox(width: 14, height: 10, borderRadius: 2),
-                            SizedBox(width: 4),
+                            SizedBox(width: AppSpacing.xs),
                             SkeletonBox(width: 80, height: 10, borderRadius: 4),
-                            SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             SkeletonBox(width: 40, height: 10, borderRadius: 4),
                           ],
                         ),

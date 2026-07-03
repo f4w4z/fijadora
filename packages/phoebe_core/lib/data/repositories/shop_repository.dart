@@ -51,9 +51,12 @@ class SupabaseShopRepository implements ShopRepository {
 
   @override
   Stream<List<String>> streamWishlist() {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return const Stream.empty();
     return _client
         .from('wishlists')
         .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
         .map((data) => data.map((json) => json['product_id'] as String).toList());
   }
 
@@ -64,13 +67,13 @@ class SupabaseShopRepository implements ShopRepository {
     try {
       await _client
           .from('wishlists')
-          .insert({'customer_id': userId, 'product_id': productId});
+          .insert({'user_id': userId, 'product_id': productId});
     } catch (_) {
       // If already exists, delete it (toggle behavior)
       await _client
           .from('wishlists')
           .delete()
-          .eq('customer_id', userId)
+          .eq('user_id', userId)
           .eq('product_id', productId);
     }
   }
@@ -82,7 +85,17 @@ class SupabaseShopRepository implements ShopRepository {
         .stream(primaryKey: ['id'])
         .eq('product_id', productId)
         .order('created_at', ascending: false)
-        .map((data) => data.map((json) => Map<String, dynamic>.from(json)).toList());
+        .map((data) => data.map((json) => Map<String, dynamic>.from(json)).toList())
+        .asyncMap((reviews) async {
+          if (reviews.isEmpty) return reviews;
+          final userIds = reviews.map((r) => r['user_id'] as String).toSet().toList();
+          final users = await _client.rpc('get_user_names', params: {'user_ids': userIds});
+          final names = {for (final u in users) u['id'] as String: u['name'] as String?};
+          for (final r in reviews) {
+            r['user_name'] = names[r['user_id'] as String] ?? 'User';
+          }
+          return reviews;
+        });
   }
 
   @override
@@ -92,9 +105,9 @@ class SupabaseShopRepository implements ShopRepository {
     await _client
         .from('reviews')
         .insert({
-          'customer_id': userId,
+          'user_id': userId,
           'product_id': productId,
-          'rating': rating,
+          'rating': rating.toInt(),
           'comment': comment
         });
   }
@@ -120,17 +133,17 @@ class MockShopRepository implements ShopRepository {
 
   void _populateMockReviews() {
     _mockReviews['prod-1'] = [
-      {'id': 'r-1', 'user': 'Sarah Jenkins', 'rating': 5.0, 'comment': 'Stunning design! It looks like an art piece in my living room.', 'date': '12/06/2026'},
-      {'id': 'r-2', 'user': 'Michael Chen', 'rating': 4.0, 'comment': 'Very heavy glass top, but absolute centerpiece.', 'date': '01/05/2026'},
+      {'id': 'r-1', 'user_id': 'user-1', 'user_name': 'Sarah Jenkins', 'rating': 5, 'comment': 'Stunning design! It looks like an art piece in my living room.', 'created_at': '2026-06-12T10:00:00Z'},
+      {'id': 'r-2', 'user_id': 'user-2', 'user_name': 'Michael Chen', 'rating': 4, 'comment': 'Very heavy glass top, but absolute centerpiece.', 'created_at': '2026-05-01T14:30:00Z'},
     ];
     _mockReviews['prod-2'] = [
-      {'id': 'r-3', 'user': 'David Miller', 'rating': 5.0, 'comment': 'Extremely comfortable and iconic chair.', 'date': '15/06/2026'},
+      {'id': 'r-3', 'user_id': 'user-3', 'user_name': 'David Miller', 'rating': 5, 'comment': 'Extremely comfortable and iconic chair.', 'created_at': '2026-06-15T09:00:00Z'},
     ];
   }
 
   void _populateInitialMockProducts() {
     _mockProducts.addAll([
-      const Product(
+      Product(
         id: 'prod-1',
         name: 'Noguchi Coffee Table',
         description: 'Designed by Isamu Noguchi, this table is a masterpiece of modern design, combining an organic wooden base with a thick glass top.',
@@ -145,8 +158,9 @@ class MockShopRepository implements ShopRepository {
         category: 'Living Room',
         inventoryCount: 4,
         isReserved: false,
+        createdAt: DateTime.now(),
       ),
-      const Product(
+      Product(
         id: 'prod-2',
         name: 'Wassily Chair',
         description: 'Designed by Marcel Breuer, this iconic chair features a tubular steel frame with leather straps, offering a sleek modernist aesthetic.',
@@ -160,8 +174,9 @@ class MockShopRepository implements ShopRepository {
         category: 'Chairs',
         inventoryCount: 2,
         isReserved: false,
+        createdAt: DateTime.now(),
       ),
-      const Product(
+      Product(
         id: 'prod-3',
         name: 'Minimalist Oak Bed Frame',
         description: 'Crafted from solid oak wood, this low-profile platform bed frame provides a minimalist, warm, and sturdy foundation for any bedroom.',
@@ -176,8 +191,9 @@ class MockShopRepository implements ShopRepository {
         category: 'Bedroom',
         inventoryCount: 3,
         isReserved: false,
+        createdAt: DateTime.now(),
       ),
-      const Product(
+      Product(
         id: 'prod-4',
         name: 'Flos Arco Floor Lamp',
         description: 'A revolutionary design featuring a solid marble pedestal and an arched stainless steel stem, perfect for direct lighting over tables.',
@@ -191,8 +207,9 @@ class MockShopRepository implements ShopRepository {
         category: 'Lighting',
         inventoryCount: 8,
         isReserved: false,
+        createdAt: DateTime.now(),
       ),
-      const Product(
+      Product(
         id: 'prod-5',
         name: 'Nordic Styled Living Room Set',
         description: 'Get the complete styled look in a single click. This bundle package includes our Noguchi Coffee Table, Wassily Chair, and the Flos Arco Floor Lamp.',
@@ -207,8 +224,9 @@ class MockShopRepository implements ShopRepository {
         category: 'Bundles',
         inventoryCount: 3,
         isReserved: false,
+        createdAt: DateTime.now(),
       ),
-      const Product(
+      Product(
         id: 'prod-6',
         name: 'Modern Bauhaus Dining Set',
         description: 'A curated mid-century dining set featuring a tubular steel dining table and classic Breuer style chairs. Clean, functional, and timeless.',
@@ -220,8 +238,9 @@ class MockShopRepository implements ShopRepository {
         category: 'Bundles',
         inventoryCount: 5,
         isReserved: false,
+        createdAt: DateTime.now(),
       ),
-      const Product(
+      Product(
         id: 'prod-7',
         name: 'Warm Japandi Bedroom Loft',
         description: 'Blends Japanese minimalism with Scandinavian warmth. Features our solid oak platform frame, linen bedding, and warm paper lamp.',
@@ -233,8 +252,9 @@ class MockShopRepository implements ShopRepository {
         category: 'Bundles',
         inventoryCount: 2,
         isReserved: false,
+        createdAt: DateTime.now(),
       ),
-      const Product(
+      Product(
         id: 'prod-8',
         name: 'Cozy Rustic Living Room',
         description: 'Bring the charm of rustic style to your space. Features our reclaimed wood coffee table, distressed leather sofa, and vintage rug.',
@@ -246,8 +266,9 @@ class MockShopRepository implements ShopRepository {
         category: 'Bundles',
         inventoryCount: 2,
         isReserved: false,
+        createdAt: DateTime.now(),
       ),
-      const Product(
+      Product(
         id: 'prod-9',
         name: 'Urban Industrial Workspace',
         description: 'A productivity-first setup designed with steel and dark wood. Features our adjustable standing desk, ergonomic mesh chair, and smart task light.',
@@ -259,8 +280,9 @@ class MockShopRepository implements ShopRepository {
         category: 'Bundles',
         inventoryCount: 4,
         isReserved: false,
+        createdAt: DateTime.now(),
       ),
-      const Product(
+      Product(
         id: 'prod-10',
         name: 'Minimalist Balcony Garden Set',
         description: 'Transform your outdoor balcony into a serene green escape. Includes weather-resistant teak wood chairs, table, and set of ceramic planters.',
@@ -272,6 +294,7 @@ class MockShopRepository implements ShopRepository {
         category: 'Bundles',
         inventoryCount: 8,
         isReserved: false,
+        createdAt: DateTime.now(),
       ),
     ]);
   }
@@ -352,10 +375,10 @@ class MockShopRepository implements ShopRepository {
     final list = _mockReviews.putIfAbsent(productId, () => []);
     list.insert(0, {
       'id': 'r-${DateTime.now().millisecondsSinceEpoch}',
-      'user': 'Guest User',
-      'rating': rating,
+      'user_id': 'mock-guest',
+      'rating': rating.toInt(),
       'comment': comment,
-      'date': 'Today',
+      'created_at': DateTime.now().toIso8601String(),
     });
     final controller = _reviewsControllers[productId];
     if (controller != null) {

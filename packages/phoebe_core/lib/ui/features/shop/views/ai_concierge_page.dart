@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../domain/models/product.dart';
 import 'product_detail_view.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 class AiConciergePage extends StatefulWidget {
   const AiConciergePage({super.key, required this.recommended});
@@ -47,7 +48,7 @@ class _AiConciergePageState extends State<AiConciergePage> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.symmetric(horizontal: context.pagePad, vertical: AppSpacing.xxl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -55,7 +56,7 @@ class _AiConciergePageState extends State<AiConciergePage> {
               'Upload a room photo to get recommendations matching your space layout and aesthetic.',
               style: TextStyle(color: Colors.grey, fontSize: 12),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xxl),
             Expanded(
               child: _analyzing
                   ? const Center(
@@ -95,7 +96,7 @@ class _AiConciergePageState extends State<AiConciergePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(CupertinoIcons.photo_on_rectangle, size: 48, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             const Text('Upload Living / Bedroom Photo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             const SizedBox(height: 6),
             const Text('Supports JPG, PNG up to 10MB', style: TextStyle(color: Colors.grey, fontSize: 11)),
@@ -122,7 +123,7 @@ class _AiConciergePageState extends State<AiConciergePage> {
             errorWidget: (c, u, e) => Container(color: theme.colorScheme.surfaceContainerHighest, height: 140, child: const Icon(CupertinoIcons.photo)),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         const Row(
           children: [
             Icon(CupertinoIcons.checkmark_seal_fill, color: Colors.green, size: 16),
@@ -133,16 +134,16 @@ class _AiConciergePageState extends State<AiConciergePage> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         Text(
           'Matching Pieces in Shop',
           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         Expanded(
           child: ListView.separated(
             itemCount: widget.recommended.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.md),
             itemBuilder: (context, index) {
               final product = widget.recommended[index];
               return InkWell(

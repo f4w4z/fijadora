@@ -1,8 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/services/telemetry_service.dart';
 import '../../../shared/utils/notification_helper.dart';
+import '../../../shared/widgets/star_rating.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 class CustomerReviewPanel extends ConsumerStatefulWidget {
   const CustomerReviewPanel({super.key, required this.jobId});
@@ -55,34 +56,22 @@ class CustomerReviewPanelState extends ConsumerState<CustomerReviewPanel> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Divider(),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         Text(
           'How was the service?',
           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
         Text(
           'Rate the completed work. Your feedback will help the manager make a final review.',
           style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
         ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(5, (index) {
-            final starVal = index + 1;
-            return IconButton(
-              icon: Icon(
-                starVal <= _rating ? CupertinoIcons.star_fill : CupertinoIcons.star,
-                color: Colors.amber,
-                size: 28,
-              ),
-              onPressed: () {
-                setState(() => _rating = starVal.toDouble());
-              },
-            );
-          }),
+        const SizedBox(height: AppSpacing.lg),
+        StarRating(
+          rating: _rating,
+          onChanged: (v) => setState(() => _rating = v),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         TextFormField(
           controller: _commentController,
           maxLines: 2,
@@ -91,7 +80,7 @@ class CustomerReviewPanelState extends ConsumerState<CustomerReviewPanel> {
             hintText: 'Any notes about the service...',
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.xl),
         if (_isSubmitting)
           const Center(child: CircularProgressIndicator())
         else

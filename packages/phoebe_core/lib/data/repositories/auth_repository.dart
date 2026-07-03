@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import '../../domain/models/app_user.dart';
 import '../../domain/models/user_role.dart';
@@ -17,7 +18,11 @@ abstract class AuthRepository {
     required UserRole role,
   });
   List<AppUser> getAllWorkers();
+  Future<void> refreshWorkers();
   Future<void> updateWorkerStatus({required String userId, required String status});
+  Future<void> sendPasswordResetEmail({required String email});
+  Future<void> resendVerificationEmail();
+  Future<void> updatePassword({required String newPassword});
   Future<void> signOut();
   void dispose();
 }
@@ -25,13 +30,28 @@ abstract class AuthRepository {
 // 1. Supabase Auth Repository Implementation
 class SupabaseAuthRepository implements AuthRepository {
   SupabaseAuthRepository(this._client) {
+    final sbUser = _client.auth.currentUser;
+    if (sbUser != null) {
+      final roleStr = sbUser.userMetadata?['role'] as String?;
+      final name = sbUser.userMetadata?['name'] as String? ?? '';
+      _currentUser = AppUser(
+        id: sbUser.id,
+        email: sbUser.email ?? '',
+        name: name,
+        role: UserRole.fromString(roleStr),
+        emailConfirmedAt: _parseEmailConfirmedAt(sbUser.emailConfirmedAt),
+        createdAt: DateTime.now(),
+      );
+    }
     _initStream();
+    _fetchWorkers();
   }
 
   final sb.SupabaseClient _client;
   final _controller = StreamController<AppUser?>.broadcast();
   AppUser? _currentUser;
   StreamSubscription? _authSubscription;
+  List<AppUser> _cachedWorkers = [];
 
   void _initStream() {
     _authSubscription = _client.auth.onAuthStateChange.listen((data) async {
@@ -54,6 +74,8 @@ class SupabaseAuthRepository implements AuthRepository {
             email: user.email ?? '',
             name: name,
             role: UserRole.fromString(roleStr),
+            emailConfirmedAt: _parseEmailConfirmedAt(user.emailConfirmedAt),
+            createdAt: DateTime.now(),
           );
           _currentUser = fallbackUser;
           _controller.add(fallbackUser);
@@ -97,6 +119,8 @@ class SupabaseAuthRepository implements AuthRepository {
         email: email,
         name: name,
         role: UserRole.fromString(roleStr),
+        emailConfirmedAt: _parseEmailConfirmedAt(user.emailConfirmedAt),
+        createdAt: DateTime.now(),
       );
     }
   }
@@ -126,16 +150,25 @@ class SupabaseAuthRepository implements AuthRepository {
       email: email,
       name: name,
       role: role,
+      emailConfirmedAt: _parseEmailConfirmedAt(user.emailConfirmedAt),
+      createdAt: DateTime.now(),
     );
 
-    // Write profile to database users table
-    try {
-      await _client.from('users').insert(newUser.toJson());
-    } catch (e) {
-      debugPrint('Warning: Could not insert profile row in DB: $e');
+    // Profile is auto-created by the on_auth_user_created DB trigger
+    if (role == UserRole.worker) {
+      try {
+        await _client.from('users').update({'worker_status': 'pending'}).eq('id', user.id);
+      } catch (e) {
+        debugPrint('Warning: Could not set worker_status: $e');
+      }
     }
 
     return newUser;
+  }
+
+  @override
+  Future<void> updatePassword({required String newPassword}) async {
+    await _client.auth.updateUser(sb.AdminUserAttributes(password: newPassword));
   }
 
   @override
@@ -143,12 +176,51 @@ class SupabaseAuthRepository implements AuthRepository {
     await _client.auth.signOut();
   }
 
+  Future<void> _fetchWorkers() async {
+    try {
+      final data = await _client
+          .from('users')
+          .select()
+          .eq('role', 'worker');
+      _cachedWorkers = data.map((json) => AppUser.fromJson(json)).toList();
+    } catch (e) {
+      debugPrint('SupabaseAuthRepository - fetch workers failed: $e');
+    }
+  }
+
   @override
-  List<AppUser> getAllWorkers() => throw UnimplementedError('Supabase workers fetched via DB query');
+  List<AppUser> getAllWorkers() => _cachedWorkers;
+
+  @override
+  Future<void> refreshWorkers() async {
+    await _fetchWorkers();
+  }
 
   @override
   Future<void> updateWorkerStatus({required String userId, required String status}) async {
     await _client.from('users').update({'worker_status': status}).eq('id', userId);
+    final idx = _cachedWorkers.indexWhere((w) => w.id == userId);
+    if (idx != -1) {
+      _cachedWorkers[idx] = _cachedWorkers[idx].copyWith(workerStatus: status);
+    }
+  }
+
+  @override
+  Future<void> sendPasswordResetEmail({required String email}) async {
+    await _client.auth.resetPasswordForEmail(email);
+  }
+
+  @override
+  Future<void> resendVerificationEmail() async {
+    final user = _client.auth.currentUser;
+    if (user != null && user.emailConfirmedAt == null) {
+      await _client.auth.resend(type: sb.OtpType.signup, email: user.email!);
+    }
+  }
+
+  DateTime? _parseEmailConfirmedAt(String? value) {
+    if (value == null) return null;
+    return DateTime.tryParse(value);
   }
 
   @override
@@ -161,14 +233,51 @@ class SupabaseAuthRepository implements AuthRepository {
 // 2. Mock Auth Repository Implementation (for testing & fallback)
 class MockAuthRepository implements AuthRepository {
   MockAuthRepository() {
-    _mockUsers['alex.worker@phoebe.com'] = const AppUser(
+    _mockUsers['alex.worker@phoebe.com'] = AppUser(
       id: 'mock-worker-alex',
       email: 'alex.worker@phoebe.com',
       name: 'Alex Worker',
       role: UserRole.worker,
       workerStatus: 'pending',
+      emailConfirmedAt: DateTime.now(),
+      createdAt: DateTime.now(),
     );
-    _controller.add(null);
+
+    try {
+      final box = Hive.box('app_preferences');
+      final cachedEmail = box.get('mock_user_email') as String?;
+      if (cachedEmail != null) {
+        final emailKey = cachedEmail.toLowerCase();
+        if (_mockUsers.containsKey(emailKey)) {
+          _currentUser = _mockUsers[emailKey];
+        } else {
+          final name = cachedEmail.split('@').first;
+          String roleStr = 'customer';
+          if (name.contains('worker')) {
+            roleStr = 'worker';
+          } else if (name.contains('admin')) {
+            roleStr = 'admin';
+          } else if (name.contains('manager')) {
+            roleStr = 'manager';
+          }
+          final role = UserRole.fromString(roleStr);
+          _currentUser = AppUser(
+            id: 'mock-uid-${DateTime.now().millisecondsSinceEpoch}',
+            email: cachedEmail,
+            name: name[0].toUpperCase() + name.substring(1),
+            role: role,
+            workerStatus: role == UserRole.worker ? 'pending' : null,
+            emailConfirmedAt: DateTime.now(),
+            createdAt: DateTime.now(),
+          );
+          _mockUsers[emailKey] = _currentUser!;
+        }
+      }
+    } catch (e) {
+      debugPrint('MockAuthRepository - failed to restore cached user: $e');
+    }
+
+    _controller.add(_currentUser);
   }
 
   final _controller = StreamController<AppUser?>.broadcast();
@@ -212,10 +321,17 @@ class MockAuthRepository implements AuthRepository {
         name: name[0].toUpperCase() + name.substring(1),
         role: role,
         workerStatus: role == UserRole.worker ? 'pending' : null,
+        emailConfirmedAt: DateTime.now(),
+        createdAt: DateTime.now(),
       );
       _mockUsers[key] = newUser;
       _currentUser = newUser;
     }
+
+    try {
+      final box = Hive.box('app_preferences');
+      await box.put('mock_user_email', email);
+    } catch (_) {}
 
     _controller.add(_currentUser);
     return _currentUser!;
@@ -245,11 +361,20 @@ class MockAuthRepository implements AuthRepository {
       name: name,
       role: role,
       workerStatus: role == UserRole.worker ? 'pending' : null,
+      emailConfirmedAt: DateTime.now(),
+      createdAt: DateTime.now(),
     );
 
     _mockUsers[key] = newUser;
     _currentUser = newUser;
+
+    try {
+      final box = Hive.box('app_preferences');
+      await box.put('mock_user_email', email);
+    } catch (_) {}
+
     _controller.add(_currentUser);
+
     return newUser;
   }
 
@@ -261,11 +386,16 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> refreshWorkers() async {
+    // Mock: already in-memory, no-op
+  }
+
+  @override
   Future<void> updateWorkerStatus({required String userId, required String status}) async {
     await Future.delayed(const Duration(milliseconds: 200));
     final key = _mockUsers.entries.firstWhere(
       (e) => e.value.id == userId,
-      orElse: () => const MapEntry('', AppUser(id: '', email: '', name: '', role: UserRole.customer)),
+      orElse: () => MapEntry('', AppUser(id: '', email: '', name: '', role: UserRole.customer, createdAt: DateTime.now())),
     );
     if (key.key.isEmpty) return;
     final updated = _mockUsers[key.key]!.copyWith(workerStatus: status);
@@ -277,9 +407,31 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> sendPasswordResetEmail({required String email}) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    debugPrint('MockAuthRepository - Password reset email sent to $email');
+  }
+
+  @override
+  Future<void> resendVerificationEmail() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    debugPrint('MockAuthRepository - Verification email resent');
+  }
+
+  @override
+  Future<void> updatePassword({required String newPassword}) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    debugPrint('MockAuthRepository - Password updated');
+  }
+
+  @override
   Future<void> signOut() async {
     await Future.delayed(const Duration(milliseconds: 300));
     _currentUser = null;
+    try {
+      final box = Hive.box('app_preferences');
+      await box.delete('mock_user_email');
+    } catch (_) {}
     _controller.add(null);
   }
 

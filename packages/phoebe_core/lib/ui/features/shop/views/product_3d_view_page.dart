@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 class Product3DViewPage extends StatelessWidget {
   const Product3DViewPage({super.key});
@@ -30,7 +31,7 @@ class Product3DViewPage extends StatelessWidget {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+        padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, AppSpacing.xxxl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -38,7 +39,7 @@ class Product3DViewPage extends StatelessWidget {
               'Placed in your digital Home Profile (Living Room)',
               style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
@@ -64,7 +65,7 @@ class Product3DViewPage extends StatelessWidget {
                       color: theme.colorScheme.primary,
                       size: 56,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.lg),
                     Text(
                       '3D Spatial Model Loaded',
                       style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -74,7 +75,7 @@ class Product3DViewPage extends StatelessWidget {
                       'Fits with 1.4m clearance around walls',
                       style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
@@ -95,14 +96,14 @@ class Product3DViewPage extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
                 foregroundColor: theme.colorScheme.onPrimary,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
               child: const Text('Save to Room Record', style: TextStyle(fontWeight: FontWeight.bold)),

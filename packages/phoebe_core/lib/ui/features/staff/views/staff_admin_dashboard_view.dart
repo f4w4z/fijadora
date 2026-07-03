@@ -6,6 +6,9 @@ import '../../../../domain/models/job_status.dart';
 import '../../../../domain/models/maintenance_job.dart';
 import '../../../../domain/models/user_role.dart';
 import '../../auth/view_models/auth_view_model.dart';
+import '../../../core/utilities/responsive_helpers.dart';
+
+import '../../services/view_models/jobs_view_model.dart';
 
 class StaffAdminDashboardView extends ConsumerWidget {
   const StaffAdminDashboardView({super.key});
@@ -13,14 +16,14 @@ class StaffAdminDashboardView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final jobsRepo = ref.watch(jobsRepositoryProvider);
+    final jobsAsync = ref.watch(jobsStreamProvider);
 
     return Scaffold(
       body: SafeArea(
-        child: StreamBuilder<List<MaintenanceJob>>(
-          stream: jobsRepo.streamJobs(userId: 'admin', role: ref.read(authViewModelProvider).user?.role ?? UserRole.admin),
-          builder: (context, snapshot) {
-            final jobs = snapshot.data ?? [];
+        child: jobsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(child: Text('Error: $err')),
+          data: (jobs) {
             final pending = jobs.where((j) => j.status == JobStatus.pending).length;
             final active = jobs.where((j) =>
                 j.status == JobStatus.assigned ||
@@ -34,13 +37,13 @@ class StaffAdminDashboardView extends ConsumerWidget {
               slivers: [
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                    padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.md, context.pagePad, 0),
                     child: Text('Dashboard', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -0.5, color: theme.colorScheme.onSurface)),
                   ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 20)),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+                  padding: EdgeInsets.fromLTRB(context.pagePad, 0, context.pagePad, 120),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
                       _SummaryGrid(jobs: jobs, pending: pending, active: active, awaitingApproval: awaitingApproval),

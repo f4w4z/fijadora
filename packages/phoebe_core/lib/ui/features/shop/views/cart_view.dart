@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../view_models/cart_view_model.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
 import '../../../shared/utils/notification_helper.dart';
+import '../../../core/utilities/responsive_helpers.dart';
 
 class CartView extends ConsumerWidget {
   const CartView({super.key});
@@ -40,7 +41,7 @@ class CartView extends ConsumerWidget {
           : CustomScrollView(
               slivers: [
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                  padding: EdgeInsets.symmetric(horizontal: context.pagePad, vertical: AppSpacing.lg),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate(
                       cart.entries.map((entry) {
@@ -52,7 +53,7 @@ class CartView extends ConsumerWidget {
                           direction: DismissDirection.endToStart,
                           background: Container(
                             alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 24),
+                            padding: EdgeInsets.only(right: context.pagePad),
                             margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
                               color: theme.colorScheme.error,
@@ -81,6 +82,7 @@ class CartView extends ConsumerWidget {
                                   height: 72,
                                   child: CachedNetworkImage(
                                     imageUrl: product.imageUrl,
+                                    memCacheWidth: 150,
                                     fit: BoxFit.cover,
                                     placeholder: (context, url) => Container(color: theme.colorScheme.surfaceContainerHighest),
                                     errorWidget: (context, url, error) => Container(
@@ -160,11 +162,11 @@ class CartView extends ConsumerWidget {
                 // Price summary
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                    padding: EdgeInsets.symmetric(horizontal: context.pagePad, vertical: AppSpacing.sm),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -178,7 +180,7 @@ class CartView extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppSpacing.sm),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -192,11 +194,11 @@ class CartView extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
                         Divider(
                           color: theme.colorScheme.surfaceContainerHighest,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -214,7 +216,7 @@ class CartView extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 48),
+                        const SizedBox(height: AppSpacing.huge),
                       ],
                     ),
                   ),
@@ -233,7 +235,7 @@ class CartView extends ConsumerWidget {
                   ),
                 ),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              padding: EdgeInsets.symmetric(horizontal: context.pagePad, vertical: AppSpacing.lg),
               child: SafeArea(
                 child: SizedBox(
                   height: 50,

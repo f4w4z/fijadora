@@ -2,13 +2,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/repositories/jobs_repository.dart';
-import '../../../../data/services/notification_service.dart';
+import '../../../../data/services/app_notification_service.dart';
 import '../../../../domain/models/job_status.dart';
-import '../../../../ui/shared/utils/notification_helper.dart';
+import '../../../shared/utils/notification_helper.dart';
 import '../../../../domain/models/maintenance_job.dart';
 import '../../../../domain/models/user_role.dart';
 import '../../auth/view_models/auth_view_model.dart';
-import '../../../../ui/shared/widgets/animated_tap_scale.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
+import '../../../core/utilities/responsive_helpers.dart';
+
+import '../../services/view_models/jobs_view_model.dart';
 
 class StaffApprovalsView extends ConsumerStatefulWidget {
   const StaffApprovalsView({super.key});
@@ -21,15 +24,17 @@ class _StaffApprovalsViewState extends ConsumerState<StaffApprovalsView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final jobsRepo = ref.watch(jobsRepositoryProvider);
     final notificationService = ref.read(notificationServiceProvider);
+    final jobsRepo = ref.read(jobsRepositoryProvider);
+    final jobsAsync = ref.watch(jobsStreamProvider);
 
     return Scaffold(
       body: SafeArea(
-        child: StreamBuilder<List<MaintenanceJob>>(
-          stream: jobsRepo.streamJobs(userId: 'manager', role: ref.read(authViewModelProvider).user?.role ?? UserRole.manager),
-          builder: (context, snapshot) {
-            final approvals = (snapshot.data ?? [])
+        child: jobsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(child: Text('Error: $err')),
+          data: (jobs) {
+            final approvals = jobs
                 .where((j) => j.status == JobStatus.waitingApproval)
                 .toList()
               ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -38,7 +43,7 @@ class _StaffApprovalsViewState extends ConsumerState<StaffApprovalsView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                  padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.md, context.pagePad, 0),
                   child: Row(
                     children: [
                       Expanded(
@@ -58,10 +63,8 @@ class _StaffApprovalsViewState extends ConsumerState<StaffApprovalsView> {
                 ),
                 const SizedBox(height: 8),
                 Expanded(
-                  child: snapshot.connectionState == ConnectionState.waiting
-                      ? const Center(child: CircularProgressIndicator())
-                      : approvals.isEmpty
-                          ? Center(
+                  child: approvals.isEmpty
+                      ? Center(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -72,7 +75,7 @@ class _StaffApprovalsViewState extends ConsumerState<StaffApprovalsView> {
                               ),
                             )
                           : ListView.builder(
-                              padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
+                              padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 120),
                               itemCount: approvals.length,
                               itemBuilder: (context, index) {
                                 final job = approvals[index];
@@ -187,7 +190,7 @@ class _ApprovalCard extends StatelessWidget {
               Icon(CupertinoIcons.clock, size: 13, color: theme.colorScheme.onSurfaceVariant),
               const SizedBox(width: 4),
               Text(
-                'Scheduled: ${_formatDate(job.scheduleDateTime)}',
+                'Scheduled: ${job.scheduleDateTime != null ? _formatDate(job.scheduleDateTime!) : 'Not scheduled'}',
                 style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
               ),
             ],
