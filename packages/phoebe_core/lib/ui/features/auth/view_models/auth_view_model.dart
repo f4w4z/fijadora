@@ -62,7 +62,6 @@ class AuthViewModel extends ChangeNotifier {
     required String name,
     required UserRole role,
   }) async {
-    debugPrint('AUTHVM: signUp called email=$email role=$role');
     _setLoading(true);
     _clearError();
     try {
@@ -72,15 +71,12 @@ class AuthViewModel extends ChangeNotifier {
         name: name,
         role: role,
       );
-      debugPrint('AUTHVM: signUpWithEmail succeeded userId=${_user?.id}');
     } catch (e) {
-      debugPrint('AUTHVM: signUpWithEmail failed: $e');
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       notifyListeners();
       rethrow;
     } finally {
       _setLoading(false);
-      debugPrint('AUTHVM: signUp finished, isLoading=false');
     }
   }
 

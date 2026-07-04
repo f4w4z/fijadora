@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AppNotification {
@@ -28,7 +27,6 @@ class NotificationService {
       timestamp: DateTime.now(),
     );
     _controller.add(notification);
-    debugPrint('[NOTIFICATION] Title: $title | Body: $body');
   }
 
   void dispose() {

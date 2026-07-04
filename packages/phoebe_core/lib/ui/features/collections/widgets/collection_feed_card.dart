@@ -40,6 +40,7 @@ class CollectionFeedCard extends StatelessWidget {
                 CachedNetworkImage(
                   imageUrl: collection.coverImageUrl!,
                   memCacheWidth: 400,
+                  fit: BoxFit.cover,
                   placeholder: (_, _) => Container(color: theme.colorScheme.surfaceContainer),
                   errorWidget: (_, _, _) => Container(color: theme.colorScheme.surfaceContainer, child: const Center(child: Icon(CupertinoIcons.photo, size: 32))),
                 )
@@ -91,6 +92,10 @@ class CollectionFeedCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 5),
                         Text(collection.creatorName, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
+                        if (collection.isEdited) ...[
+                          const SizedBox(width: 5),
+                          Text('•  Edited', style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic, color: Colors.white.withValues(alpha: 0.6))),
+                        ],
                         const Spacer(),
                         Text('${collection.itemCount} items', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
                       ],

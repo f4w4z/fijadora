@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../view_models/auth_view_model.dart';
 import '../../../core/utilities/responsive_helpers.dart';
+import '../../../shared/utils/notification_helper.dart';
 import '../../../shared/widgets/app_animations.dart';
 
 class ForgotPasswordView extends ConsumerStatefulWidget {
@@ -29,7 +30,11 @@ class _ForgotPasswordViewState extends ConsumerState<ForgotPasswordView> {
     try {
       await ref.read(authViewModelProvider).forgotPassword(email: email);
       setState(() => _sent = true);
-    } catch (_) {}
+    } catch (e) {
+      if (mounted) {
+        context.showSnackBar('Failed to send reset link: $e', type: SnackBarType.error);
+      }
+    }
   }
 
   @override

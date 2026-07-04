@@ -1,13 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../data/repositories/shop_repository.dart';
-import '../../../../data/services/telemetry_service.dart';
 import '../../../../domain/models/product.dart';
 
 class CartViewModel extends StateNotifier<Map<Product, int>> {
-  CartViewModel(this._shopRepository, this._telemetryService) : super({});
-
-  final ShopRepository _shopRepository;
-  final TelemetryService _telemetryService;
+  CartViewModel() : super({});
 
   void addToCart(Product product) {
     if (product.inventoryCount <= 0) return;
@@ -38,21 +33,6 @@ class CartViewModel extends StateNotifier<Map<Product, int>> {
     state = {};
   }
 
-  Future<void> checkoutReservation() async {
-    _telemetryService.logEvent('checkout_reservation', {
-      'item_count': totalItems,
-      'total_amount': totalPrice,
-    });
-    for (final entry in state.entries) {
-      final product = entry.key;
-      final quantity = entry.value;
-      for (int i = 0; i < quantity; i++) {
-        await _shopRepository.reserveProduct(product.id);
-      }
-    }
-    clearCart();
-  }
-
   double get totalPrice {
     double total = 0.0;
     state.forEach((product, qty) {
@@ -71,7 +51,5 @@ class CartViewModel extends StateNotifier<Map<Product, int>> {
 }
 
 final cartViewModelProvider = StateNotifierProvider<CartViewModel, Map<Product, int>>((ref) {
-  final shopRepository = ref.watch(shopRepositoryProvider);
-  final telemetryService = ref.watch(telemetryServiceProvider);
-  return CartViewModel(shopRepository, telemetryService);
+  return CartViewModel();
 });

@@ -32,7 +32,9 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
         case ThemeMode.dark: box.put('theme_mode', 'dark'); break;
         case ThemeMode.system: box.put('theme_mode', 'system'); break;
       }
-    } catch (_) {}
+    } catch (_) {
+      debugPrint('ThemeModeNotifier - failed to save theme preference');
+    }
   }
 
   void toggleTheme() {

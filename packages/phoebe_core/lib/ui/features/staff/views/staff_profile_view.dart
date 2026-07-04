@@ -199,7 +199,6 @@ class _SettingsRow extends StatelessWidget {
     required this.subtitle,
     required this.theme,
     this.trailing,
-    this.onTap,
   });
 
   final IconData icon;
@@ -207,11 +206,10 @@ class _SettingsRow extends StatelessWidget {
   final String subtitle;
   final ThemeData theme;
   final Widget? trailing;
-  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final rowContent = Container(
+    return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
@@ -257,14 +255,6 @@ class _SettingsRow extends StatelessWidget {
         ],
       ),
     );
-
-    if (onTap != null) {
-      return AnimatedTapScale(
-        onTap: onTap!,
-        child: rowContent,
-      );
-    }
-    return rowContent;
   }
 }
 

@@ -1,8 +1,8 @@
+import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import '../../../../domain/models/job_status.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../services/view_models/jobs_view_model.dart';
 import '../../../shared/utils/notification_helper.dart';
@@ -15,13 +15,13 @@ class JobCompletionPage extends ConsumerStatefulWidget {
   @override
   ConsumerState<JobCompletionPage> createState() => _JobCompletionPageState();
 }
-
 class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
   final _formKey = GlobalKey<FormState>();
   final _notesController = TextEditingController();
   final _partsController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
+  final List<Uint8List> _imageBytesList = [];
   bool _isSubmitting = false;
-  bool _photoCaptured = false;
   bool _isCapturing = false;
 
   @override
@@ -33,13 +33,23 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
 
   Future<void> _submitCompletion() async {
     if (!_formKey.currentState!.validate()) return;
-    if (!_photoCaptured) return;
+    if (_imageBytesList.isEmpty) {
+      context.showSnackBar('Please attach at least one proof of work photo', type: SnackBarType.warning);
+      return;
+    }
 
     setState(() => _isSubmitting = true);
     try {
+      final imageUrls = await Future.wait(_imageBytesList.map((bytes) async {
+        final idx = _imageBytesList.indexOf(bytes);
+        final fileName = 'job_completion_${widget.jobId}_${DateTime.now().millisecondsSinceEpoch}_$idx.jpg';
+        return await ref.read(jobsViewModelProvider).uploadJobImage(fileName, bytes);
+      }));
+
       await ref
           .read(jobsViewModelProvider)
-          .updateStatus(widget.jobId, JobStatus.waitingApproval);
+          .completeJob(widget.jobId, _notesController.text.trim(), imageUrls);
+
       if (mounted) {
         Navigator.pop(context);
         context.showSnackBar('Job submitted for approval',
@@ -54,17 +64,63 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
     }
   }
 
-  Future<void> _capturePhoto() async {
+  Future<void> _addPhoto(ImageSource source) async {
     setState(() => _isCapturing = true);
-    await Future.delayed(const Duration(milliseconds: 1500));
-    if (mounted) {
-      setState(() {
-        _photoCaptured = true;
-        _isCapturing = false;
-      });
-      context.showSnackBar('Photo captured successfully',
-          type: SnackBarType.success);
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        imageQuality: 50,
+        maxWidth: 1024,
+        maxHeight: 1024,
+      );
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        setState(() {
+          _imageBytesList.add(bytes);
+        });
+        if (mounted) {
+          context.showSnackBar('Photo added successfully', type: SnackBarType.success);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        context.showSnackBar('Error picking photo: $e', type: SnackBarType.error);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCapturing = false);
+      }
     }
+  }
+
+  void _showImageSourceActionSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(CupertinoIcons.camera),
+              title: const Text('Take Photo'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _addPhoto(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(CupertinoIcons.photo_on_rectangle),
+              title: const Text('Choose from Gallery'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _addPhoto(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -118,28 +174,67 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
                 ),
                 child: Column(
                   children: [
-                    if (_photoCaptured) ...[
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: CachedNetworkImage(
-                          imageUrl:
-                              'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=300&fit=crop&q=60',
-                          height: 160,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
+                    if (_imageBytesList.isNotEmpty) ...[
+                      SizedBox(
+                        height: 120,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _imageBytesList.length,
+                          itemBuilder: (context, idx) {
+                            final bytes = _imageBytesList[idx];
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 12),
+                              child: Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.memory(
+                                      bytes,
+                                      height: 120,
+                                      width: 120,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 4,
+                                    right: 4,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _imageBytesList.removeAt(idx);
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.black54,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          CupertinoIcons.xmark,
+                                          size: 14,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(CupertinoIcons.checkmark_circle_fill,
-                              size: 16, color: const Color(0xFF2E7D32)),
+                          const Icon(CupertinoIcons.checkmark_circle_fill,
+                              size: 16, color: Color(0xFF2E7D32)),
                           const SizedBox(width: 8),
                           Text(
-                            'Proof of Work Attached',
-                            style: TextStyle(
-                              color: const Color(0xFF2E7D32),
+                            '${_imageBytesList.length} Photo${_imageBytesList.length > 1 ? 's' : ''} Attached (Compressed)',
+                            style: const TextStyle(
+                              color: Color(0xFF2E7D32),
                               fontWeight: FontWeight.w600,
                               fontSize: 13,
                             ),
@@ -153,7 +248,7 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
                               .withValues(alpha: 0.4)),
                       const SizedBox(height: 10),
                       Text(
-                        'Take a photo of the completed work',
+                        'Take photos of the completed work',
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
                           fontSize: 14,
@@ -162,7 +257,7 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'This is required for customer approval',
+                        'Multiple photos are allowed and auto-compressed',
                         style: TextStyle(
                           color: theme.colorScheme.onSurfaceVariant,
                           fontSize: 12,
@@ -173,7 +268,7 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: _isCapturing ? null : _capturePhoto,
+                        onPressed: _isCapturing ? null : _showImageSourceActionSheet,
                         icon: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 200),
                           child: _isCapturing
@@ -183,25 +278,16 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
                                   height: 16,
                                   child: CircularProgressIndicator(strokeWidth: 2),
                                 )
-                              : Icon(
-                                  _photoCaptured ? CupertinoIcons.refresh : CupertinoIcons.camera,
-                                  key: const ValueKey('normal_icon'),
+                              : const Icon(
+                                  CupertinoIcons.camera,
+                                  key: ValueKey('normal_icon'),
                                 ),
                         ),
-                        label: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          child: Text(
-                            _isCapturing
-                                ? 'Opening camera...'
-                                : _photoCaptured
-                                    ? 'Retake Photo'
-                                    : 'Capture Photo',
-                            key: ValueKey<bool>(_isCapturing),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                            ),
-                          ),
+                        label: Text(
+                          _isCapturing
+                              ? 'Opening camera...'
+                              : 'Add Proof Photo',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         style: OutlinedButton.styleFrom(
                           padding:
@@ -282,14 +368,14 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
 
               // Submit button
               AnimatedTapScale(
-                onTap: _isSubmitting || !_photoCaptured
+                onTap: _isSubmitting
                     ? () {}
                     : () { _submitCompletion(); },
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
-                    color: _isSubmitting || !_photoCaptured
+                    color: _isSubmitting
                         ? theme.colorScheme.onSurfaceVariant
                             .withValues(alpha: 0.3)
                         : theme.colorScheme.primary,
@@ -325,10 +411,10 @@ class _JobCompletionPageState extends ConsumerState<JobCompletionPage> {
                   ),
                 ),
               ),
-              if (!_photoCaptured) ...[
+              if (_imageBytesList.isEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
-                  'Capture a photo first to enable submission',
+                  'Add at least one photo to enable submission',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11,

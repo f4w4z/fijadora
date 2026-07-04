@@ -14,6 +14,7 @@ class MaintenanceJob {
   final List<String> images;
   final String customerId;
   final String? workerId;
+  final String? assetId;
   final DateTime createdAt;
 
   const MaintenanceJob({
@@ -26,6 +27,7 @@ class MaintenanceJob {
     required this.images,
     required this.customerId,
     this.workerId,
+    this.assetId,
     required this.createdAt,
   });
 
@@ -40,6 +42,7 @@ class MaintenanceJob {
       images: _parseImages(json['images']),
       customerId: json['customer_id'] as String? ?? '',
       workerId: json['worker_id'] as String?,
+      assetId: json['asset_id'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
@@ -55,6 +58,7 @@ class MaintenanceJob {
       'images': images,
       'customer_id': customerId,
       'worker_id': workerId,
+      'asset_id': assetId,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -69,6 +73,7 @@ class MaintenanceJob {
     List<String>? images,
     String? customerId,
     String? workerId,
+    String? assetId,
     DateTime? createdAt,
   }) {
     return MaintenanceJob(
@@ -81,6 +86,7 @@ class MaintenanceJob {
       images: images ?? this.images,
       customerId: customerId ?? this.customerId,
       workerId: workerId ?? this.workerId,
+      assetId: assetId ?? this.assetId,
       createdAt: createdAt ?? this.createdAt,
     );
   }

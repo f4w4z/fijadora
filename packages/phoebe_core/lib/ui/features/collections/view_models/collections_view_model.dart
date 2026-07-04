@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/repositories/auth_repository.dart';
@@ -12,6 +13,8 @@ class CollectionsViewModel extends ChangeNotifier {
   final CollectionsRepository _repository;
   final AuthRepository _authRepository;
 
+  StreamSubscription? _collectionsSub;
+
   List<Collection> _allCollections = [];
   List<Collection> get allCollections => _allCollections;
 
@@ -24,7 +27,7 @@ class CollectionsViewModel extends ChangeNotifier {
   String? get _userId => _authRepository.currentUser?.id;
 
   void _init() {
-    _repository.streamCollections().listen((collections) {
+    _collectionsSub = _repository.streamCollections().listen((collections) {
       _allCollections = collections;
       _isLoading = false;
       _error = null;
@@ -34,6 +37,12 @@ class CollectionsViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     });
+  }
+
+  @override
+  void dispose() {
+    _collectionsSub?.cancel();
+    super.dispose();
   }
 
   Future<void> toggleFollow(String collectionId) async {

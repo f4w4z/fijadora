@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/repositories/collections_repository.dart';
@@ -23,11 +22,6 @@ class AdminCollectionsViewModel extends ChangeNotifier {
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
-
-  void _clearError() {
-    _errorMessage = null;
-    notifyListeners();
-  }
 
   Future<Collection> createCollection({
     required String title,

@@ -5,8 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../domain/models/product.dart';
 import '../../collections/view_models/collections_view_model.dart';
 import '../view_models/cart_view_model.dart';
-import '../view_models/wishlist_view_model.dart';
-import 'ai_concierge_page.dart';
+import '../view_models/products_provider.dart';
 import 'cart_view.dart';
 import 'product_detail_view.dart';
 import 'wishlist_view.dart';
@@ -32,17 +31,6 @@ class ShopTabView extends ConsumerStatefulWidget {
 class _ShopTabViewState extends ConsumerState<ShopTabView> with AutomaticKeepAliveClientMixin {
   String _selectedCategory = 'All Products';
   String _searchQuery = '';
-
-  void _showAiConcierge(BuildContext context, List<Product> catalog) {
-    final recommended = catalog.take(2).toList();
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AiConciergePage(recommended: recommended),
-      ),
-    );
-  }
 
   @override
   bool get wantKeepAlive => true;
@@ -122,7 +110,6 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> with AutomaticKeepAli
               searchQuery: _searchQuery,
               topPadding: topPadding,
               onCategoryChanged: (c) => setState(() => _selectedCategory = c),
-              onAiConcierge: () => _showAiConcierge(context, products),
             ),
           );
         },
@@ -139,7 +126,6 @@ class _ShopContent extends ConsumerWidget {
     required this.searchQuery,
     required this.topPadding,
     required this.onCategoryChanged,
-    required this.onAiConcierge,
   });
 
   final List<Product> products;
@@ -147,7 +133,6 @@ class _ShopContent extends ConsumerWidget {
   final String searchQuery;
   final double topPadding;
   final ValueChanged<String> onCategoryChanged;
-  final VoidCallback onAiConcierge;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -155,7 +140,6 @@ class _ShopContent extends ConsumerWidget {
 
     final categories = ['All Products', ...products.map((p) => p.category).toSet()];
     final featuredCollectionsAsync = ref.watch(featuredCollectionsProvider);
-    final featuredCollections = featuredCollectionsAsync.valueOrNull ?? [];
 
     final query = searchQuery.trim().toLowerCase();
     final filteredProducts = products.where((p) {
@@ -178,92 +162,33 @@ class _ShopContent extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 0),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(16.0),
+                featuredCollectionsAsync.when(
+                  loading: () => const ShimmerShopTheLook(),
+                  error: (err, stack) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Text('Could not load featured collections',
+                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                  data: (collections) {
+                    if (collections.isEmpty) return const SizedBox.shrink();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          'PHOEBE CURATED',
-                          style: TextStyle(
-                            color: theme.colorScheme.primary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 2.0,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                          child: Text(
+                            'Shop the Look',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface, letterSpacing: -0.3),
                           ),
                         ),
-                        const SizedBox(height: 6.0),
-                        Text(
-                          'Architectural furniture for modern living spaces.',
-                          style: TextStyle(
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 20,
-                            height: 1.1,
-                          ),
-                        ),
-                        const SizedBox(height: 12.0),
-                        Row(
-                          children: [
-                            Flexible(
-                              child: SizedBox(
-                                height: 32,
-                                child: ElevatedButton(
-                                  onPressed: () {},
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: theme.colorScheme.primary,
-                                    foregroundColor: theme.colorScheme.onPrimary,
-                                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-                                    elevation: 0,
-                                    textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.0),
-                                  ),
-                                  child: const Text('VIEW COLLECTION'),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Flexible(
-                              child: SizedBox(
-                                height: 32,
-                                child: OutlinedButton.icon(
-                                  onPressed: onAiConcierge,
-                                  icon: const Icon(CupertinoIcons.sparkles, size: 10),
-                                  label: const Text('AI CONCIERGE'),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: theme.colorScheme.onSurface,
-                                    side: BorderSide(color: theme.colorScheme.outlineVariant),
-                                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-                                    textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.0),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        const SizedBox(height: 16.0),
+                        ShopTheLookCarousel(collections: collections),
+                        const SizedBox(height: 24.0),
                       ],
-                    ),
-                  ),
+                    );
+                  },
                 ),
-                const SizedBox(height: 24.0),
-
-                if (featuredCollections.isNotEmpty) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Text(
-                      'Shop the Look',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface, letterSpacing: -0.3),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  ShopTheLookCarousel(collections: featuredCollections),
-                ],
 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),

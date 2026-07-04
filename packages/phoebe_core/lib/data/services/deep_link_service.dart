@@ -17,16 +17,31 @@ class DeepLinkService {
   StreamSubscription? _notificationSub;
   GoRouter? _router;
   WidgetRef? _ref;
+  final _pendingLinks = <Uri>[];
+
+  /// Subscribe to link stream early (before runApp) to avoid missing links.
+  /// Buffers events until [init] is called with a router and ref.
+  void startListening() {
+    final appLinks = AppLinks();
+    _sub = appLinks.uriLinkStream.listen((uri) {
+      debugPrint('DeepLinkService - Incoming link: $uri');
+      if (_router != null && _ref != null) {
+        _handleLink(uri);
+      } else {
+        _pendingLinks.add(uri);
+      }
+    });
+  }
 
   Future<void> init(GoRouter router, WidgetRef ref) async {
     _router = router;
     _ref = ref;
-    final appLinks = AppLinks();
 
-    _sub = appLinks.uriLinkStream.listen((uri) {
-      debugPrint('DeepLinkService - Incoming link: $uri');
+    // Replay any links that arrived before init
+    for (final uri in _pendingLinks) {
       _handleLink(uri);
-    });
+    }
+    _pendingLinks.clear();
 
     _notificationSub = PushNotificationService.instance.onMessage.listen((message) {
       final route = message.data['route'] as String?;
@@ -55,11 +70,7 @@ class DeepLinkService {
     if (uri.toString().contains('type=recovery') ||
         uri.toString().contains('access_token') ||
         uri.fragment.contains('type=recovery')) {
-      try {
-        SupabaseService.instance.client.auth.getSessionFromUrl(uri);
-      } catch (e) {
-        debugPrint('DeepLinkService - getSessionFromUrl error: $e');
-      }
+      SupabaseService.instance.client.auth.getSessionFromUrl(uri);
       _navigate(router, '/reset-password');
       return;
     }

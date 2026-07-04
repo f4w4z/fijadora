@@ -10,6 +10,7 @@ import 'app_config.dart';
 import 'data/services/connectivity_provider.dart';
 import 'data/services/crash_reporting_service.dart';
 import 'data/services/deep_link_service.dart';
+import 'data/services/local_cache_service.dart';
 import 'data/services/push_notification_service.dart';
 import 'data/services/supabase_service.dart';
 import 'data/services/telemetry_service.dart';
@@ -39,14 +40,25 @@ void runPhoebeApp(
     return true;
   };
 
+  // Initialize Firebase eagerly so FirebaseAnalytics.instance is available
+  // before runApp() is called and providers are first read.
+  try {
+    if (firebaseOptions != null) {
+      await Firebase.initializeApp(options: firebaseOptions);
+    } else {
+      await Firebase.initializeApp();
+    }
+  } catch (e) {
+    debugPrint('Firebase initialization failed: $e');
+  }
+
   // Run Hive and Supabase initializations in parallel!
   await Future.wait([
     Future(() async {
       try {
         await Hive.initFlutter();
-        await Hive.openBox('cached_jobs');
         await Hive.openBox('app_preferences');
-        debugPrint('Hive initialized (cached_jobs, app_preferences).');
+        await LocalCacheService.instance.init();
       } catch (e) {
         debugPrint('Hive initialization failed: $e');
       }
@@ -77,7 +89,6 @@ void runPhoebeApp(
       systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
     ));
   } catch (e) {
-    debugPrint('Failed to set initial SystemUI style: $e');
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -92,16 +103,10 @@ void runPhoebeApp(
   try {
     initialUri = await AppLinks().getInitialLink();
     if (initialUri != null) {
-      debugPrint('runPhoebeApp - Initial link fetched at startup: $initialUri');
       if (initialUri.toString().contains('type=recovery') ||
           initialUri.toString().contains('access_token') ||
           initialUri.fragment.contains('type=recovery')) {
-        try {
-          await SupabaseService.instance.client.auth.getSessionFromUrl(initialUri);
-          debugPrint('runPhoebeApp - Successfully parsed Supabase recovery session from link');
-        } catch (e) {
-          debugPrint('runPhoebeApp - Failed to process recovery session: $e');
-        }
+        await SupabaseService.instance.client.auth.getSessionFromUrl(initialUri);
       }
     }
   } catch (e) {
@@ -118,8 +123,12 @@ void runPhoebeApp(
     debugPrint('Failed to log telemetry launch: $e');
   }
 
-  // Initialize push notification services in the background so it doesn't block the UI
-  PushNotificationService.instance.init(options: firebaseOptions).catchError((e) {
+  // Start listening for deep links before runApp to avoid missing initial links
+  DeepLinkService.instance.startListening();
+
+  // Initialize push notification services in the background so it doesn't block the UI.
+  // Firebase is already initialized above, so we pass null to skip re-initialization.
+  PushNotificationService.instance.init(options: null).catchError((e) {
     debugPrint('Push notification initialization failed: $e');
   });
 
@@ -167,11 +176,9 @@ class _PhoebeAppState extends ConsumerState<PhoebeApp> with WidgetsBindingObserv
     super.didChangeAppLifecycleState(state);
     switch (state) {
       case AppLifecycleState.resumed:
-        debugPrint('PhoebeApp - resumed');
         ref.invalidate(connectivityProvider);
         break;
       case AppLifecycleState.paused:
-        debugPrint('PhoebeApp - paused');
         break;
       case AppLifecycleState.inactive:
       case AppLifecycleState.detached:

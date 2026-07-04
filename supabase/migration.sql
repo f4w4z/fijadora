@@ -264,12 +264,13 @@ CREATE INDEX IF NOT EXISTS idx_fcm_tokens_user_id ON fcm_tokens(user_id);
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.users (id, email, name, role)
+  INSERT INTO public.users (id, email, name, role, worker_status)
   VALUES (
     NEW.id,
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
-    COALESCE(NEW.raw_user_meta_data->>'role', 'customer')
+    COALESCE(NEW.raw_user_meta_data->>'role', 'customer'),
+    CASE WHEN NEW.raw_user_meta_data->>'role' = 'worker' THEN 'pending' ELSE NULL END
   );
   RETURN NEW;
 END;

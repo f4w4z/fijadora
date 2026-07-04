@@ -1,20 +1,20 @@
 import 'package:flutter/foundation.dart';
 
 @immutable
-class Asset {
+class PropertyAsset {
   final String id;
   final String name;
   final String type;
   final String status;
 
-  const Asset({
+  const PropertyAsset({
     required this.id,
     required this.name,
     this.type = '',
     this.status = 'Healthy',
   });
 
-  factory Asset.fromJson(Map<String, dynamic> json) => Asset(
+  factory PropertyAsset.fromJson(Map<String, dynamic> json) => PropertyAsset(
     id: json['id'] as String,
     name: json['name'] as String? ?? '',
     type: json['type'] as String? ?? '',
@@ -25,7 +25,7 @@ class Asset {
     'id': id, 'name': name, 'type': type, 'status': status,
   };
 
-  Asset copyWith({String? id, String? name, String? type, String? status}) => Asset(
+  PropertyAsset copyWith({String? id, String? name, String? type, String? status}) => PropertyAsset(
     id: id ?? this.id, name: name ?? this.name, type: type ?? this.type, status: status ?? this.status,
   );
 }
@@ -34,7 +34,7 @@ class Asset {
 class Room {
   final String id;
   final String name;
-  final List<Asset> assets;
+  final List<PropertyAsset> assets;
 
   const Room({required this.id, required this.name, this.assets = const []});
 
@@ -42,7 +42,7 @@ class Room {
     id: json['id'] as String,
     name: json['name'] as String? ?? '',
     assets: (json['assets'] as List<dynamic>?)
-        ?.map((e) => Asset.fromJson(e as Map<String, dynamic>))
+        ?.map((e) => PropertyAsset.fromJson(e as Map<String, dynamic>))
         .toList() ?? [],
   );
 

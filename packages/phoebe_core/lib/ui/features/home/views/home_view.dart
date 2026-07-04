@@ -25,7 +25,11 @@ class HomeView extends ConsumerWidget {
       );
     }
 
-    final property = propertyAsync.valueOrNull;
+    final property = propertyAsync.when(
+      loading: () => null,
+      error: (error, _) => null,
+      data: (p) => p,
+    );
     final propertyName = property?.name;
     final propertyAddress = property?.address;
     final rooms = property?.units.expand((u) => u.rooms).toList() ?? <dynamic>[];
@@ -38,6 +42,19 @@ class HomeView extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // ─── Loading indicator ──────────────────────────────────────────
+              if (propertyAsync.isLoading)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 16),
+                  child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                ),
+              if (propertyAsync.hasError)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Center(child: Text('Could not load property info',
+                    style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                  )),
+                ),
               // ─── Header ────────────────────────────────────────────────────
               FadeSlideTransition(
                 delay: const Duration(milliseconds: 0),

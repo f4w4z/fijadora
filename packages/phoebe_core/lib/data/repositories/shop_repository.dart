@@ -4,12 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import '../../domain/models/product.dart';
+import '../services/local_cache_service.dart';
 import '../services/supabase_service.dart';
 
 abstract class ShopRepository {
   Stream<List<Product>> streamProducts();
-  Future<Product> reserveProduct(String id);
-  Future<void> updateInventory(String id, int quantity);
   Stream<List<String>> streamWishlist();
   Future<void> toggleWishlist(String productId);
   Stream<List<Map<String, dynamic>>> streamReviews(String productId);
@@ -28,30 +27,16 @@ class SupabaseShopRepository implements ShopRepository {
 
   @override
   Stream<List<Product>> streamProducts() {
-    return _client
-        .from('products')
-        .stream(primaryKey: ['id'])
-        .order('name', ascending: true)
-        .map((data) => data.map((json) => Product.fromJson(json)).toList());
-  }
-
-  @override
-  Future<Product> reserveProduct(String id) async {
-    final response = await _client
-        .from('products')
-        .update({'is_reserved': true})
-        .eq('id', id)
-        .select()
-        .single();
-    return Product.fromJson(response);
-  }
-
-  @override
-  Future<void> updateInventory(String id, int quantity) async {
-    await _client
-        .from('products')
-        .update({'inventory_count': quantity})
-        .eq('id', id);
+    return cacheStream(
+      _client
+          .from('products')
+          .stream(primaryKey: ['id'])
+          .order('name', ascending: true)
+          .map((data) => data.map((json) => Product.fromJson(json)).toList()),
+      'shop_products',
+      Product.fromJson,
+      (p) => p.toJson(),
+    );
   }
 
   @override

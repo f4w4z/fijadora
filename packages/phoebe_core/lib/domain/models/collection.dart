@@ -62,6 +62,7 @@ class Collection {
   final List<CollectionItem> items;
   final int followerCount;
   final int likeCount;
+  final bool isEdited;
 
   const Collection({
     required this.id,
@@ -79,6 +80,7 @@ class Collection {
     this.items = const [],
     this.followerCount = 0,
     this.likeCount = 0,
+    this.isEdited = false,
   });
 
   int get itemCount => items.length;
@@ -108,6 +110,7 @@ class Collection {
           [],
       followerCount: json['follower_count'] as int? ?? 0,
       likeCount: json['like_count'] as int? ?? 0,
+      isEdited: json['is_edited'] as bool? ?? false,
     );
   }
 
@@ -127,6 +130,7 @@ class Collection {
     'items': items.map((e) => e.toJson()).toList(),
     'follower_count': followerCount,
     'like_count': likeCount,
+    'is_edited': isEdited,
   };
 
   Collection copyWith({
@@ -145,6 +149,7 @@ class Collection {
     List<CollectionItem>? items,
     int? followerCount,
     int? likeCount,
+    bool? isEdited,
   }) {
     return Collection(
       id: id ?? this.id,
@@ -162,6 +167,7 @@ class Collection {
       items: items ?? this.items,
       followerCount: followerCount ?? this.followerCount,
       likeCount: likeCount ?? this.likeCount,
+      isEdited: isEdited ?? this.isEdited,
     );
   }
 

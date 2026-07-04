@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/trade_type.dart';
 import 'supabase_service.dart';
+
+String _encodeBase64(Uint8List bytes) => base64Encode(bytes);
 
 class AiDiagnosis {
   final String problemSummary;
@@ -46,9 +49,8 @@ class GeminiService {
     required TradeType tradeType,
   }) async {
     // Try calling through Supabase Edge Function
-    try {
       final client = SupabaseService.instance.client;
-      final imageBase64 = imageBytes != null ? base64Encode(imageBytes) : null;
+      final imageBase64 = imageBytes != null ? await compute(_encodeBase64, imageBytes) : null;
 
       final messages = [
         {'role': 'system', 'content': _systemPrompt},
@@ -77,10 +79,6 @@ class GeminiService {
       }
 
       throw Exception('Empty response from OpenRouter proxy');
-    } catch (e) {
-      debugPrint('GeminiService: Edge Function call failed ($e)');
-      rethrow;
-    }
   }
 
   static const _systemPrompt = '''

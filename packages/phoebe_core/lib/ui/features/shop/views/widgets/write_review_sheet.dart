@@ -21,6 +21,7 @@ class WriteReviewSheet extends StatefulWidget {
 class _WriteReviewSheetState extends State<WriteReviewSheet> {
   final _controller = TextEditingController();
   double _rating = 5;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -79,18 +80,32 @@ class _WriteReviewSheetState extends State<WriteReviewSheet> {
             Expanded(
               flex: 2,
               child: ElevatedButton(
-                onPressed: () async {
-                  final comment = _controller.text.trim();
-                  if (comment.isEmpty) return;
-                  await widget.onSubmit(_rating, comment);
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                    context.showSnackBar(
-                      'Review submitted successfully!',
-                      type: SnackBarType.success,
-                    );
-                  }
-                },
+                onPressed: _isSubmitting
+                    ? null
+                    : () async {
+                        final comment = _controller.text.trim();
+                        if (comment.isEmpty) return;
+                        setState(() => _isSubmitting = true);
+                        try {
+                          await widget.onSubmit(_rating, comment);
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                            context.showSnackBar(
+                              'Review submitted successfully!',
+                              type: SnackBarType.success,
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            context.showSnackBar(
+                              'Failed to submit review: $e',
+                              type: SnackBarType.error,
+                            );
+                          }
+                        } finally {
+                          if (mounted) setState(() => _isSubmitting = false);
+                        }
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: theme.colorScheme.onPrimary,
@@ -98,7 +113,13 @@ class _WriteReviewSheetState extends State<WriteReviewSheet> {
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                child: const Text('Submit Review', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: _isSubmitting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('Submit Review', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
           ],

@@ -79,5 +79,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Phoebe Homes uses your camera to add photos of products, maintenance requests, and completed jobs.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Phoebe Homes accesses your photo library to attach images to products, requests, and job reports.</string>
 </dict>
 </plist>

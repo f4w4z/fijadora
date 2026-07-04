@@ -1,11 +1,9 @@
-import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../view_models/cart_view_model.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
-import '../../../shared/utils/notification_helper.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 
 class CartView extends ConsumerWidget {
@@ -181,20 +179,6 @@ class CartView extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Reservation Deposit (10%)',
-                              style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                            ),
-                            Text(
-                              '\$${(cartNotifier.totalPrice * 0.1).toStringAsFixed(0)}',
-                              style: const TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
                         const SizedBox(height: AppSpacing.lg),
                         Divider(
                           color: theme.colorScheme.surfaceContainerHighest,
@@ -208,7 +192,7 @@ class CartView extends ConsumerWidget {
                               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                             ),
                             Text(
-                              '\$${(cartNotifier.totalPrice * 1.1).toStringAsFixed(0)}',
+                              '\$${cartNotifier.totalPrice.toStringAsFixed(0)}',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
@@ -241,56 +225,22 @@ class CartView extends ConsumerWidget {
                 child: SizedBox(
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: () async {
-                      try {
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (context) => const CheckoutProgressDialog(),
-                        );
-                        
-                        await cartNotifier.checkoutReservation();
-                        
-                        if (context.mounted) {
-                          Navigator.of(context).pop(); // dismiss loading
-                           showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              icon: Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  CupertinoIcons.checkmark_seal_fill,
-                                  color: theme.brightness == Brightness.dark ? Colors.white : Colors.black,
-                                  size: 40,
-                                ),
-                              ),
-                              title: const Text('Reservation Placed'),
-                              content: const Text(
-                                  'Your architectural furniture reservation has been successfully registered. View details on your orders page.',
-                                  textAlign: TextAlign.center),
-                              actionsAlignment: MainAxisAlignment.center,
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop(); // dismiss dialog
-                                    Navigator.of(context).pop(); // back to shop tab
-                                  },
-                                  child: const Text('Done'),
-                                ),
-                              ],
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Coming Soon'),
+                          content: const Text(
+                            'Online ordering is not yet available. Please contact our team at hello@phoebe-homes.com to inquire about this order.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Got it'),
                             ),
-                          );
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          Navigator.of(context).pop(); // dismiss loading
-                          context.showSnackBar('Reservation failed: $e', type: SnackBarType.error);
-                        }
-                      }
+                          ],
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.colorScheme.primary,
@@ -302,7 +252,7 @@ class CartView extends ConsumerWidget {
                       elevation: 0,
                     ),
                     child: const Text(
-                      'Confirm Reservation',
+                      'Inquire About Order',
                       style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                     ),
                   ),
@@ -313,109 +263,4 @@ class CartView extends ConsumerWidget {
   }
 }
 
-class CheckoutProgressDialog extends StatefulWidget {
-  const CheckoutProgressDialog({super.key});
 
-  @override
-  State<CheckoutProgressDialog> createState() => _CheckoutProgressDialogState();
-}
-
-class _CheckoutProgressDialogState extends State<CheckoutProgressDialog> {
-  int _messageIndex = 0;
-  late final Timer _timer;
-  final List<String> _messages = [
-    'Reserving items...',
-    'Verifying inventory...',
-    'Generating scheduled job...',
-    'Finalizing details...',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(milliseconds: 900), (timer) {
-      if (mounted) {
-        setState(() {
-          _messageIndex = (_messageIndex + 1) % _messages.length;
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 40),
-        padding: const EdgeInsets.all(28),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E).withValues(alpha: 0.9) : Colors.white.withValues(alpha: 0.9),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isDark ? const Color(0xFF2E2E2E) : const Color(0xFFE5E5E5),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 180,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  minHeight: 4,
-                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              transitionBuilder: (child, animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.25),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
-                  ),
-                );
-              },
-              child: Text(
-                _messages[_messageIndex],
-                key: ValueKey<int>(_messageIndex),
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  color: theme.colorScheme.onSurface,
-                  letterSpacing: 0.2,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

@@ -22,11 +22,6 @@ class AdminProductsViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  void _clearError() {
-    _errorMessage = null;
-    notifyListeners();
-  }
-
   Future<Product> addProduct({
     required String name,
     required String description,

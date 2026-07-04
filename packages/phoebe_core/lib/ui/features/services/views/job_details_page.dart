@@ -4,6 +4,8 @@ import '../../../../data/services/telemetry_service.dart';
 import '../../../shared/utils/notification_helper.dart';
 import '../../../shared/widgets/star_rating.dart';
 import '../../../core/utilities/responsive_helpers.dart';
+import '../../../../domain/models/job_status.dart';
+import '../view_models/jobs_view_model.dart';
 
 class CustomerReviewPanel extends ConsumerStatefulWidget {
   const CustomerReviewPanel({super.key, required this.jobId});
@@ -33,9 +35,12 @@ class CustomerReviewPanelState extends ConsumerState<CustomerReviewPanel> {
         'comment': _commentController.text.trim(),
       });
 
+      // Update the status in the backend/Supabase database
+      await ref.read(jobsViewModelProvider).updateStatus(widget.jobId, JobStatus.completed);
+
       if (mounted) {
         context.showSnackBar(
-          'Feedback submitted. The manager will review the completed work.',
+          'Feedback submitted. Work marked as completed.',
           type: SnackBarType.success,
         );
       }

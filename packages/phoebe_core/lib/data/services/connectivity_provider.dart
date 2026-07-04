@@ -18,11 +18,12 @@ final connectivityProvider = StreamProvider<ConnectivityStatus>((ref) {
     );
   }
 
-  connectivity.onConnectivityChanged.listen(emitStatus);
+  final sub = connectivity.onConnectivityChanged.listen(emitStatus);
 
   connectivity.checkConnectivity().then(emitStatus);
 
   ref.onDispose(() {
+    sub.cancel();
     controller.close();
   });
 

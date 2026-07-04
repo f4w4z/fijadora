@@ -136,6 +136,43 @@ class JobsViewModel extends ChangeNotifier {
     }
   }
 
+  Future<String> uploadJobImage(String fileName, Uint8List fileBytes) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      return await jobsRepository.uploadJobImage(fileName, fileBytes);
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> completeJob(String jobId, String notes, List<String> images) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await jobsRepository.completeJob(jobId: jobId, notes: notes, images: images);
+      telemetryService.logEvent('complete_job', {'job_id': jobId});
+      notificationService.sendNotification(
+        title: 'Job Completed',
+        body: 'Job completion request submitted for approval.',
+      );
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   void refresh() {
     _subscription?.cancel();
     _init();

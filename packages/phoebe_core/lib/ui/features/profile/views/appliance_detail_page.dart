@@ -1,9 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 import '../../../shared/utils/notification_helper.dart';
+import '../../services/views/new_request_page.dart';
+import '../../../../domain/models/trade_type.dart';
 
-class ApplianceDetailPage extends StatelessWidget {
+class ApplianceDetailPage extends ConsumerWidget {
   const ApplianceDetailPage({
     super.key,
     required this.title,
@@ -19,8 +22,20 @@ class ApplianceDetailPage extends StatelessWidget {
   final Color? statusColor;
   final IconData? icon;
 
+  TradeType _getTradeType() {
+    final name = title.toLowerCase();
+    if (name.contains('ac') || name.contains('hvac') || name.contains('air') || name.contains('cool')) {
+      return TradeType.acEngineering;
+    } else if (name.contains('water') || name.contains('plumb') || name.contains('sink') || name.contains('heater') || name.contains('shower')) {
+      return TradeType.plumbing;
+    } else if (name.contains('kitchen') || name.contains('cook') || name.contains('stove') || name.contains('oven')) {
+      return TradeType.kitchenDesigns;
+    }
+    return TradeType.electrical;
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isNeedsService = statusText == 'Needs Service';
 
@@ -83,9 +98,20 @@ class ApplianceDetailPage extends StatelessWidget {
             const SizedBox(height: AppSpacing.xxxl),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context);
-                Navigator.pop(context);
-                context.showSnackBar('Selected $title. Pre-filling diagnostic ticket...', type: SnackBarType.info);
+                // Automatically open the NewRequestPage directly on top
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => NewRequestPage(
+                      initialTrade: _getTradeType(),
+                      initialDescription: 'Service required for $title:\n'
+                          'Model / Info: $subtitle\n'
+                          'Current status: $statusText\n'
+                          'Please diagnose and resolve.',
+                    ),
+                  ),
+                );
+
+                context.showSnackBar('Pre-filling diagnostic ticket for $title...', type: SnackBarType.info);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: isNeedsService ? Colors.orange : theme.colorScheme.primary,

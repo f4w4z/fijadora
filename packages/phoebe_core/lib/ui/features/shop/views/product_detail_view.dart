@@ -6,7 +6,6 @@ import '../../../../domain/models/product.dart';
 import '../view_models/cart_view_model.dart';
 import '../view_models/wishlist_view_model.dart';
 import 'cart_view.dart';
-import 'room_preview_page.dart';
 import '../../../shared/utils/notification_helper.dart';
 import '../../../shared/widgets/app_bottom_sheet.dart';
 import 'widgets/product_image_gallery.dart';
@@ -166,28 +165,6 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                     ],
                   ),
                   const SizedBox(height: 28),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: OutlinedButton.icon(
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => RoomPreviewPage(product: widget.product),
-                        ),
-                      ),
-                      icon: const Icon(CupertinoIcons.camera_viewfinder, size: 16),
-                      label: const Text(
-                        'See it in your room',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: theme.colorScheme.primary,
-                        side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 28),
                   Text(
                     'About this piece',
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -231,6 +208,14 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const ShimmerReviewCard(count: 2);
+                      }
+                      if (snapshot.hasError) {
+                        return Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Center(child: Text('Could not load reviews',
+                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                          )),
+                        );
                       }
                       final reviews = snapshot.data ?? [];
                       if (reviews.isEmpty) {

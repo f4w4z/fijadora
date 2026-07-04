@@ -45,10 +45,6 @@ class StubShopRepository implements ShopRepository {
   }
 
   @override
-  Future<Product> reserveProduct(String id) async => throw UnimplementedError();
-  @override
-  Future<void> updateInventory(String id, int quantity) async {}
-  @override
   Stream<List<String>> streamWishlist() => const Stream.empty();
   @override
   Future<void> toggleWishlist(String productId) async {}

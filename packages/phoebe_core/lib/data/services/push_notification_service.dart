@@ -8,9 +8,7 @@ import 'supabase_service.dart';
 import 'deep_link_service.dart';
 
 @pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  debugPrint('PushNotificationService - Background message: ${message.messageId}');
-}
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
 
 class PushNotificationService {
   static final PushNotificationService instance = PushNotificationService._();
@@ -22,20 +20,27 @@ class PushNotificationService {
   final _messageController = StreamController<RemoteMessage>.broadcast();
   Stream<RemoteMessage> get onMessage => _messageController.stream;
 
+  StreamSubscription? _tokenSub;
+  StreamSubscription? _messageSub;
+  StreamSubscription? _openSub;
+
   String? _fcmToken;
   String? get fcmToken => _fcmToken;
 
   Future<void> init({FirebaseOptions? options}) async {
-    try {
-      if (options != null) {
-        await Firebase.initializeApp(options: options);
-      } else {
-        await Firebase.initializeApp();
+    // Firebase may already be initialized (done eagerly in app_entry.dart).
+    // Only initialize if no default app exists yet.
+    if (Firebase.apps.isEmpty) {
+      try {
+        if (options != null) {
+          await Firebase.initializeApp(options: options);
+        } else {
+          await Firebase.initializeApp();
+        }
+      } catch (e) {
+        debugPrint('PushNotificationService - Firebase init failed: $e');
+        return;
       }
-      debugPrint('PushNotificationService - Firebase initialized');
-    } catch (e) {
-      debugPrint('PushNotificationService - Firebase init failed: $e');
-      return;
     }
 
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -47,19 +52,17 @@ class PushNotificationService {
     await _requestPermission(messaging);
 
     _fcmToken = await messaging.getToken();
-    debugPrint('PushNotificationService - FCM Token: $_fcmToken');
     if (_fcmToken != null) {
       await _storeToken(_fcmToken!);
     }
 
-    messaging.onTokenRefresh.listen((token) {
+    _tokenSub = messaging.onTokenRefresh.listen((token) {
       _fcmToken = token;
-      debugPrint('PushNotificationService - Token refreshed: $token');
       _storeToken(token);
     });
 
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+    _messageSub = FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+    _openSub = FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
 
     final initialMessage = await messaging.getInitialMessage();
     if (initialMessage != null) {
@@ -83,7 +86,6 @@ class PushNotificationService {
     await _localNotifications.initialize(
       settings,
       onDidReceiveNotificationResponse: (response) {
-        debugPrint('PushNotificationService - Local notification tapped: ${response.payload}');
         final payload = response.payload;
         if (payload != null && payload.isNotEmpty) {
           DeepLinkService.instance.handlePath(payload);
@@ -101,18 +103,15 @@ class PushNotificationService {
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.denied) {
-      debugPrint('PushNotificationService - Notification permission denied');
     }
   }
 
   void _handleForegroundMessage(RemoteMessage message) {
-    debugPrint('PushNotificationService - Foreground message: ${message.messageId}');
     _messageController.add(message);
     _showLocalNotification(message);
   }
 
   void _handleNotificationTap(RemoteMessage message) {
-    debugPrint('PushNotificationService - Notification tapped: ${message.data}');
     _messageController.add(message);
   }
 
@@ -182,6 +181,9 @@ class PushNotificationService {
   }
 
   void dispose() {
+    _tokenSub?.cancel();
+    _messageSub?.cancel();
+    _openSub?.cancel();
     _messageController.close();
   }
 }

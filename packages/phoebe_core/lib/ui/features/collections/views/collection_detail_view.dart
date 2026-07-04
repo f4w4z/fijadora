@@ -9,10 +9,14 @@ import '../../../shared/widgets/animated_tap_scale.dart';
 import '../view_models/collections_view_model.dart';
 import '../widgets/collection_item_tile.dart';
 import '../../shop/views/product_detail_view.dart';
-import '../../shop/view_models/wishlist_view_model.dart';
+import '../../shop/view_models/products_provider.dart';
 import '../../services/views/new_request_page.dart';
 import '../../../../domain/models/trade_type.dart';
 import '../../../../domain/models/product.dart';
+import 'collection_form_page.dart';
+import '../../auth/view_models/auth_view_model.dart';
+import '../../staff/view_models/admin_collections_view_model.dart';
+import '../../../shared/utils/notification_helper.dart';
 
 class CollectionDetailView extends ConsumerWidget {
   const CollectionDetailView({super.key, required this.collection});
@@ -65,6 +69,21 @@ class CollectionDetailView extends ConsumerWidget {
                     ),
                   ),
                 ),
+                if (collection.creatorId == ref.read(authViewModelProvider).user?.id)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: AnimatedTapScale(
+                      onTap: () => _showCreatorOptions(context, ref, collection),
+                      child: Container(
+                        width: 40, height: 40,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1A1A1A) : Colors.white.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(child: Icon(CupertinoIcons.ellipsis_vertical, size: 20)),
+                      ),
+                    ),
+                  ),
               ],
             ),
             SliverToBoxAdapter(
@@ -100,6 +119,10 @@ class CollectionDetailView extends ConsumerWidget {
                             ),
                             const SizedBox(width: AppSpacing.sm),
                             Text('by ${collection.creatorName}', style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant)),
+                            if (collection.isEdited) ...[
+                              const SizedBox(width: 6),
+                              Text('•  Edited', style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6))),
+                            ],
                             const Spacer(),
                             Icon(CupertinoIcons.heart, size: 14, color: theme.colorScheme.onSurfaceVariant),
                             const SizedBox(width: 3),
@@ -150,22 +173,115 @@ class CollectionDetailView extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  Padding(
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     padding: EdgeInsets.symmetric(horizontal: context.pagePad),
-                    child: Column(
-                      children: collection.items.map((item) => CollectionItemTile(
+                    itemCount: collection.items.length,
+                    itemBuilder: (context, idx) {
+                      final item = collection.items[idx];
+                      return CollectionItemTile(
                         item: item,
                         onTap: () => _onItemTap(context, ref, item),
-                      )).toList(),
-                    ),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 100),
+                  const SizedBox(height: AppSpacing.xxl),
                 ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showCreatorOptions(BuildContext context, WidgetRef ref, Collection collection) {
+    final theme = Theme.of(context);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          margin: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: const Icon(CupertinoIcons.pencil, color: Colors.blue),
+                  title: const Text('Edit Look', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        fullscreenDialog: true,
+                        builder: (context) => CollectionFormPage(collection: collection),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(CupertinoIcons.trash, color: Colors.red),
+                  title: const Text('Delete Look', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.red)),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Delete Look'),
+                        content: const Text('Are you sure you want to delete this look? This action cannot be undone.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true) {
+                      try {
+                        await ref.read(adminCollectionsViewModelProvider.notifier).removeCollection(
+                          collection.id,
+                          collection.title,
+                        );
+                        if (context.mounted) {
+                          context.showSnackBar('Look deleted successfully', type: SnackBarType.success);
+                          Navigator.pop(context);
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          context.showSnackBar('Failed to delete look: $e', type: SnackBarType.error);
+                        }
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

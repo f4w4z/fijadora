@@ -1,11 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../data/repositories/properties_repository.dart';
 import '../../../../domain/models/job_status.dart';
 import '../../../../domain/models/maintenance_job.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 
 import '../../../shared/widgets/shimmer_loading.dart';
+import '../../auth/view_models/auth_view_model.dart';
 import '../../services/view_models/jobs_view_model.dart';
 
 class StaffManagerDashboardView extends ConsumerWidget {
@@ -15,6 +17,8 @@ class StaffManagerDashboardView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final jobsAsync = ref.watch(jobsStreamProvider);
+    final userId = ref.watch(authViewModelProvider).user?.id ?? '';
+    final propertiesAsync = ref.watch(propertiesStreamProvider(userId));
 
     return Scaffold(
       body: SafeArea(
@@ -39,7 +43,12 @@ class StaffManagerDashboardView extends ConsumerWidget {
                       delegate: SliverChildListDelegate([
                         _SummaryRow(
                           items: [
-                            _SummaryItem(label: 'Properties', value: '2', icon: CupertinoIcons.building_2_fill, color: theme.colorScheme.primary),
+                            _SummaryItem(
+                              label: 'Properties',
+                              value: propertiesAsync.value?.length.toString() ?? '...',
+                              icon: CupertinoIcons.building_2_fill,
+                              color: theme.colorScheme.primary,
+                            ),
                             _SummaryItem(label: 'Pending Approvals', value: '$pendingApprovals', icon: CupertinoIcons.clock, color: const Color(0xFFE65100)),
                             _SummaryItem(label: 'Active Jobs', value: '$activeJobs', icon: CupertinoIcons.hammer_fill, color: const Color(0xFF3F51B5)),
                           ],

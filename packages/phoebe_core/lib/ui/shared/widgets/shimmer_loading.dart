@@ -182,7 +182,7 @@ class ShimmerServiceGrid extends StatelessWidget {
           crossAxisCount: context.gridCols,
           crossAxisSpacing: AppGrid.spacing(context),
           mainAxisSpacing: AppGrid.spacing(context),
-          childAspectRatio: 0.68,
+          childAspectRatio: 0.82,
         ),
         delegate: SliverChildBuilderDelegate(
           (context, index) {
@@ -525,6 +525,39 @@ class ShimmerCollectionCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class ShimmerShopTheLook extends StatelessWidget {
+  const ShimmerShopTheLook({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final cardSize = (MediaQuery.of(context).size.width * 0.75).clamp(240.0, 310.0);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: const SkeletonBox(width: 140, height: 20, borderRadius: 4),
+          ),
+          const SizedBox(height: 16.0),
+          Center(
+            child: SizedBox(
+              width: cardSize,
+              height: cardSize,
+              child: const SkeletonBox(
+                width: double.infinity,
+                height: double.infinity,
+                borderRadius: 28.0,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -34,14 +34,11 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
   }
 
   Future<void> _handleRegister() async {
-    debugPrint('REGISTER: _handleRegister called');
     if (!_formKey.currentState!.validate()) {
-      debugPrint('REGISTER: form validation failed');
       return;
     }
 
     final viewModel = ref.read(authViewModelProvider.notifier);
-    debugPrint('REGISTER: calling signUp with email=${_emailController.text.trim()} role=${_selectedRole.key}');
     try {
       await viewModel.signUp(
         email: _emailController.text.trim(),
@@ -49,16 +46,11 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
         name: _nameController.text.trim(),
         role: _selectedRole,
       );
-      debugPrint('REGISTER: signUp completed successfully');
       if (mounted) {
         final email = _emailController.text.trim();
-        debugPrint('REGISTER: navigating to verify-email for $email');
         context.go('/verify-email?email=$email');
-      } else {
-        debugPrint('REGISTER: widget not mounted after signUp');
       }
     } catch (e) {
-      debugPrint('REGISTER: signUp threw error: $e');
       if (mounted) {
         context.showSnackBar(
           e.toString().replaceAll('Exception: ', ''),

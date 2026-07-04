@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import '../../domain/models/collection.dart';
-import '../../domain/models/collection_item.dart';
+import '../services/local_cache_service.dart';
 import '../services/supabase_service.dart';
 
 abstract class CollectionsRepository {
@@ -24,50 +24,58 @@ class SupabaseCollectionsRepository implements CollectionsRepository {
   SupabaseCollectionsRepository(this._client);
 
   final sb.SupabaseClient _client;
-  StreamSubscription<List<Map<String, dynamic>>>? _collectionSub;
-  final _controller = StreamController<List<Collection>>.broadcast();
 
   @override
   Stream<List<Collection>> streamCollections() {
-    _collectionSub = _client
-        .from('collections')
-        .stream(primaryKey: ['id'])
-        .order('created_at', ascending: false)
-        .listen((data) async {
-          try {
-            final collections = await _hydrateItems(data);
-            if (!_controller.isClosed) {
-              _controller.add(collections);
-            }
-          } catch (e) {
-            debugPrint('SupabaseCollectionsRepository - hydrate error: $e');
-          }
-        }, onError: (e) {
-          debugPrint('SupabaseCollectionsRepository - stream error: $e');
-        });
-
-    return _controller.stream;
+    return cacheStream(
+      _client
+          .from('collections')
+          .stream(primaryKey: ['id'])
+          .order('created_at', ascending: false)
+          .asyncMap((data) => _hydrateItems(data)),
+      'collections_all',
+      Collection.fromJson,
+      (c) => c.toJson(),
+    );
   }
 
   @override
   Stream<List<Collection>> streamFeaturedCollections() {
-    return _controller.stream.map(
-      (collections) => collections.where((c) => c.isFeatured).toList()
-        ..sort((a, b) => a.featuredOrder.compareTo(b.featuredOrder)),
+    return cacheStream(
+      _client
+          .from('collections')
+          .stream(primaryKey: ['id'])
+          .eq('is_featured', true)
+          .asyncMap((data) async {
+            final collections = await _hydrateItems(data);
+            return collections..sort((a, b) => a.featuredOrder.compareTo(b.featuredOrder));
+          }),
+      'collections_featured',
+      Collection.fromJson,
+      (c) => c.toJson(),
     );
   }
 
   Future<List<Collection>> _hydrateItems(List<Map<String, dynamic>> collectionsJson) async {
-    return Future.wait(collectionsJson.map((json) async {
-      final itemsData = await _client
-          .from('collection_items')
-          .select()
-          .eq('collection_id', json['id'] as String);
-      json['items'] = itemsData
-          .map((e) => CollectionItem.fromJson(e))
-          .toList();
+    if (collectionsJson.isEmpty) return [];
+
+    final collectionIds = collectionsJson.map((c) => c['id'] as String).toList();
+    final itemsData = await _client
+        .from('collection_items')
+        .select()
+        .inFilter('collection_id', collectionIds);
+
+    final groupedItems = <String, List<Map<String, dynamic>>>{};
+    for (final item in itemsData) {
+      final colId = item['collection_id'] as String;
+      groupedItems.putIfAbsent(colId, () => []).add(item);
+    }
+
+    return collectionsJson.map((json) {
+      final colId = json['id'] as String;
+      json['items'] = groupedItems[colId] ?? [];
       return Collection.fromJson(json);
-    }));
+    }).toList();
   }
 
   @override
@@ -134,6 +142,7 @@ class SupabaseCollectionsRepository implements CollectionsRepository {
       'is_public': collection.isPublic,
       'is_featured': collection.isFeatured,
       'featured_order': collection.featuredOrder,
+      'is_edited': false,
       'created_at': now.toIso8601String(),
     };
     final result = await _client.from('collections').insert(data).select('id').single();
@@ -149,7 +158,7 @@ class SupabaseCollectionsRepository implements CollectionsRepository {
         'note_content': item.noteContent,
       });
     }
-    return collection.copyWith(id: id, createdAt: now);
+    return collection.copyWith(id: id, createdAt: now, isEdited: false);
   }
 
   @override
@@ -162,6 +171,7 @@ class SupabaseCollectionsRepository implements CollectionsRepository {
       'is_public': collection.isPublic,
       'is_featured': collection.isFeatured,
       'featured_order': collection.featuredOrder,
+      'is_edited': true,
     }).eq('id', collection.id);
 
     await _client.from('collection_items').delete().eq('collection_id', collection.id);
@@ -176,7 +186,7 @@ class SupabaseCollectionsRepository implements CollectionsRepository {
         'note_content': item.noteContent,
       });
     }
-    return collection;
+    return collection.copyWith(isEdited: true);
   }
 
   @override
@@ -208,10 +218,7 @@ class SupabaseCollectionsRepository implements CollectionsRepository {
   }
 
   @override
-  void dispose() {
-    _collectionSub?.cancel();
-    _controller.close();
-  }
+  void dispose() {}
 }
 
 // 3. Riverpod Provider definition

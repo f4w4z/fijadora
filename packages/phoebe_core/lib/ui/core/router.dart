@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../app_config.dart';
+import '../../data/services/analytics_service.dart';
 import '../features/auth/view_models/auth_view_model.dart';
 import '../features/auth/views/login_view.dart';
 import '../features/auth/views/register_view.dart';
@@ -58,7 +59,7 @@ final staffTabProvider = StateProvider<int>((ref) => 0);
 final workerTabProvider = StateProvider<int>((ref) => 0);
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authViewModel = ref.read(authViewModelProvider);
+  final authViewModel = ref.watch(authViewModelProvider);
   final appConfig = ref.read(appConfigProvider);
   final initialUri = ref.read(initialUriProvider);
 
@@ -76,10 +77,13 @@ final routerProvider = Provider<GoRouter>((ref) {
     }
   }
 
+  final analyticsObserver = ref.read(analyticsObserverProvider);
+
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: initialLocation,
     refreshListenable: authViewModel,
+    observers: [analyticsObserver],
     redirect: (context, state) {
       final isAuthenticated = authViewModel.isAuthenticated;
       final location = state.matchedLocation;
@@ -105,11 +109,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (!appConfig.allowedRoles.contains(user.role)) {
           return '/access-denied';
         }
-        if (user.role == UserRole.worker && user.workerStatus == 'pending' && location != '/pending-approval') {
-          return '/pending-approval';
-        }
-        if (user.role == UserRole.worker && (user.workerStatus == 'rejected' || user.workerStatus == null) && location != '/access-denied') {
-          return '/access-denied';
+        if (user.role == UserRole.worker) {
+          final status = user.workerStatus;
+          if (status == null || status == 'pending') {
+            if (location != '/pending-approval') return '/pending-approval';
+          } else if (status == 'rejected') {
+            if (location != '/access-denied') return '/access-denied';
+          }
         }
       }
 

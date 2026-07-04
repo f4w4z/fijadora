@@ -8,8 +8,8 @@ import '../../shop/views/shop_tab_view.dart';
 import '../../collections/views/collections_tab_view.dart';
 import '../../../../data/services/app_notification_service.dart';
 import '../../../shared/utils/notification_helper.dart';
+import '../../../shared/widgets/offline_banner.dart';
 import 'home_view.dart';
-import '../../../shared/widgets/app_animations.dart';
 import '../../../core/router.dart';
 
 // ─── Shell ────────────────────────────────────────────────────────────────────
@@ -150,6 +150,14 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
                 controller: _pageController,
                 onPageChanged: _onPageChanged,
                 children: _tabs,
+              ),
+
+              // ── Offline banner ────────────────────────────────────────────
+              const Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: OfflineBanner(),
               ),
 
               // ── Floating nav bar ──────────────────────────────────────────

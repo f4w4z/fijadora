@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/services/app_notification_service.dart';
 import '../../../shared/utils/notification_helper.dart';
+import '../../../shared/widgets/offline_banner.dart';
 import '../../../../domain/models/user_role.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import 'admin_jobs_view.dart';
@@ -152,6 +153,12 @@ class _StaffShellViewState extends ConsumerState<StaffShellView>
               FadeIndexedStack(
                 index: currentIndex,
                 children: tabs,
+              ),
+              const Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: OfflineBanner(),
               ),
               Positioned(
                 left: 0,
