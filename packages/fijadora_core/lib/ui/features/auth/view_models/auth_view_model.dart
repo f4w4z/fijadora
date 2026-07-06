@@ -28,11 +28,14 @@ class AuthViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  bool _needsEmailVerification = false;
-  bool get needsEmailVerification => _needsEmailVerification;
+  bool _signUpJustCompleted = false;
+  bool get signUpJustCompleted => _signUpJustCompleted;
 
   String? _signUpEmail;
   String? get signUpEmail => _signUpEmail;
+
+  @Deprecated('Use signUpJustCompleted instead')
+  bool get needsEmailVerification => _signUpJustCompleted;
 
   int _cooldownSeconds = 0;
   int get cooldownSeconds => _cooldownSeconds;
@@ -68,11 +71,12 @@ class AuthViewModel extends ChangeNotifier {
     _user = _authRepository.currentUser;
     _subscription = _authRepository.authStateChanges.listen(
       (user) {
+        final wasSignUpMode = _signUpJustCompleted;
         _user = user;
         _isLoading = false;
         _errorMessage = null;
         if (user != null && user.emailConfirmedAt != null) {
-          _needsEmailVerification = false;
+          _signUpJustCompleted = false;
           _signUpEmail = null;
         }
         notifyListeners();
@@ -96,7 +100,7 @@ class AuthViewModel extends ChangeNotifier {
     try {
       await _authRepository.signUp(email: email, password: password, name: name, role: role);
       _signUpEmail = email;
-      _needsEmailVerification = true;
+      _signUpJustCompleted = true;
       _startCooldown();
       notifyListeners();
     } catch (e) {
@@ -154,7 +158,7 @@ class AuthViewModel extends ChangeNotifier {
     try {
       await _authRepository.signOut();
       _user = null;
-      _needsEmailVerification = false;
+      _signUpJustCompleted = false;
       _signUpEmail = null;
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
@@ -171,7 +175,7 @@ class AuthViewModel extends ChangeNotifier {
     try {
       await _authRepository.deleteAccount();
       _user = null;
-      _needsEmailVerification = false;
+      _signUpJustCompleted = false;
       _signUpEmail = null;
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
@@ -211,7 +215,7 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   void resetVerification() {
-    _needsEmailVerification = false;
+    _signUpJustCompleted = false;
     _signUpEmail = null;
     notifyListeners();
   }
