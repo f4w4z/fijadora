@@ -17,32 +17,32 @@ ON CONFLICT (id) DO NOTHING;
 -- 2. Add new collections (using real manager ID by email)
 INSERT INTO collections (id, title, description, cover_image_url, creator_id, creator_name, category, is_public)
 SELECT '00000000-0000-0000-0000-000000000022', 'Bathroom Spa Retreat', 'Transform your bathroom into a spa-like sanctuary with these picks', 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600', id, 'Sarah Manager', 'bathroom', true
-FROM public.users WHERE email = 'manager@phoebe.app'
+FROM public.users WHERE email = 'manager@fijadora.com'
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO collections (id, title, description, cover_image_url, creator_id, creator_name, category, is_public)
 SELECT '00000000-0000-0000-0000-000000000023', 'Weekend DIY Projects', 'Fun and rewarding DIY projects to tackle this weekend', 'https://images.unsplash.com/photo-1562259929-b4e1fd3aef09?w=600', id, 'Sarah Manager', 'diy', true
-FROM public.users WHERE email = 'manager@phoebe.app'
+FROM public.users WHERE email = 'manager@fijadora.com'
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO collections (id, title, description, cover_image_url, creator_id, creator_name, category, is_public)
 SELECT '00000000-0000-0000-0000-000000000024', 'Seasonal Refresh', 'Transition your home into the new season with fresh accents', 'https://images.unsplash.com/photo-1513519245088-0e12902e35ca?w=600', id, 'Sarah Manager', 'seasonal', true
-FROM public.users WHERE email = 'manager@phoebe.app'
+FROM public.users WHERE email = 'manager@fijadora.com'
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO collections (id, title, description, cover_image_url, creator_id, creator_name, category, is_public)
 SELECT '00000000-0000-0000-0000-000000000025', 'Urban Jungle', 'Bring the outdoors in with our favorite indoor plant setups', 'https://images.unsplash.com/photo-1587061949405-0e6be0c8b55d?w=600', id, 'Sarah Manager', 'livingRoom', true
-FROM public.users WHERE email = 'manager@phoebe.app'
+FROM public.users WHERE email = 'manager@fijadora.com'
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO collections (id, title, description, cover_image_url, creator_id, creator_name, category, is_public)
 SELECT '00000000-0000-0000-0000-000000000026', 'Boho Bedroom Vibes', 'Free-spirited bohemian bedroom decor for a dreamy retreat', 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=600', id, 'Sarah Manager', 'bedroom', true
-FROM public.users WHERE email = 'manager@phoebe.app'
+FROM public.users WHERE email = 'manager@fijadora.com'
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO collections (id, title, description, cover_image_url, creator_id, creator_name, category, is_public)
 SELECT '00000000-0000-0000-0000-000000000027', 'Smart & Efficient Home', 'Upgrade your home with smart technology and energy-saving essentials', 'https://images.unsplash.com/photo-1558089687-f282ffcbc126?w=600', id, 'Sarah Manager', 'energy', true
-FROM public.users WHERE email = 'manager@phoebe.app'
+FROM public.users WHERE email = 'manager@fijadora.com'
 ON CONFLICT (id) DO NOTHING;
 
 -- Also update existing collections with cover images + better descriptions

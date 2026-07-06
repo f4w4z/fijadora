@@ -1,4 +1,4 @@
--- Phoebe Homes — Supabase Schema Migration
+-- Fijadora — Supabase Schema Migration
 -- Run this in the Supabase SQL Editor (https://supabase.com/dashboard/project/nmcxkoahokihzqnfkmvg)
 
 -- 1. Users table (for auth profiles)

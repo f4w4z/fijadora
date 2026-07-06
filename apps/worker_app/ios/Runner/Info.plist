@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Phoebe Worker</string>
+	<string>Fijadora Worker</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -31,13 +31,13 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>phoebe</string>
+				<string>fijadora</string>
 			</array>
 		</dict>
 	</array>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<string>applinks:phoebe.app</string>
+		<string>applinks:fijadora.com</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
@@ -80,8 +80,8 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>Phoebe Homes uses your camera to add photos of products, maintenance requests, and completed jobs.</string>
+	<string>Fijadora uses your camera to add photos of products, maintenance requests, and completed jobs.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Phoebe Homes accesses your photo library to attach images to products, requests, and job reports.</string>
+	<string>Fijadora accesses your photo library to attach images to products, requests, and job reports.</string>
 </dict>
 </plist>

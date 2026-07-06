@@ -1,0 +1,19 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAM_ID.com.fijadora.customerApp",
+        "paths": ["*"]
+      },
+      {
+        "appID": "TEAM_ID.com.fijadora.workerApp",
+        "paths": ["*"]
+      },
+      {
+        "appID": "TEAM_ID.com.fijadora.staffApp",
+        "paths": ["*"]
+      }
+    ]
+  }
+}

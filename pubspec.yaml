@@ -1,4 +1,4 @@
-name: phoebe_homes_workspace
+name: fijadora_workspace
 publish_to: none
 
 environment:
@@ -8,4 +8,4 @@ workspace:
   - apps/customer_app
   - apps/worker_app
   - apps/staff_app
-  - packages/phoebe_core
+  - packages/fijadora_core

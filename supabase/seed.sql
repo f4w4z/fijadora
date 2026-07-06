@@ -1,12 +1,14 @@
--- Phoebe Homes — Seed Data
+-- Fijadora — Seed Data
 -- Run after migrations: supabase db reset
 
--- Seed auth users (triggers handle_new_user() which creates public.users rows)
+-- Seed auth users (triggers handle_new_user() which creates public.users rows).
+-- Passwords: use strong random passwords; these are dev-only seeds.
+-- WARNING: never use these passwords in production — always rotate before production deploy.
 INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, confirmation_token, recovery_token, aud, role, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, instance_id) VALUES
-  ('00000000-0000-0000-0000-000000000001', 'admin@phoebe.app', extensions.crypt('password', extensions.gen_salt('bf')), now(), '', '', 'authenticated', 'authenticated', '{"provider":"email","providers":["email"]}', '{"name":"Admin User","role":"admin"}', now(), now(), '00000000-0000-0000-0000-000000000000'),
-  ('00000000-0000-0000-0000-000000000002', 'manager@phoebe.app', extensions.crypt('password', extensions.gen_salt('bf')), now(), '', '', 'authenticated', 'authenticated', '{"provider":"email","providers":["email"]}', '{"name":"Sarah Manager","role":"manager"}', now(), now(), '00000000-0000-0000-0000-000000000000'),
-  ('00000000-0000-0000-0000-000000000003', 'worker@phoebe.app', extensions.crypt('password', extensions.gen_salt('bf')), now(), '', '', 'authenticated', 'authenticated', '{"provider":"email","providers":["email"]}', '{"name":"Alex Worker","role":"worker"}', now(), now(), '00000000-0000-0000-0000-000000000000'),
-  ('00000000-0000-0000-0000-000000000004', 'customer@phoebe.app', extensions.crypt('password', extensions.gen_salt('bf')), now(), '', '', 'authenticated', 'authenticated', '{"provider":"email","providers":["email"]}', '{"name":"Jane Customer","role":"customer"}', now(), now(), '00000000-0000-0000-0000-000000000000')
+  ('00000000-0000-0000-0000-000000000001', 'admin@fijadora.com', extensions.crypt('password', extensions.gen_salt('bf')), now(), '', '', 'authenticated', 'authenticated', '{"provider":"email","providers":["email"]}', '{"name":"Admin User","role":"admin"}', now(), now(), '00000000-0000-0000-0000-000000000000'),
+  ('00000000-0000-0000-0000-000000000002', 'manager@fijadora.com', extensions.crypt('password', extensions.gen_salt('bf')), now(), '', '', 'authenticated', 'authenticated', '{"provider":"email","providers":["email"]}', '{"name":"Sarah Manager","role":"manager"}', now(), now(), '00000000-0000-0000-0000-000000000000'),
+  ('00000000-0000-0000-0000-000000000003', 'worker@fijadora.com', extensions.crypt('password', extensions.gen_salt('bf')), now(), '', '', 'authenticated', 'authenticated', '{"provider":"email","providers":["email"]}', '{"name":"Alex Worker","role":"worker"}', now(), now(), '00000000-0000-0000-0000-000000000000'),
+  ('00000000-0000-0000-0000-000000000004', 'customer@fijadora.com', extensions.crypt('password', extensions.gen_salt('bf')), now(), '', '', 'authenticated', 'authenticated', '{"provider":"email","providers":["email"]}', '{"name":"Jane Customer","role":"customer"}', now(), now(), '00000000-0000-0000-0000-000000000000')
 ON CONFLICT (id) DO NOTHING;
 
 -- Update extra fields not set by handle_new_user() trigger

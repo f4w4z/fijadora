@@ -1,5 +1,5 @@
 name: staff_app
-description: Phoebe Homes - Staff App
+description: Fijadora - Staff App
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -12,8 +12,8 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  phoebe_core:
-    path: ../../packages/phoebe_core
+  fijadora_core:
+    path: ../../packages/fijadora_core
 
 dev_dependencies:
   flutter_test:

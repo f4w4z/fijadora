@@ -4,7 +4,7 @@
     android:height="120dp"
     android:viewportWidth="120"
     android:viewportHeight="120">
-    <!-- Simple house icon for Phoebe Homes splash -->
+    <!-- Simple house icon for Fijadora splash -->
     <group
         android:translateX="20"
         android:translateY="20">

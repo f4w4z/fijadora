@@ -1,4 +1,4 @@
--- Phoebe Homes — Clean Reset (removes all seed data, preserves schema)
+-- Fijadora — Clean Reset (removes all seed data, preserves schema)
 -- Run this in the Supabase SQL Editor to erase all mock/test data
 -- while keeping all tables, RLS policies, triggers, functions, and indexes.
 
@@ -26,8 +26,8 @@ DELETE FROM properties;
 -- 5. Seed auth users — CASCADE-deletes public.users rows automatically
 --    (via ON DELETE CASCADE on users(id) FK)
 DELETE FROM auth.users WHERE email IN (
-  'admin@phoebe.app',
-  'manager@phoebe.app',
-  'worker@phoebe.app',
-  'customer@phoebe.app'
+  'admin@fijadora.com',
+  'manager@fijadora.com',
+  'worker@fijadora.com',
+  'customer@fijadora.com'
 );

@@ -42,4 +42,4 @@ ON CONFLICT (id) DO NOTHING;
 -- 5. Link the customer (Jane Customer) occupant row to the seeded unit
 UPDATE property_occupants
 SET unit_id = '00000000-0000-0000-0000-000000000060'
-WHERE user_id = (SELECT id FROM users WHERE email = 'customer@phoebe.app');
+WHERE user_id = (SELECT id FROM users WHERE email = 'customer@fijadora.com');

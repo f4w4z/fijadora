@@ -4,7 +4,7 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Simple house/roof silhouette for Phoebe Homes -->
+    <!-- Simple house/roof silhouette for Fijadora -->
     <group
         android:translateX="24"
         android:translateY="22">

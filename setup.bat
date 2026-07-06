@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 echo ===================================================
-echo               Phoebe Homes Setup Tool
+echo               Fijadora Setup Tool
 echo ===================================================
 echo.
 

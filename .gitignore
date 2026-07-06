@@ -47,6 +47,16 @@ GoogleService-Info*.plist
 google-services*.json
 *-adminsdk-*.json
 
+# Release keystore and signing config
+*.keystore
+keystore.properties
+
+# Root-level Android wrapper (artifact from flutter create .)
+/android/
+
+# Supabase temp files
+supabase/.temp/
+
 # Local scripts and run files
 run.bat
 run.ps1

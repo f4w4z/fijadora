@@ -1,599 +1,241 @@
-# Implementation Plan: Phoebe Homes → Production Ready
+# Security Fix Implementation Plan
 
-**Goal:** Address all issues from the production audit and achieve 80+/100 readiness score.  
-**Target:** 6–8 weeks for a single developer, 3–4 weeks for two developers.  
-**Strategy:** Fix security issues first, then complete simulated features, then harden quality.
+## Phase 1 — CRITICAL (Do First)
+
+### 1.1 Remove Firebase Admin SDK Key from Git
+
+- [ ] Purge `pheobe-ee0a3-firebase-adminsdk-fbsvc-24442c6f82.json` from git history using `git filter-branch` or `bfg-repo-cleaner`
+- [ ] Rotate the Firebase service account key in GCP Console
+- [ ] Add `*.json` patterns to `.gitignore` for any future service account keys
+
+### 1.2 Remove Root-Level Firebase Config Files
+
+- [ ] Delete `google-services (customer).json`, `google-services (staff).json`, `google-services (Worker).json` from repo root
+- [ ] Delete `GoogleService-Info(CustomerIOS).plist`, `GoogleService-Info(StaffIOS).plist`, `GoogleService-Info(WorkerIOS).plist` from repo root
+- [ ] Update `.gitignore` to exclude these patterns at root level
+
+### 1.3 Switch to Magic Links + GoodSender SMTP
+
+**File:** `supabase/config.toml:196-220`
+- [ ] Enable magic link auth in Supabase dashboard (Settings > Authentication > Providers > Email > Magic Link)
+- [ ] Enable `secure_password_change = true`
+- [ ] Set `minimum_password_length = 8` (as fallback for edge cases)
+
+**File:** `supabase/config.toml` — add SMTP section:
+```toml
+[auth.email.smtp]
+host = "smtp.goodsender.com"
+port = 587
+user = "SMTP_Injection"
+pass = "<API_KEY>"
+```
+- [ ] Sign up at [goodsender.com](https://goodsender.com) — 100K emails/mo free, no credit card
+- [ ] Verify sending domain (add SPF, DKIM, DMARC DNS records)
+- [ ] Create SMTP credentials and add to config
+
+**UI changes:**
+**File:** `packages/fijadora_core/lib/ui/features/auth/views/login_view.dart`
+- [ ] Replace password login UI with email-only input + "Send Magic Link" button
+- [ ] Remove demo accounts section entirely (was already planned in 2.2)
+
+**File:** `packages/fijadora_core/lib/ui/features/auth/views/register_view.dart`
+- [ ] Convert to email collection for magic link sign-up (no password registration)
+
+**File:** `packages/fijadora_core/lib/ui/features/auth/view_models/auth_view_model.dart`
+- [ ] Replace `signIn()` call with `client.auth.signInWithOtp(email:)`
+- [ ] Remove `signUp()` with password — use magic link instead
+- [ ] Keep `signOut()` and `resetPassword()` as-is
+
+### 1.4 Encrypt Hive Local Storage
+
+**File:** `packages/fijadora_core/lib/data/services/local_cache_service.dart:11`
+- [ ] Generate or derive an encryption key at app startup (store via `flutter_secure_storage` or `crypto` + device ID)
+- [ ] Replace `Hive.openBox(_boxName)` with `Hive.openBox(_boxName, encryptionCipher: HiveAesCipher(key))`
+
+**File:** `packages/fijadora_core/lib/app_entry.dart:60-61`
+- [ ] Encrypt `app_preferences` box similarly
+
+### 1.5 Fix Release Signing Config
+
+**File:** `apps/customer_app/android/app/build.gradle.kts:40`
+**File:** `apps/staff_app/android/app/build.gradle.kts:40`
+**File:** `apps/worker_app/android/app/build.gradle.kts:40`
+- [ ] Replace `signingConfig = signingConfigs.getByName("debug")` with reference to a release keystore
+- [ ] Document how to generate the keystore: `keytool -genkey -v -keystore release.keystore -alias fijadora -keyalg RSA -keysize 2048 -validity 10000`
+- [ ] Add `release.keystore` to `.gitignore`; store password in CI secrets
 
 ---
 
-## Phase 0: Emergency Security Fixes (Day 1)
+## Phase 2 — HIGH
 
-> Do these immediately — before any other work. These are active vulnerabilities.
+### 2.1 Implement SSL Certificate Pinning
 
-### 0.1 — Revoke Exposed Firebase Admin SDK Key ✅ DONE (file deleted, .gitignore set — revoke in console still manual)
+**File:** `packages/fijadora_core/lib/data/services/supabase_service.dart:44-69`
+- [ ] Remove the `!kReleaseMode` bypass — pinning must work in all modes
+- [ ] Keep the `SUPABASE_CERT_FINGERPRINT` check but remove the debug bypass
+- [ ] Add a fallback: if fingerprint hex is empty, still validate against system CA store (don't use `badCertificateCallback` at all)
+- [ ] Document how to obtain the Supabase API gateway SHA-256 fingerprint
 
-```bash
-# 1. Revoke in Firebase Console immediately (manual step — still needed)
-#    Go to: Firebase Console > Project Settings > Service Accounts > Firebase Admin SDK
-#    Click "Delete" or regenerate the key
+### 2.2 Remove Hardcoded Demo Credentials
 
-# 2. Remove from git history (still needed if key was committed)
-git filter-branch --force --index-filter \
-  "git rm --cached --ignore-unmatch 'pheobe-ee0a3-firebase-adminsdk-fbsvc-24442c6f82.json'" \
-  --prune-empty --tag-name-filter cat -- --all
+**File:** `packages/fijadora_core/lib/ui/features/auth/views/login_view.dart:51-55,240-327`
+- [ ] Remove `_useCredentials()` method entirely
+- [ ] Remove the entire demo accounts UI section (lines 240-327)
+- [ ] If demo accounts are still needed for development, move them to a separate dev-only tool that reads from environment variables, not hardcoded strings
 
-# 3. .gitignore already has: *-adminsdk-*.json, google-services*.json, GoogleService-Info*.plist
-```
+### 2.3 Fix Weak Seed Account Passwords
 
-### 0.2 — Remove Placeholder Supabase Credentials ✅ DONE
+**File:** `supabase/seed.sql:6-9`
+- [ ] Replace `extensions.crypt('password', ...)` with properly generated bcrypt hashes
+- [ ] Update seed passwords to strong values (passwords should be unique per account)
+- [ ] Document that seed accounts must have passwords rotated immediately if run against production
 
-**File:** `packages/phoebe_core/lib/data/services/supabase_service.dart`
+### 2.4 Fix Insecure Deep Link Token Handling
 
-Replace the placeholder defaults with a hard compile-time guard:
+**File:** `packages/fijadora_core/lib/data/services/deep_link_service.dart:70-74`
+- [ ] Replace `.contains('access_token')` with proper URI fragment parsing
+- [ ] Use `uri.fragment.contains(...)` and then validate the fragment structure
+- [ ] Add origin validation — verify the deep link came from a trusted source
 
-```dart
-Future<void> initialize() async {
-  if (_isInitialized) return;
+**File:** `packages/fijadora_core/lib/app_entry.dart:106-110`
+- [ ] Apply the same fix to the initial deep link handler
 
-  const url = String.fromEnvironment('SUPABASE_URL');
-  const anonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+### 2.5 Lock Down Storage RLS Policies
 
-  if (url.isEmpty || anonKey.isEmpty) {
-    throw ArgumentError(
-      'SUPABASE_URL and SUPABASE_ANON_KEY must be provided via --dart-define. '
-      'See README.md for setup instructions.',
-    );
-  }
-  // ...
-}
-```
+**File:** `supabase/migrations/20260734_fix_storage_rls.sql:13-24`
+- [ ] Restrict `product-images` bucket mutations to staff/admin roles only:
+  - `INSERT`: only `auth.jwt() ->> 'role' IN ('admin', 'manager')`
+  - `UPDATE`: only `auth.jwt() ->> 'role' IN ('admin', 'manager')`
+  - `DELETE`: only `auth.jwt() ->> 'role' IN ('admin', 'manager')`
+- [ ] Keep SELECT for all authenticated users (product browsing)
+- [ ] Consider adding a bucket-level size/type restriction via edge function
 
-### 0.3 — Remove Redundant Firebase Config Files from Root ✅ DONE (never committed to git)
+### 2.6 Implement Tenant-Specific RLS
 
-```bash
-git rm "google-services (customer).json"
-git rm "google-services (staff).json"
-git rm "google-services (Worker).json"
-git rm "GoogleService-Info(CustomerIOS).plist"
-git rm "GoogleService-Info(StaffIOS).plist"
-git rm "GoogleService-Info(WorkerIOS).plist"
-git commit -m "Remove exposed Firebase config files from root"
-```
+**File:** `supabase/migrations/20260730_tenant_read_policies_and_seeding.sql:5-15`
+- [ ] Replace generic `auth.role() = 'authenticated'` SELECT policies with occupant-based checks:
+  - `properties`: user can read properties they are linked to via `property_occupants`
+  - `units`: user can read units belonging to their properties (join through property_occupants)
+  - `rooms`: user can read rooms belonging to their units
+  - `assets`: user can read assets belonging to their rooms
+- [ ] For staff/worker roles, allow reading all properties (they need to see assignments)
+- [ ] Create a helper function to get user's accessible property IDs
 
----
+### 2.7 Sanitize Error Messages Shown to Users
 
-## Phase 1: Fix Simulated Features (Week 1-2)
+**File:** `packages/fijadora_core/lib/ui/features/auth/views/login_view.dart:44`
+**File:** `packages/fijadora_core/lib/ui/features/auth/views/register_view.dart:56`
+**File:** `packages/fijadora_core/lib/ui/features/auth/views/reset_password_view.dart:40`
+**File:** `packages/fijadora_core/lib/ui/features/auth/view_models/auth_view_model.dart:51`
+- [ ] Create a user-friendly error mapping that strips internal details
+- [ ] Map `AuthApiException` codes to generic messages like "Invalid email or password"
+- [ ] Never forward `e.toString()` directly to UI
+- [ ] Log the full error internally via CrashReportingService
 
-> Complete or remove every feature that is currently a fake/demo implementation.
+### 2.8 Remove or Guard All debugPrint Calls
 
-### 1.1 — Fix Worker Status Lifecycle ✅ DONE (0.5 hr)
+Systematic check across all files (24 occurrences):
+- [ ] Convert `debugPrint('$sensitiveData')` to structured logging via CrashReportingService
+- [ ] For deep link URIs: log only the path, strip query params
+- [ ] For FCM tokens: log only first 4 chars + "..."
+- [ ] For auth errors: log only error type, not full message
+- [ ] For stack traces: log via dedicated error service only
 
-**Files:**
-- `packages/phoebe_core/lib/ui/core/router.dart` (line ~97)
-- `supabase/migration.sql` (DB trigger)
+Key files to fix:
+- `packages/fijadora_core/lib/data/services/deep_link_service.dart:27,49`
+- `packages/fijadora_core/lib/data/services/supabase_service.dart:38-39`
+- `packages/fijadora_core/lib/data/services/push_notification_service.dart:41,179`
+- `packages/fijadora_core/lib/data/repositories/auth_repository.dart:67,161,186`
+- `packages/fijadora_core/lib/app_entry.dart:52,63,70,113,123,132`
 
-**Changes:**
+### 2.9 Implement Real Client-Side Rate Limiting
 
-In `router.dart`, change the null check to treat it as pending:
-```dart
-// BEFORE:
-if (user.role == UserRole.worker && user.workerStatus == 'pending' && ...)
-if (user.role == UserRole.worker && (user.workerStatus == 'rejected' || user.workerStatus == null) && ...)
+**File:** `packages/fijadora_core/lib/ui/features/auth/views/login_view.dart`
+- [ ] Add a rate limiter: max 5 login attempts per 60 seconds
+- [ ] Disable the sign-in button and show a countdown timer on rate limit
+- [ ] Add exponential backoff for rapid retries
 
-// AFTER:
-if (user.role == UserRole.worker && user.workerStatus != 'approved' && user.workerStatus != 'rejected' && location != '/pending-approval') {
-  return '/pending-approval';
-}
-if (user.role == UserRole.worker && user.workerStatus == 'rejected' && location != '/access-denied') {
-  return '/access-denied';
-}
-```
-
-In the DB trigger, set `worker_status = 'pending'` for worker signups:
-```sql
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.users (id, email, name, role, worker_status)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
-    COALESCE(NEW.raw_user_meta_data->>'role', 'customer'),
-    CASE WHEN NEW.raw_user_meta_data->>'role' = 'worker' THEN 'pending' ELSE NULL END
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-```
-
-### 1.2 — Remove AI Concierge ✅ DONE (0.5 hr, Option A)
-
-- Deleted `ai_concierge_page.dart`
-- Removed the AI Concierge card and all references from `shop_tab_view.dart`
-
-### 1.3 — Remove Room Preview ✅ DONE (0.25 hr, Option A)
-
-- Deleted `room_preview_page.dart`, `room_preview_service.dart`
-- Removed the "See it in your room" button from `product_detail_view.dart`
-
-### 1.4 — Replace Fake Checkout ✅ DONE (0.5 hr, Option A variant)
-
-- Kept cart display (items, quantities, prices) — no need to remove the entire view model
-- Replaced `CheckoutProgressDialog` and fake `checkoutReservation()` with a "Coming Soon — contact hello@phoebe-homes.com" inquiry dialog
-- Removed fake "Reservation Deposit (10%)" price line
-- Simplified total to just display subtotal
-- Button now says "Inquire About Order" instead of "Confirm Reservation"
-- Removed `checkoutReservation()` from `CartViewModel` (no backend dependency needed)
+**File:** `packages/fijadora_core/lib/ui/features/auth/views/register_view.dart`
+- [ ] Same rate limiting for sign-up attempts
 
 ---
 
-## Phase 2: Core Quality & Infrastructure (Week 2-3)
+## Phase 3 — MEDIUM
 
-> Fix the architectural issues, memory leaks, and navigation.
+### 3.1 Enhance FCM Token Storage
 
-### 2.1 — Standardize All Navigation Through GoRouter 🚫 SKIPPED (ponytail — 38 changes, 20+ files, minimal value for MVP)
+**File:** `packages/fijadora_core/lib/data/services/push_notification_service.dart:174-177`
+- [ ] Consider encrypting FCM tokens at rest in the DB
+- [ ] Add RLS to `fcm_tokens` table so users can only read/update their own tokens
+- [ ] Add a trigger to automatically remove tokens for deleted users
 
-**Files to change:**
-- `collection_detail_view.dart` — replace `Navigator.push(MaterialPageRoute(...))` with `GoRouter.of(context).push('/collections/${collection.id}')`
-- `product_detail_view.dart` — same
-- `collection_form_page.dart` — same
-- `job_details_page.dart` — same
-- `new_request_page.dart` — same
-- Any other file using direct `MaterialPageRoute`
+### 3.2 Improve Auth Error Handling & Stream Resilience
 
-**Add routes to `router.dart`:**
-```dart
-GoRoute(
-  path: '/collections/:id',
-  builder: (context, state) {
-    final id = state.pathParameters['id']!;
-    // Look up collection or pass ID
-    return CollectionDetailView(collection: /* resolve */);
-  },
-),
-GoRoute(
-  path: '/products/:id',
-  builder: (context, state) {
-    final id = state.pathParameters['id']!;
-    return ProductDetailView(productId: id);
-  },
-),
-// ... etc for all navigable screens
-```
+**File:** `packages/fijadora_core/lib/data/repositories/auth_repository.dart:55-84`
+- [ ] Add error handler to `_authSubscription` that re-subscribes on failure
+- [ ] Add a retry mechanism with backoff for the auth state stream
 
-Then create helper extension:
-```dart
-extension GoRouterNavigation on BuildContext {
-  void pushTo(String location, {Map<String, String>? params}) {
-    GoRouter.of(this).push(location, extra: params);
-  }
-}
-```
+### 3.3 Audit & Minimize SECURITY DEFINER Functions
 
-### 2.2 — Fix Stream Subscription Memory Leaks ✅ DONE (0.5 hr, direct fix — no mixin needed)
+**File:** `supabase/migrations/20260712_fix_rls_with_security_definer.sql:9-21` (is_admin)
+**File:** `supabase/migrations/20260733_rls_fixes.sql:47-78` (assign_job)
+**File:** `supabase/migration.sql:264-277,310-312` (handle_new_user, get_user_names)
+- [ ] Review each SECURITY DEFINER function for input validation
+- [ ] Add explicit parameter validation to `assign_job` (verify caller is admin)
+- [ ] Add row-level access checks inside `get_user_names` (limit to users in same property)
+- [ ] Document why each function needs SECURITY DEFINER
+- [ ] Consider replacing `get_user_names` with a direct view that respects RLS
 
-Fixed 3 subscription leaks directly:
+### 3.4 Add Input Validation to OpenRouter Edge Function
 
-1. **`collections_view_model.dart`** — Added `StreamSubscription?` field, captured `.listen()` return, cancelled in `dispose()`
-2. **`connectivity_provider.dart`** — Captured `StreamSubscription` from `.listen()`, cancelled in `ref.onDispose()`
-3. **`push_notification_service.dart`** — Added 3 `StreamSubscription?` fields for token/message/open subscriptions, captured `.listen()` returns, cancelled in `dispose()`
+**File:** `supabase/functions/openrouter-proxy/index.ts:16-31`
+- [ ] Add max length restriction on messages (e.g., 4096 chars total)
+- [ ] Whitelist allowed models instead of accepting arbitrary user input
+- [ ] Add maxTokens cap enforced server-side (512)
+- [ ] Add usage rate limiting per user
 
-Files that already had proper cleanup (verified): `auth_repository`, `auth_view_model`, `jobs_view_model`, `properties_repository`, `property_occupants_repository`, `home_shell_view`, `worker_shell_view`, `staff_shell_view`, `manager_properties_view`, `deep_link_service`
+### 3.5 Remove Linked Supabase Project File
 
-### 2.3 — Fix Router Rebuild Performance ✅ DONE (0.1 hr)
-
-**File:** `packages/phoebe_core/lib/ui/core/router.dart`
-
-Changed `ref.read(authViewModelProvider)` → `ref.watch(authViewModelProvider)` on line 61. This establishes a proper reactive dependency so the GoRouter provider rebuilds when auth state changes, rather than relying solely on `refreshListenable` for re-evaluation. Since `GoRouter` uses the same `navigatorKey`, the navigation stack persists across rebuilds.
-
-### 2.4 — Add API Timeouts ✅ DONE (0.1 hr)
-
-**File:** `packages/phoebe_core/lib/data/services/supabase_service.dart`
-
-Added 15s `.timeout()` to `Supabase.initialize()` future:
-
-```dart
-await Supabase.initialize(
-  url: url,
-  publishableKey: anonKey,
-).timeout(const Duration(seconds: 15));
-```
-
-(Room preview service was already deleted in Phase 1.3.)
-
-### 2.5 — Add Double-Submit Protection ✅ DONE (0.5 hr)
-
-All submit handlers protected:
-
-- `login_view.dart` — Button guarded by `viewModel.isLoading ? null : _handleLogin`
-- `register_view.dart` — Same, `viewModel.isLoading` guards the button
-- `new_request_page.dart` — Button guarded by `isCreating` from jobs VM
-- `collection_form_page.dart` — Added `_isSubmitting` flag + guard + loading spinner
-- `write_review_sheet.dart` — `_isSubmitting` guard (done in Session 1)
+- [ ] Delete `supabase/.temp/linked-project.json`
+- [ ] Add `.temp/` to `.gitignore`
 
 ---
 
-## Phase 3: Offline & Connectivity (Week 3-4)
+## Phase 4 — LOW
 
-> Make the app resilient to network loss.
+### 4.1 Fix AndroidManifest INTERNET Permission
 
-### 3.1 — Implement Offline Data Layer ✅ DONE (1 hr)
+**File:** `apps/*/android/app/src/debug/AndroidManifest.xml:6`
+- [ ] Move `<uses-permission android:name="android.permission.INTERNET"/>` to `src/main/AndroidManifest.xml`
+- [ ] Remove from debug/manifest since it should be in all builds
 
-Implementation:
+### 4.2 Add Sentry PII Stripping
 
-1. **Created `LocalCacheService`** (`packages/phoebe_core/lib/data/services/local_cache_service.dart`):
-   - Singleton with a single Hive box `app_cache`
-   - `put(key, List<Map<String, dynamic>>)` / `get(key)` for JSON data
-   - `cacheStream<T>()` utility: wraps any `Stream<List<T>>` with cache-on-data and cache-fallback-on-error via `StreamTransformer`
+**File:** `packages/fijadora_core/lib/data/services/crash_reporting_service.dart`
+- [ ] Add `options.sendDefaultPii = false` (verify it's already false)
+- [ ] Add a before-send callback to strip email addresses and tokens from error messages
+- [ ] Review trace sample rate (0.2 = 20%) — consider lowering for production
 
-2. **Modified 4 repositories** to wrap their stream methods:
-   - `shop_repository.dart`: `streamProducts()` → cache key `shop_products`
-   - `collections_repository.dart`: `streamCollections()` → `collections_all`, `streamFeaturedCollections()` → `collections_featured`
-   - `jobs_repository.dart`: `streamJobs()` → `jobs_{userId}_{role}` (dynamic key per user/role)
-   - `properties_repository.dart`: `streamProperties()` → `properties_{managerId}` (custom pattern since it uses `StreamController`+`listen`)
+### 4.3 Configure iOS App Transport Security
 
-3. **Updated `app_entry.dart`**: `LocalCacheService.instance.init()` called after Hive init
+**File:** `apps/*/ios/Runner/Info.plist`
+- [ ] Add `NSAppTransportSecurity` with `NSAllowsArbitraryLoads = false`
+- [ ] Add `NSRequiresCertificateTransparency = true`
+- [ ] Add specific exception domains only if needed
 
-### 3.2 — Consume Connectivity Provider for Offline UI ✅ DONE (0.5 hr)
+### 4.4 Cleanup Debug/Profile Manifest Duplication
 
-Implementation:
-
-1. **Created `OfflineBanner` widget** (`packages/phoebe_core/lib/ui/shared/widgets/offline_banner.dart`):
-   - `ConsumerWidget` that watches `connectivityProvider`
-   - Shows red banner "You are offline — showing cached data" when disconnected
-   - Uses `AnimatedSlide` + `AnimatedOpacity` for smooth show/hide animation
-   - Returns `SizedBox.shrink()` when online (zero layout impact)
-
-2. **Added to all 3 shell views** via `Positioned(top: 0, left: 0, right: 0)` inside their content `Stack`:
-   - `home_shell_view.dart`
-   - `staff_shell_view.dart`
-   - `worker_shell_view.dart`
-
-### 3.3 — Add Loading States Where Missing (2-3 hr)
-
-Create a unified loading pattern:
-
-```dart
-class AsyncView<T> extends StatelessWidget {
-  const AsyncView({
-    required this.value,
-    required this.data,
-    this.loading = const ShimmerProductGrid(),
-    this.error = const ErrorStateWidget(onRetry: null),
-  });
-
-  final AsyncValue<T> value;
-  final Widget Function(T data) data;
-  final Widget loading;
-  final Widget error;
-
-  @override
-  Widget build(BuildContext context) {
-    return value.when(
-      data: data,
-      loading: () => loading,
-      error: (e, s) => error is ErrorStateWidget
-          ? ErrorStateWidget(message: e.toString(), onRetry: /* ref.invalidate */ null)
-          : error,
-    );
-  }
-}
-```
-
-Apply to every `StreamBuilder` and `AsyncValue` consumer across the app.
+- [ ] Review `apps/*/android/app/src/profile/AndroidManifest.xml` — remove if identical to debug
+- [ ] Consolidate common manifest entries into the main manifest
 
 ---
 
-## Phase 4: Testing ✅ DONE (~6 hr, 119 total tests)
+## Summary
 
-### 4.1 — Unit Tests for View Models (22 view model tests + 14 model tests)
-
-| File | Tests | Coverage |
-|------|-------|----------|
-| `auth_view_model_test.dart` | 22 | sign-in, sign-up, sign-out, forgot/reset/update password, auth state stream, error states, loading states |
-| `cart_view_model_test.dart` | 10 | add, remove, increment, inventory limits, out-of-stock, total, clear |
-| `wishlist_view_model_test.dart` | 8 | wishlist stream, empty, updates, cross-provider filtering, removal, loading |
-| `jobs_view_model_test.dart` | 10 | stream, create, update status, upload, error states, loading |
-| `collections_view_model_test.dart` | 7 | stream, follow/unfollow, like/unlike, null user guard |
-| `admin_products_test.dart` | 4 | CRUD + image upload |
-| `models_test.dart` | 8 | AppUser, JobStatus, MaintenanceJob, Product roundtrip |
-| `collection_model_test.dart` | 8 | CollectionItem, Collection, copyWith, equality, category |
-| `property_model_test.dart` | 10 | Asset, Room, Unit, Property roundtrip + missing fields |
-
-### 4.2 — Widget Tests for Critical Screens (18 tests)
-
-| File | Tests | Verifies |
-|------|-------|----------|
-| `login_view_test.dart` | 6 | form renders, validation (empty/email/password), loading spinner, sign-in calls |
-| `shop_tab_view_test.dart` | 4 | renders, products shown, loading state, empty state |
-| `worker_dashboard_test.dart` | 4 | dashboard renders, job cards, empty state, greeting |
-| `admin_jobs_view_test.dart` | 4 | view renders, job list, empty state, filter tabs |
-
-### 4.3 — Integration Tests (6 tests)
-
-- `auth_shop_job_flow_test.dart` — 6 tests covering:
-  - Auth: sign up → sign out → sign in again
-  - Auth: sign-in failure recovery
-  - Shop: browse products → add to cart → remove → wishlist toggle
-  - Shop: inventory limits respected
-  - Job: create → assign → update → complete full lifecycle
-  - Job: create with telemetry + notification verification
-
----
-
-## Phase 5: Code Quality & Hardening ✅ DONE (~5 hr)
-
-### 5.1 — Split Large Files ✅
-- `admin_products_view.dart` (1275→285) → `product_list_card.dart` + `product_form_page.dart`
-- `manager_properties_view.dart` (1277→728) → `property_card.dart` + `unit_card.dart` + `asset_form_dialog.dart`
-- `worker_dashboard_view.dart` (833→476) → `job_card.dart` + `job_preview_sheet.dart`
-
-### 5.2 — Clean Up Debug Prints ✅ (done in Session 2)
-Removed 35 `debugPrint` calls. Remaining 23 are all in error handlers (stripped in release builds).
-
-### 5.3 — Add Basic Accessibility ✅
-- `MergeSemantics` on `ProductListCard`, `WorkerJobCard`, `PropertyHeader`
-- `flutter analyze`: 0 warnings, 1 info (pre-existing deprecation)
-
-### 5.4 — Set Up CI/CD ✅
-- `.github/workflows/ci.yml` — `flutter analyze` + `flutter test` on push/PR
-
-### 5.5 — Write Proper README ✅
-- Project overview, architecture, setup instructions with `--dart-define`, build commands
-
----
-
-## Phase 6: Polish & Platform Readiness (Week 6-7)
-
-> Platform-specific hardening and production monitoring.
-
-### 6.1 — Configure Release Build Settings ✅ DONE (Session 5)
-
-- Set `TRACK_WIDGET_CREATION=false` for release builds
-- Enable code shrinking / obfuscation in `android/app/build.gradle.kts`:
-  ```kotlin
-  buildTypes {
-      release {
-          minifyEnabled true
-          proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-      }
-  }
-  ```
-- Configure iOS release in `ios/Runner/Info.plist`:
-  - Remove NSAppTransportSecurity allow-arbitrary-loads if present
-  - Add usage descriptions for camera, photo library, location if needed
-
-### 6.2 — Add Firebase Analytics ✅ DONE (0.25 hr, ponytail)
-
-Implementation:
-- Added `firebase_analytics: ^11.3.0` to pubspec.yaml
-- Created `analytics_service.dart` with `analyticsProvider`, `analyticsObserverProvider`, and `logAnalyticsEvent()` helper
-- Added `FirebaseAnalyticsObserver` to GoRouter via `observers: [analyticsObserver]` — automatic screen view tracking
-- Key event tracking deferred until there's a clear need (ponytail — YAGNI for custom events at MVP stage)
-
-### 6.3 — Add Certificate Pinning ✅ DONE (0.25 hr, ponytail)
-
-Implementation:
-- Added `crypto: ^3.0.6` and `http: ^1.3.0` to pubspec.yaml
-- `_createHttpClient()` in `supabase_service.dart` reads `SUPABASE_CERT_FINGERPRINT` from `--dart-define`
-- Only enables in `kReleaseMode`; ignored if fingerprint not provided (opt-in)
-- Extracts DER bytes from `cert.pem`, hashes with SHA-256, compares to expected hex fingerprint
-- Passes custom `IOClient` with pinned `HttpClient` to `Supabase.initialize(httpClient:)`
-
-Usage: `flutter build appbundle --dart-define SUPABASE_CERT_FINGERPRINT=<sha256-hex>`
-
-### 6.4 — Remove or Clean Up Unused Code ✅ DONE
-
----
-
-## Phase 7: Final Verification ✅ DONE (Jul 4)
-
-> All automated checks verified. 5 items need manual confirmation.
-
-### 7.1 — Security Audit Checklist
-
-- [x] Firebase Admin SDK key file deleted from disk & `.gitignore` covers `*-adminsdk-*.json` — **manual: revoke in Firebase Console still needed**
-- [x] No API keys/secrets in committed files (verified: all Firebase configs are SDK-level, not admin keys)
-- [x] `.gitignore` covers `*.env`, `GoogleService-Info*.plist`, `google-services*.json`, `*-adminsdk-*.json`
-- [ ] ⚠️ Supabase RLS policies tested for all tables — **requires DB access**
-- [x] No debug endpoints enabled (`debugShowCheckedModeBanner: false` in app_entry.dart)
-- [x] Session tokens not logged (no session/log prints in auth code)
-
-### 7.2 — Performance Checklist
-
-- [x] `flutter analyze` passes with 0 errors, 0 warnings (2 infos — pre-existing deprecations)
-- [ ] No widget rebuild warnings in Flutter Inspector — **requires running app**
-- [x] List views have proper keys — `super.key` on all ConsumerStatefulWidgets; `ValueKey` on list items
-- [x] Images have proper caching — `CachedNetworkImage` used throughout
-- [ ] No jank during navigation transitions — **requires running app**
-- [ ] App launches in <2s on mid-range device — **requires running app**
-- [ ] Memory usage <200MB during normal use — **requires running app**
-
-### 7.3 — UX Checklist
-
-- [x] Every screen has a loading state — shimmer/indicator on all list screens + StreamBuilder checks
-- [x] Every error state displayed — snackbars on form errors; error text on stream errors; ErrorStateWidget used
-- [x] Offline state shows clear banner + cached data — `OfflineBanner` in all 3 shells; `cacheStream` in 4 repos
-- [x] All forms validate input before submit — `FormState.validate()` on all forms; `_isSubmitting` guards on all
-- [ ] Keyboard doesn't overlap form fields — **requires running app** (`SingleChildScrollView` used on most forms)
-- [x] Pull-to-refresh on all list screens — `RefreshIndicator` on 5 views (worker dashboard, profile, schedule, services, shop)
-- [x] Empty states are informative — `EmptyStateWidget` used in shop tab, cart, wishlist, admin products, admin collections, worker dash, admin jobs, home detail views
-
-### 7.4 — Platform Checklist
-
-- [ ] Android: Compiles with `flutter build appbundle --release` — **requires keystore + dart-define**
-- [x] Android: `minSdk = flutter.minSdkVersion` (defaults to 21) — appropriate for target
-- [x] Android: Permissions declared — INTERNET, ACCESS_NETWORK_STATE, WAKE_LOCK, POST_NOTIFICATIONS, VIBRATE, CAMERA (via picker), RECEIVE
-- [ ] iOS: Compiles with `flutter build ios --release` — **requires macOS**
-- [x] iOS: Info.plist — `NSCameraUsageDescription` + `NSPhotoLibraryUsageDescription` in all 3 apps
-- [x] iOS: Release.xcconfig — `TRACK_WIDGET_CREATION=false` in all 3 apps
-- [ ] iOS: TestFlight build passes — **requires macOS + Apple Developer account**
-- [x] ProGuard — `isMinifyEnabled = true` + `proguard-rules.pro` with Firebase keep rules in all 3 apps
-
-### 7.5 — Monitoring Checklist
-
-- [ ] Sentry DSN configured and working in release mode — **requires running app with `--dart-define SENTRY_DSN=...`**
-- [ ] Firebase Analytics events firing correctly — **requires running app**
-- [x] Custom crash reports capture relevant context — `FlutterError.onError` + `PlatformDispatcher.instance.onError` both use `CrashReportingService.captureException()`
-- [x] App handles session expiry gracefully — `_handleLink` in `deep_link_service.dart` handles Supabase auth callbacks; router handles redirects on auth state change (`if (user == null) return '/login'`)
-
----
-
-## Effort Summary
-
-| Phase | Est. Hours | Actual Hours | Status |
-|-------|-----------|--------------|--------|
-| 0 — Emergency Security | 1 | 0.5 | ✅ 90% done (revoke in console still manual) |
-| 1 — Fix Simulated Features | 40-80 | 1.75 | ✅ Phase complete |
-| 2 — Core Quality | 12-16 | 1.6 | ✅ Phase complete (2.1 skipped per ponytail) |
-| 3 — Offline & Connectivity | 30-40 | 3.5 | ✅ Phase complete |
-| 4 — Testing | 40-50 | 6 | ✅ Phase complete (119 tests) |
-| 5 — Code Quality | 10-14 | 5 | ✅ Phase complete |
-| 6 — Polish | 14-20 | 2.5 | ✅ Phase complete |
-| 7 — Verification | 8-12 | 0.5 | ✅ Phase complete |
-| **Total** | **155-233** | **~21.5** | **~90/100 audit score** |
-
-## Current Session Progress (Jul 4)
-
-```
-Session 7: Phase 7 — Final Verification (~0.5 hr)
-  Phase 7.1  ✅ Security audit — Admin SDK key deleted, .gitignore set, no debug endpoints, no session logging
-  Phase 7.2  ✅ Performance — analyze clean, CachedNetworkImage, proper keys
-  Phase 7.3  ✅ UX — loading/error/empty states verified, form guards on all, pull-to-refresh on 5 views
-  Phase 7.4  ✅ Platform — ProGuard + minify on all 3 apps, iOS descriptions, TRACK_WIDGET_CREATION=false
-  Phase 7.5  ✅ Monitoring — Sentry + Analytics wired, crash handlers set, session expiry handled
-  Manual     ⚠️ 5 items need running app: no jank, launch time, memory, keyboard overlap, Firebase events
-  Manual     ⚠️ 1 item needs DB access: RLS policies
-  Status: flutter analyze — 0 errors, 0 warnings, 2 infos | 119 tests all passing | ~90/100 audit score
-```
-
-```
-Session 6: Outstanding items cleanup (~1.5 hr)
-  Phase 0.1  ✅ Admin SDK key file deleted from disk
-  Phase 6.1  ✅ Added ✅ DONE marker to section heading
-  L4         ✅ Asset → PropertyAsset rename (4 files)
-  L1         ✅ debugPrint: removed 1 informational print; 22 catch-block prints kept as legitimate
-  H5         ✅ Atomic job assignment: assign_job() SQL function + Dart RPC call
-  M8         ✅ base64Encode in gemini_service.dart → compute(encodeBase64, imageBytes)
-  L6         ✅ Already fixed in Phase 5.2 debugPrint cleanup
-  Audit      ✅ Re-audit found 8 issues; fixed 6 (skipped large-file split as cosmetic)
-               Removed 4 unused deps (dio, flutter_hooks, flutter_map, latlong2)
-               Removed dead code (reserveProduct/updateInventory from shop_repository)
-               Added _isSubmitting guard to product_form_page.dart
-               Fixed silent catch in forgot_password_view.dart
-               Fixed silent catch in theme_provider.dart
-               Removed redundant try/catch in gemini_service.dart
-  Status: flutter analyze — 0 errors, 0 warnings, 2 infos | 119 tests all passing
-```
-
-```
-Session 5: Phase 4 completion + Phase 6 completion (~2.5 hr)
-  Phase 4.1  ✅ Complete: 22 auth VM, 10 cart VM, 8 wishlist, 10 jobs VM, 7 collections VM
-  Phase 4.1  ✅ Model tests: 8 collection model, 10 property model, 4 admin products, 8 models
-  Phase 4.2  ✅ Widget tests: 6 login, 4 shop tab, 4 worker dash, 4 admin jobs
-  Phase 4.3  ✅ Integration: 6 auth→shop→job flow tests
-  Phase 6.4  ✅ 7 unused imports removed, 2 unused _clearError() methods, unused onTap param, foundation import
-  Phase 6.4  ✅ Fix: login_view_test.dart `__` → `(context, state)`, shop_tab_view_test.dart, worker_dashboard_test.dart
-  Phase 6.4  ✅ Deleted unused supabase/functions/fcm-send edge function
-  Phase 6.1  ✅ Release build: isMinifyEnabled + proguard-rules.pro for all 3 apps
-  Phase 6.1  ✅ iOS: NSCameraUsageDescription + NSPhotoLibraryUsageDescription for all 3 apps
-  Phase 6.2  ✅ Firebase Analytics: analytics_service.dart + FirebaseAnalyticsObserver in GoRouter
-  Phase 6.3  ✅ Certificate pinning: SUPABASE_CERT_FINGERPRINT via --dart-define, SHA-256 validation
-  Phase 4    ✅ Phase complete
-  Phase 6    ✅ Phase complete
-  Phase 4    ✅ 119 tests all passing
-  Status: flutter analyze — 0 warnings, 1 info | 119 tests all passing | CI ready
-```
-
-```
-Session 4: Phase 5 — Code Quality (~5 hr)
-  Phase 5.1  ✅ Split admin_products_view (1275→285) → product_list_card + product_form_page
-  Phase 5.1  ✅ Split manager_properties_view (1277→728) → property_card + unit_card + asset_form_dialog
-  Phase 5.1  ✅ Split worker_dashboard_view (833→476) → job_card + job_preview_sheet
-  Phase 5.3  ✅ MergeSemantics on ProductListCard, WorkerJobCard, PropertyHeader
-  Phase 5.4  ✅ .github/workflows/ci.yml (analyze + test on push/PR)
-  Phase 5.5  ✅ README.md rewritten (setup, architecture, commands)
-  Phase 5    ✅ Phase complete
-  Status: flutter analyze — 1 info, 0 warnings | 66 tests all passing | CI ready
-```
-
-```
-Session 3: Finalized Phases 2+3, tests, loading states (~3 hr)
-  Phase 2.5  ✅ Double-submit guard on collection_form_page
-  Phase 2.5  ✅ All 5 forms verified guarded (login, register, new_request, review, collection)
-  Phase 3.3  ✅ Fixed 5 loading/error issues: shop_tab error, review error, home loading, product selector
-  Phase 4    ✅ 48 new tests (cart VM, jobs VM, collections VM, property models, cache stream)
-  Phase 2    ✅ Phase complete
-  Phase 3    ✅ Phase complete
-  Status: flutter analyze — 1 info, 0 warnings | 66 tests all passing
-```
-
-```
-Session 2: Offline data layer + connectivity banner (~1.5 hours)
-  Phase 3.1  ✅ LocalCacheService + cacheStream() helper
-  Phase 3.1  ✅ shop_repository: streamProducts() wrapped with cache
-  Phase 3.1  ✅ collections_repository: both streams wrapped with cache
-  Phase 3.1  ✅ jobs_repository: streamJobs() wrapped with cache
-  Phase 3.1  ✅ properties_repository: streamProperties() wrapped with cache
-  Phase 3.1  ✅ app_entry: LocalCacheService.init() after Hive init
-  Phase 3.2  ✅ OfflineBanner widget + added to all 3 shell views
-```
-
-```
-Session 1: Fixed top-10 production issues in ~3.5 hours
-  Phase 0.2  ✅ supabase_service.dart — hard compile-time guard
-  Phase 1.1  ✅ router.dart + migration.sql — null worker status = pending
-  Phase 1.2  ✅ Deleted ai_concierge_page.dart + removed from shop_tab_view.dart
-  Phase 1.3  ✅ Deleted room_preview_page.dart + room_preview_service.dart
-  Phase 1.4  ✅ Cart checkout replaced with "Inquire" dialog
-  Phase 2.2  ✅ 3 stream subscription leaks fixed
-  Phase 2.3  ✅ routerProvider uses ref.watch() for reactivity
-  Phase 2.4  ✅ Supabase.init .timeout(15s)
-```
-
-## Critical Path
-
-```
-Week 1               Week 2         Week 3         Week 4         Week 5-8
-│                    │              │              │              │
-Phase 0 ──► Phase 1 ──► Phase 2 ──► Phase 3 ─────► Phase 4 ─────► Phase 6-7
-(0.5 day)  (1-2 wks)  (3-4 days)    (1 wk)        (1-1.5 wks)    (2-3 wks)
-                                                                                          
-              └── Done  └── Done  └── Done      └── Testing    └── Polish + Release
-                                                    (66 tests)
-```
-
-Phases can overlap with 2 developers:
-- Dev 1: Phases 1 + 3 (features + offline)
-- Dev 2: Phases 2 + 4 + 5 (quality + testing)
-
----
-
-## Individual Issue Effort Breakdown
-
-| ID | Issue | Est. Time | Dependencies |
-|----|-------|-----------|-------------|
-| C1 | Revoke Firebase Admin key | 15 min | ✅ File deleted from disk; recommend revoking in Firebase Console manually |
-| C2 | Fix placeholder credentials | 5 min | None |
-| C3 | Remove config files from root | 15 min | None |
-| H1 | Integrate payment / remove checkout | 0.5 hr ✅ | Done (replaced with inquiry flow) |
-| H2 | Fix/remove AI concierge | 0.5 hr ✅ | Done (removed) |
-| H3 | Fix/remove room preview | 0.25 hr ✅ | Done (removed) |
-| H4 | Implement offline data layer | 24-32 hr ✅ | Done — LocalCacheService + cacheStream + banner |
-| H5 | Atomic job assignment RPC | 2 hr | ✅ Created `assign_job()` SQL function + updated `jobs_repository.dart` to call via RPC |
-| H6 | Write tests | 24-40 hr | Phases 1-3 done |
-| H7 | Fix worker status lifecycle | 0.5 hr ✅ | Done |
-| H8 | Standardize GoRouter navigation | 0 hr 🚫 | Skipped (38 changes, minimal value) |
-| H9 | Fix/remove cached_jobs box | 30 min ✅ | Done — removed from app_entry.dart |
-| M1 | Add loading states | 3-4 hr | H4 (offline) — 5 ad-hoc fixes done (Session 3); unified AsyncView pattern skipped per ponytail |
-| M2 | Add API timeouts | 30 min | None |
-| M3 | Fix router rebuilds | 0.1 hr ✅ | Done |
-| M4 | Dispose stream subs | 0.5 hr ✅ | Done (3 leaks fixed) |
-| M5 | Double-submit protection | 1 hr ✅ | Done — all forms guarded |
-| M6 | Split large files | 2 hr | None |
-| M7 | Accessibility | 4-6 hr | None |
-| M8 | Image processing off main thread | 4 hr | ✅ `base64Encode` in `gemini_service.dart` wrapped with `compute()` |
-| M9 | Fix deep link init race | 30 min ✅ | Done — `startListening()` before runApp |
-| M10 | Certificate pinning | 2 hr | None |
-| L1-L7 | All low-priority items | 4-6 hr | None |
+| Phase | Items | Est. Effort |
+|-------|-------|-------------|
+| 1 — CRITICAL | 5 | 1-2 days |
+| 2 — HIGH | 9 | 3-4 days |
+| 3 — MEDIUM | 5 | 2-3 days |
+| 4 — LOW | 4 | 0.5 day |
+| **Total** | **23** | **~7-10 days** |

@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fijadora | Home Services, Curated Decor & AI Interior Design</title>
+  <meta name="description" content="Your home, refined. Vetted trade professionals for repairs, curated styling bundles, and AI-powered space matching.">
+  
+  <!-- Supabase -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['Outfit', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              slate: '#1E293B',
+              indigo: '#312E81',
+              primary: '#4338CA',
+              lavender: '#818CF8',
+              rose: '#F472B6',
+              gold: '#D97706',
+              cream: '#FDFBF7',
+              pearl: '#FAF8F5',
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'scan': 'scan 2s linear infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-6px)' },
+            },
+            scan: {
+              '0%, 100%': { transform: 'translateY(0%)', opacity: '0.3' },
+              '50%': { transform: 'translateY(100%)', opacity: '0.6' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Premium custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #FDFBF7;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #E2E8F0;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #CBD5E1;
+    }
+    /* Subtle dot grid pattern background */
+    .bg-dot-grid {
+      background-image: radial-gradient(#e2e8f0 1.2px, transparent 1.2px);
+      background-size: 24px 24px;
+    }
+  </style>
+</head>
+<body class="bg-brand-cream text-brand-slate font-sans antialiased selection:bg-brand-lavender/30 overflow-x-hidden">
+
+  <!-- TOP HEADER NOTIFICATION -->
+  <div class="bg-brand-slate text-white/90 text-center py-2 px-4 text-[10px] tracking-widest uppercase z-50 relative">
+    ✨ Transform your space with 10% off code: <span class="text-brand-lavender underline font-semibold select-all">WELCOME10</span>
+  </div>
+
+  <!-- NAVIGATION WRAPPER (Handles floating pill transform) -->
+  <div id="header-wrapper" class="sticky top-0 z-40 w-full transition-all duration-300 bg-brand-cream/80 backdrop-blur-md border-b border-slate-200/40">
+    <header id="nav-container" class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between transition-all duration-300">
+      
+      <!-- Brand Logo (Pure Typography) -->
+      <a href="#" class="font-display font-bold text-xl tracking-tight text-brand-slate hover:text-brand-primary transition-colors">
+        Fijadora
+      </a>
+
+      <!-- Desktop Nav Links -->
+      <nav class="hidden md:flex items-center gap-8 text-xs font-semibold tracking-wider uppercase text-slate-500">
+        <a href="#services" class="hover:text-brand-slate transition-colors">Services</a>
+        <a href="#concierge" class="hover:text-brand-slate transition-colors">AI Concierge</a>
+        <a href="#shop" class="hover:text-brand-slate transition-colors">Curated Shop</a>
+        <a href="#how-it-works" class="hover:text-brand-slate transition-colors">How It Works</a>
+      </nav>
+
+      <!-- CTA -->
+      <div class="flex items-center gap-4">
+        <a href="#services" class="hidden sm:inline-flex items-center justify-center px-5 py-2 rounded-full bg-brand-slate text-white text-xs font-medium hover:bg-slate-800 transition-colors">
+          Book Service
+        </a>
+
+        <!-- Mobile Menu Toggle -->
+        <button id="menu-btn" class="md:hidden p-2 text-slate-600 hover:text-brand-slate" aria-label="Toggle Menu" onclick="toggleMenu()">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path id="menu-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile Nav Menu -->
+    <div id="mobile-menu" class="hidden md:hidden absolute top-20 left-4 right-4 bg-white/95 backdrop-blur-md border border-slate-200/60 rounded-3xl p-6 flex flex-col gap-4 shadow-xl z-50 transition-all duration-300">
+      <a href="#services" onclick="toggleMenu()" class="text-sm font-semibold tracking-wider uppercase text-slate-600 hover:text-brand-slate py-1">Services</a>
+      <a href="#concierge" onclick="toggleMenu()" class="text-sm font-semibold tracking-wider uppercase text-slate-600 hover:text-brand-slate py-1">AI Concierge</a>
+      <a href="#shop" onclick="toggleMenu()" class="text-sm font-semibold tracking-wider uppercase text-slate-600 hover:text-brand-slate py-1">Curated Shop</a>
+      <a href="#how-it-works" onclick="toggleMenu()" class="text-sm font-semibold tracking-wider uppercase text-slate-600 hover:text-brand-slate py-1">How It Works</a>
+      <a href="#services" onclick="toggleMenu()" class="inline-flex items-center justify-center w-full py-2.5 rounded-full bg-brand-slate text-white text-xs font-semibold">
+        Book Service
+      </a>
+    </div>
+  </div>
+
+  <!-- HERO SECTION (Ultra-Minimalist) -->
+  <section class="relative pt-16 pb-24 md:pt-24 md:pb-36 overflow-hidden bg-dot-grid">
+    <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+      
+      <!-- Hero Copy -->
+      <div class="lg:col-span-6 flex flex-col items-start text-left">
+        <h1 class="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-brand-slate font-bold leading-[1.05] tracking-tight mb-8">
+          Your home,<br><span class="text-slate-400">refined.</span>
+        </h1>
+        <p class="text-lg text-slate-500 font-normal leading-relaxed max-w-lg mb-10">
+          Vetted trade professionals for repairs, designer-curated home styling bundles, and instant AI space matchmaking. Made simple.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <a href="#services" class="inline-flex items-center justify-center px-7 py-3.5 rounded-full bg-brand-slate text-white font-medium text-sm hover:bg-slate-800 transition-all text-center">
+            Book a Service
+          </a>
+          <a href="#shop" class="inline-flex items-center justify-center px-7 py-3.5 rounded-full bg-white text-brand-slate font-medium text-sm border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all text-center">
+            Shop Curated Looks
+          </a>
+        </div>
+      </div>
+
+      <!-- Hero Visuals (Sleek Phone Frame Displaying Minimal App) -->
+      <div class="lg:col-span-6 flex justify-center items-center relative">
+        <!-- Soft Minimal Shadow/Glow -->
+        <div class="absolute w-72 h-72 rounded-full bg-brand-slate/5 blur-[80px] pointer-events-none"></div>
+
+        <!-- Phone Frame Mockup -->
+        <div class="relative w-72 h-[580px] rounded-[48px] bg-slate-900 p-2.5 shadow-2xl border-4 border-slate-800 animate-float">
+          <!-- Speaker ear piece -->
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 h-5 w-24 bg-slate-900 rounded-b-xl z-20 flex items-center justify-center">
+            <div class="w-8 h-1 bg-slate-800 rounded-full"></div>
+          </div>
+
+          <!-- Screen Wrapper -->
+          <div class="relative w-full h-full rounded-[38px] overflow-hidden bg-brand-pearl flex flex-col justify-between text-brand-slate">
+            
+            <!-- App Bar Mock -->
+            <div class="h-8 flex items-end justify-between px-6 pb-1 text-[9px] font-bold text-slate-400">
+              <span>9:41</span>
+              <div class="flex items-center gap-1">
+                <div class="w-3.5 h-2 border border-slate-300 rounded-xs"></div>
+              </div>
+            </div>
+
+            <!-- Page Title -->
+            <div class="px-5 pt-3 flex justify-between items-center">
+              <div>
+                <span class="text-[8px] uppercase tracking-wider text-slate-400 font-bold">Fijadora App</span>
+                <h4 class="text-sm font-serif font-bold">Active Space</h4>
+              </div>
+              <div class="w-6 h-6 rounded-full bg-slate-200/50 flex items-center justify-center text-[9px] font-bold">SJ</div>
+            </div>
+
+            <!-- Screen Content (Displays Minimal Tracking Card) -->
+            <div class="flex-1 px-4 py-4 flex flex-col justify-center gap-4">
+              
+              <!-- Clean Minimal Tracking Card -->
+              <div class="bg-white rounded-2xl p-4 shadow-xs border border-slate-200/50">
+                <div class="flex justify-between items-start mb-3">
+                  <div>
+                    <h5 class="text-[10px] font-bold tracking-tight text-slate-800">Kitchen Plumber</h5>
+                    <p class="text-[8px] text-slate-400">Order #FIJ-89302</p>
+                  </div>
+                  <span class="text-[8px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">Active</span>
+                </div>
+
+                <!-- Sleek Timeline dots -->
+                <div class="flex items-center justify-between relative px-2 py-3 mb-3">
+                  <div class="absolute h-0.5 bg-slate-100 left-4 right-4 top-1/2 -translate-y-1/2 z-0"></div>
+                  <div class="absolute h-0.5 bg-slate-800 left-4 top-1/2 -translate-y-1/2 z-0 transition-all duration-500" style="width: 50%;"></div>
+                  <!-- Dot 1 -->
+                  <div class="w-2.5 h-2.5 rounded-full bg-slate-800 border-2 border-white z-10"></div>
+                  <!-- Dot 2 -->
+                  <div class="w-2.5 h-2.5 rounded-full bg-slate-800 border-2 border-white z-10 scale-110"></div>
+                  <!-- Dot 3 -->
+                  <div class="w-2.5 h-2.5 rounded-full bg-slate-200 border-2 border-white z-10"></div>
+                </div>
+
+                <!-- Short Status detail -->
+                <div class="text-[9px] text-slate-500 mb-3 text-center leading-tight">
+                  <strong class="text-slate-800 block">Lucas Miller</strong>
+                  En route • ETA: 8 minutes
+                </div>
+
+                <!-- Provider Profile row -->
+                <div class="flex items-center gap-2.5 bg-slate-50 p-2 rounded-xl">
+                  <img src="https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&w=60&h=60&q=80" alt="Lucas M" class="w-6 h-6 rounded-full object-cover">
+                  <div class="flex-grow leading-none">
+                    <div class="text-[9px] font-bold text-slate-800">Lucas M.</div>
+                    <div class="text-[7px] text-slate-400 mt-0.5">5.0★ Verified Plumber</div>
+                  </div>
+                  <div class="w-5 h-5 rounded-full bg-white flex items-center justify-center text-slate-500 border border-slate-100 hover:text-brand-slate">
+                    <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sleek Visual Decor Card Mock -->
+              <div class="bg-white rounded-2xl overflow-hidden shadow-xs border border-slate-200/50 flex items-center p-3 gap-3">
+                <img src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=100&q=80" alt="Room Decor" class="w-12 h-12 object-cover rounded-lg">
+                <div class="flex-grow leading-none">
+                  <h6 class="text-[9px] font-bold">Cozy Minimalist Pack</h6>
+                  <span class="text-[8px] text-slate-400 mt-1 block">$299 Bundle</span>
+                </div>
+                <button onclick="inquireAction('Cozy Minimalist Pack')" class="bg-slate-900 text-white text-[8px] px-2.5 py-1 rounded-full hover:bg-slate-800 transition-colors">Inquire</button>
+              </div>
+
+            </div>
+
+            <!-- Bottom Navigation Bar inside mockup -->
+            <div class="h-12 bg-white border-t border-slate-100 flex items-center justify-around px-4">
+              <span class="w-4 h-4 text-slate-800 flex items-center justify-center">
+                <svg fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+              </span>
+              <span class="w-4 h-4 text-slate-300">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </span>
+              <span class="w-4 h-4 text-slate-300">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- THE STAR FEATURE: AI DESIGN CONCIERGE -->
+  <section id="concierge" class="py-24 bg-brand-pearl relative border-y border-slate-200/50">
+    <div class="max-w-7xl mx-auto px-6">
+      
+      <!-- Section Title -->
+      <div class="max-w-3xl mx-auto text-center mb-16">
+        <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">AI Room Analysis</span>
+        <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl text-brand-slate font-bold mt-2 mb-6">
+          Meet Your AI Design Concierge
+        </h2>
+        <p class="text-base text-slate-500 leading-relaxed max-w-xl mx-auto">
+          Upload a photo of any room. Our AI Concierge analyzes layout, shapes, and lighting to recommend matching styling bundles from our shop instantly.
+        </p>
+      </div>
+
+      <!-- Interactive Widget Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch">
+        
+        <!-- Interactive Uploader & Selector Left Panel -->
+        <div class="lg:col-span-6 flex flex-col justify-between bg-white rounded-3xl p-8 shadow-xs border border-slate-200/50">
+          <div>
+            <h3 class="font-serif text-2xl text-brand-slate font-bold mb-3">Analyze Your Space</h3>
+            <p class="text-xs text-slate-400 mb-6 leading-relaxed">
+              Drag and drop an image of your space, select a file, or click on one of our room samples below to simulate the scan.
+            </p>
+
+            <!-- Room Selector Option Buttons -->
+            <div class="grid grid-cols-3 gap-4 mb-6">
+              <button onclick="simulateAI('living')" class="group text-left focus:outline-none">
+                <div class="relative aspect-video rounded-xl overflow-hidden mb-2 border border-slate-100 group-hover:border-slate-300 transition-all">
+                  <img src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=200&q=80" alt="Living Room Sample" class="w-full h-full object-cover">
+                  <div class="absolute inset-0 bg-slate-900/5 group-hover:bg-transparent transition-colors"></div>
+                </div>
+                <div class="text-[10px] font-bold text-slate-600 group-hover:text-brand-slate tracking-wide uppercase">Living Room</div>
+              </button>
+
+              <button onclick="simulateAI('bedroom')" class="group text-left focus:outline-none">
+                <div class="relative aspect-video rounded-xl overflow-hidden mb-2 border border-slate-100 group-hover:border-slate-300 transition-all">
+                  <img src="https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=200&q=80" alt="Bedroom Sample" class="w-full h-full object-cover">
+                  <div class="absolute inset-0 bg-slate-900/5 group-hover:bg-transparent transition-colors"></div>
+                </div>
+                <div class="text-[10px] font-bold text-slate-600 group-hover:text-brand-slate tracking-wide uppercase">Bedroom</div>
+              </button>
+
+              <button onclick="simulateAI('bathroom')" class="group text-left focus:outline-none">
+                <div class="relative aspect-video rounded-xl overflow-hidden mb-2 border border-slate-100 group-hover:border-slate-300 transition-all">
+                  <img src="https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=200&q=80" alt="Bathroom Sample" class="w-full h-full object-cover">
+                  <div class="absolute inset-0 bg-slate-900/5 group-hover:bg-transparent transition-colors"></div>
+                </div>
+                <div class="text-[10px] font-bold text-slate-600 group-hover:text-brand-slate tracking-wide uppercase">Bathroom</div>
+              </button>
+            </div>
+
+            <!-- Drag and Drop Dropzone -->
+            <label for="room-file" class="relative block border border-dashed border-slate-300 hover:border-slate-400 rounded-2xl p-8 text-center cursor-pointer transition-all bg-slate-50/50 hover:bg-slate-50 group">
+              <input type="file" id="room-file" class="hidden" accept="image/*" onchange="handleFileUpload(event)">
+              <div class="flex flex-col items-center">
+                <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                </div>
+                <span class="text-xs font-bold text-slate-700">Upload Room Photo</span>
+                <span class="text-[10px] text-slate-400 mt-1">PNG, JPG up to 10MB</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="mt-6 flex items-center gap-3 text-[10px] text-slate-400 bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+            <span>Processed privately. Matches sync with our verified decor inventory catalogue.</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Output Right Panel -->
+        <div class="lg:col-span-6 flex flex-col bg-white rounded-3xl p-8 shadow-xs border border-slate-200/50 min-h-[460px] relative overflow-hidden">
+          
+          <!-- STATE 1: Empty Initial state -->
+          <div id="ai-state-empty" class="flex-1 flex flex-col items-center justify-center text-center py-12 transition-all duration-300">
+            <div class="w-16 h-16 bg-brand-pearl rounded-2xl flex items-center justify-center mb-6 relative">
+              <div class="absolute inset-0 bg-slate-200/50 rounded-2xl animate-ping scale-75 opacity-70"></div>
+              <svg class="w-8 h-8 text-slate-400 relative" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.813 15.904L9 21l8.904-4.813M10.813 14.904l7.19-7.19a2.5 2.5 0 00-3.536-3.536l-7.19 7.19M10.813 14.904L9.813 15.904" />
+              </svg>
+            </div>
+            <h4 class="font-serif text-lg font-bold text-slate-800 mb-2">Awaiting Space Upload</h4>
+            <p class="text-xs text-slate-400 max-w-xs leading-relaxed">
+              Select one of our room samples or upload your own room photo to test the AI.
+            </p>
+          </div>
+
+          <!-- STATE 2: Loading State -->
+          <div id="ai-state-loading" class="hidden flex-1 flex flex-col items-center justify-center text-center py-12 transition-all duration-300">
+            <div class="relative w-24 h-24 mb-6">
+              <!-- Radial outer spinner -->
+              <div class="absolute inset-0 rounded-full border-2 border-slate-100 border-t-slate-800 animate-spin"></div>
+              <!-- Inner pulse scanner grid -->
+              <div class="absolute inset-3 rounded-full bg-slate-50 flex items-center justify-center overflow-hidden border border-slate-100">
+                <div class="w-full h-0.5 bg-slate-800 absolute top-0 animate-scan"></div>
+                <svg class="w-6 h-6 text-slate-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7" />
+                </svg>
+              </div>
+            </div>
+            <h4 id="ai-loading-title" class="text-sm font-bold text-slate-800 mb-1">Scanning space details...</h4>
+            <p id="ai-loading-desc" class="text-[10px] text-slate-400 max-w-xs">Analyzing spatial boundaries and light vectors.</p>
+          </div>
+
+          <!-- STATE 3: Success recommendations -->
+          <div id="ai-state-result" class="hidden flex-grow flex flex-col transition-all duration-500 opacity-0">
+            <!-- Results Header -->
+            <div class="flex items-center justify-between border-b border-slate-150 pb-4 mb-6">
+              <div>
+                <span class="text-[9px] uppercase font-bold tracking-widest text-slate-400">Analysis Results</span>
+                <h4 id="result-title" class="font-serif text-lg font-bold text-slate-850">Modern Living Room Matches</h4>
+              </div>
+              <div class="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                <span class="w-1.5 h-1.5 bg-slate-800 rounded-full animate-pulse"></span>
+                Done
+              </div>
+            </div>
+
+            <!-- Description -->
+            <p id="result-desc" class="text-xs text-slate-500 leading-relaxed mb-6 bg-brand-pearl p-4 rounded-xl border border-slate-200/40">
+              Matches found: Warm minimalist layout with soft ambient light. We recommend a floor lamp for soft task lighting, olive tree to add life, and our cozy minimalist home styling pack.
+            </p>
+
+            <!-- Product recommendations list -->
+            <div id="recommendation-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-grow">
+              <!-- Cards dynamically rendered by JS -->
+            </div>
+
+            <!-- Footer for Results -->
+            <div class="mt-8 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <span class="text-[11px] text-slate-455">Need assistance setting up these items?</span>
+              <button onclick="scrollToSection('services')" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 rounded-full bg-slate-900 text-white text-[10px] font-semibold hover:bg-slate-800 transition-colors">
+                Book Professional Setup
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SERVICES SECTION (With Minimal Tab Filter & Clean Simulation Card) -->
+  <section id="services" class="py-24 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6">
+      
+      <div class="max-w-3xl mx-auto text-center mb-16">
+        <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">On-Demand Care</span>
+        <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl text-brand-slate font-bold mt-2 mb-6">
+          Professional Home Services
+        </h2>
+        <p class="text-base text-slate-500 max-w-xl mx-auto leading-relaxed">
+          Book licensed, vetted professionals for repairs, maintenance, and expert design guidance. Upfront transparent flat pricing.
+        </p>
+      </div>
+
+      <!-- Main Layout: Grid of services AND the Live Tracking simulator side-by-side -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        
+        <!-- Left: Filter & Service Grid (Col 7) -->
+        <div class="lg:col-span-7 space-y-8">
+          <!-- Filter Tabs -->
+          <div class="flex flex-wrap gap-1 p-1 bg-slate-100 rounded-full max-w-md">
+            <button onclick="filterServices('all')" id="filter-btn-all" class="px-4 py-1.5 text-[10px] font-semibold tracking-wider uppercase rounded-full transition-all text-white bg-slate-900">
+              All Services
+            </button>
+            <button onclick="filterServices('maintenance')" id="filter-btn-maintenance" class="px-4 py-1.5 text-[10px] font-semibold tracking-wider uppercase rounded-full transition-all text-slate-500 hover:text-slate-900">
+              Maintenance
+            </button>
+            <button onclick="filterServices('design')" id="filter-btn-design" class="px-4 py-1.5 text-[10px] font-semibold tracking-wider uppercase rounded-full transition-all text-slate-500 hover:text-slate-900">
+              Design & Styling
+            </button>
+          </div>
+
+          <!-- Services Grid -->
+          <div id="services-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[520px] overflow-y-auto pr-2">
+            <!-- Services dynamically loaded here by JS -->
+          </div>
+        </div>
+
+        <!-- Right: Sleek Interactive Service Tracker Card (Col 5) -->
+        <div class="lg:col-span-5 flex flex-col gap-6">
+          
+          <!-- Sleek Tracker Dashboard Card -->
+          <div class="bg-white rounded-3xl p-6 shadow-md border border-slate-200/50 flex flex-col justify-between min-h-[400px]">
+            
+            <div>
+              <div class="flex justify-between items-center mb-6">
+                <span class="text-[9px] uppercase font-bold tracking-widest text-slate-400">Order Dispatch Demonstration</span>
+                <span class="text-[9px] bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-full">Simulated App</span>
+              </div>
+              
+              <div class="mb-6">
+                <span id="tracker-label" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Stage 1</span>
+                <h4 id="tracker-title" class="font-serif text-xl font-bold text-slate-800">Finding Professional</h4>
+                <p id="tracker-desc" class="text-xs text-slate-500 leading-relaxed mt-2">
+                  Matching your kitchen plumbing dispatch request with verified plumbers in your area code.
+                </p>
+              </div>
+
+              <!-- Ultra-Sleek Timeline Progress Bar -->
+              <div class="relative py-4 mb-6">
+                <!-- Underline -->
+                <div class="absolute h-0.5 bg-slate-100 left-0 right-0 top-1/2 -translate-y-1/2 rounded-full"></div>
+                <!-- Highlight line -->
+                <div id="tracker-bar" class="absolute h-0.5 bg-slate-800 left-0 top-1/2 -translate-y-1/2 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                
+                <!-- Timeline status selectors -->
+                <div class="flex justify-between items-center relative">
+                  <button onclick="setTrackerStep(0)" id="step-node-0" class="w-3.5 h-3.5 rounded-full border-2 border-white bg-slate-200 z-10 transition-all focus:outline-none" title="Request Received"></button>
+                  <button onclick="setTrackerStep(1)" id="step-node-1" class="w-3.5 h-3.5 rounded-full border-2 border-white bg-slate-200 z-10 transition-all focus:outline-none" title="Professional Confirmed"></button>
+                  <button onclick="setTrackerStep(2)" id="step-node-2" class="w-3.5 h-3.5 rounded-full border-2 border-white bg-slate-200 z-10 transition-all focus:outline-none" title="En Route"></button>
+                  <button onclick="setTrackerStep(3)" id="step-node-3" class="w-3.5 h-3.5 rounded-full border-2 border-white bg-slate-200 z-10 transition-all focus:outline-none" title="Arrived"></button>
+                  <button onclick="setTrackerStep(4)" id="step-node-4" class="w-3.5 h-3.5 rounded-full border-2 border-white bg-slate-200 z-10 transition-all focus:outline-none" title="In Progress"></button>
+                </div>
+              </div>
+
+              <!-- ETA or Status text -->
+              <div id="tracker-eta" class="text-xs text-slate-800 font-semibold mb-6 flex items-center justify-between">
+                <span>Current Status:</span>
+                <span id="tracker-eta-val" class="font-mono text-slate-500">Estimating...</span>
+              </div>
+            </div>
+
+            <!-- Provider Profile row -->
+            <div id="tracker-provider-card" class="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100 transition-opacity duration-300">
+              <img id="tracker-provider-img" src="https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&w=80&h=80&q=80" alt="Provider Avatar" class="w-8 h-8 rounded-full object-cover">
+              <div class="flex-grow leading-none">
+                <div id="tracker-provider-name" class="text-xs font-bold text-slate-800">Searching...</div>
+                <div id="tracker-provider-role" class="text-[9px] text-slate-400 mt-1">Pending assignment</div>
+              </div>
+              <a href="#" class="w-7 h-7 rounded-full bg-white flex items-center justify-center text-slate-400 hover:text-slate-800 transition-colors border border-slate-100">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+              </a>
+            </div>
+
+          </div>
+
+          <!-- Simulation Button Controls -->
+          <div class="flex justify-between items-center gap-4">
+            <button onclick="shiftTracker(-1)" class="w-1/2 py-2.5 rounded-full border border-slate-200 bg-white text-xs text-slate-500 font-semibold hover:bg-slate-50 hover:text-brand-slate transition-colors text-center">
+              Back
+            </button>
+            <button onclick="shiftTracker(1)" class="w-1/2 py-2.5 rounded-full bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-colors text-center">
+              Next Stage
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- THE CURATED SHOP & BUNDLES -->
+  <section id="shop" class="py-24 bg-brand-pearl relative">
+    <div class="max-w-7xl mx-auto px-6">
+      
+      <!-- Section Title -->
+      <div class="max-w-3xl mx-auto text-center mb-16">
+        <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Decor & Furnishings</span>
+        <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl text-brand-slate font-bold mt-2 mb-6">
+          Curated Shop & Collections
+        </h2>
+        <p class="text-base text-slate-500 max-w-xl mx-auto leading-relaxed">
+          Designer-matched sets. Purchase complete bundles in a single click, or browse styled mood boards.
+        </p>
+      </div>
+
+      <!-- Curated Bundles Sub-Section -->
+      <div class="mb-20">
+        <div class="flex justify-between items-end mb-10 pb-4 border-b border-slate-200/50">
+          <div>
+            <h3 class="font-serif text-xl font-bold text-brand-slate">Designer Bundles</h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">Ready to buy sets styled for premium homes.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          
+          <!-- Bundle 1 -->
+          <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/40 hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+            <div>
+              <div class="relative h-56 w-full overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=600&q=80" alt="Smart Home Starter" class="w-full h-full object-cover">
+              </div>
+              <div class="p-6">
+                <h4 class="font-serif text-lg font-bold text-brand-slate mb-1">Smart Home Starter</h4>
+                <p class="text-xs text-slate-400 leading-relaxed mb-4">Smart plug 4-pack, smart home hub, motion sensor, and custom ambient smart light bulbs.</p>
+              </div>
+            </div>
+            <div class="p-6 pt-0 flex items-center justify-between">
+              <span class="text-base font-bold text-brand-slate">$299</span>
+              <button onclick="inquireAction('Smart Home Starter')" class="px-4 py-2 rounded-full bg-slate-900 text-white text-[10px] font-semibold hover:bg-slate-800 transition-colors">
+                Inquire
+              </button>
+            </div>
+          </div>
+
+          <!-- Bundle 2 -->
+          <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/40 hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+            <div>
+              <div class="relative h-56 w-full overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80" alt="Kitchen Starter Bundle" class="w-full h-full object-cover">
+              </div>
+              <div class="p-6">
+                <h4 class="font-serif text-lg font-bold text-brand-slate mb-1">Kitchen Starter Bundle</h4>
+                <p class="text-xs text-slate-400 leading-relaxed mb-4">Cast iron skillet, seasoned wooden cutting board set, solid oak utensils, and organic linen towels.</p>
+              </div>
+            </div>
+            <div class="p-6 pt-0 flex items-center justify-between">
+              <span class="text-base font-bold text-brand-slate">$249</span>
+              <button onclick="inquireAction('Kitchen Starter Bundle')" class="px-4 py-2 rounded-full bg-slate-900 text-white text-[10px] font-semibold hover:bg-slate-800 transition-colors">
+                Inquire
+              </button>
+            </div>
+          </div>
+
+          <!-- Bundle 3 -->
+          <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/40 hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+            <div>
+              <div class="relative h-56 w-full overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80" alt="Bath Refresh Bundle" class="w-full h-full object-cover">
+              </div>
+              <div class="p-6">
+                <h4 class="font-serif text-lg font-bold text-brand-slate mb-1">Bath Refresh Bundle</h4>
+                <p class="text-xs text-slate-400 leading-relaxed mb-4">Rain shower head, matte black bathroom fixtures, organic Egyptian cotton towels, and wooden caddy.</p>
+              </div>
+            </div>
+            <div class="p-6 pt-0 flex items-center justify-between">
+              <span class="text-base font-bold text-brand-slate">$199</span>
+              <button onclick="inquireAction('Bath Refresh Bundle')" class="px-4 py-2 rounded-full bg-slate-900 text-white text-[10px] font-semibold hover:bg-slate-800 transition-colors">
+                Inquire
+              </button>
+            </div>
+          </div>
+
+          <!-- Bundle 4 -->
+          <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/40 hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+            <div>
+              <div class="relative h-56 w-full overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1517816743773-6e0fd518b4a6?auto=format&fit=crop&w=600&q=80" alt="Cozy Night In Bundle" class="w-full h-full object-cover">
+              </div>
+              <div class="p-6">
+                <h4 class="font-serif text-lg font-bold text-brand-slate mb-1">Cozy Night In Bundle</h4>
+                <p class="text-xs text-slate-400 leading-relaxed mb-4">Woven weighted blanket, aromatherapy soy candle set, solid bamboo lap tray, and cocoa mix.</p>
+              </div>
+            </div>
+            <div class="p-6 pt-0 flex items-center justify-between">
+              <span class="text-base font-bold text-brand-slate">$159</span>
+              <button onclick="inquireAction('Cozy Night In Bundle')" class="px-4 py-2 rounded-full bg-slate-900 text-white text-[10px] font-semibold hover:bg-slate-800 transition-colors">
+                Inquire
+              </button>
+            </div>
+          </div>
+
+          <!-- Bundle 5 -->
+          <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/40 hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+            <div>
+              <div class="relative h-56 w-full overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=600&q=80" alt="Paint & Tools Bundle" class="w-full h-full object-cover">
+              </div>
+              <div class="p-6">
+                <h4 class="font-serif text-lg font-bold text-brand-slate mb-1">Paint & Tools Bundle</h4>
+                <p class="text-xs text-slate-400 leading-relaxed mb-4">Premium satin neutral paint (5L), roller set, painter tape, and canvas drop cloth.</p>
+              </div>
+            </div>
+            <div class="p-6 pt-0 flex items-center justify-between">
+              <span class="text-base font-bold text-brand-slate">$129</span>
+              <button onclick="inquireAction('Paint & Tools Bundle')" class="px-4 py-2 rounded-full bg-slate-900 text-white text-[10px] font-semibold hover:bg-slate-800 transition-colors">
+                Inquire
+              </button>
+            </div>
+          </div>
+
+          <!-- Bundle 6 -->
+          <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/40 hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+            <div>
+              <div class="relative h-56 w-full overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=600&q=80" alt="Herb Garden Kit" class="w-full h-full object-cover">
+              </div>
+              <div class="p-6">
+                <h4 class="font-serif text-lg font-bold text-brand-slate mb-1">Herb Garden Kit</h4>
+                <p class="text-xs text-slate-400 leading-relaxed mb-4">Indoor kitchen herb kit with 6 ceramic pots, heirloom herb seeds, soil pellets, and bamboo tray.</p>
+              </div>
+            </div>
+            <div class="p-6 pt-0 flex items-center justify-between">
+              <span class="text-base font-bold text-brand-slate">$49</span>
+              <button onclick="inquireAction('Herb Garden Kit')" class="px-4 py-2 rounded-full bg-slate-900 text-white text-[10px] font-semibold hover:bg-slate-800 transition-colors">
+                Inquire
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Inspirational Collections Sub-Section -->
+      <div>
+        <div class="mb-10 pb-2 border-b border-slate-250">
+          <h3 class="font-serif text-xl font-bold text-brand-slate">Inspirational Collections</h3>
+          <p class="text-[11px] text-slate-400 mt-0.5">Explore blueprints matching your design preferences.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          
+          <!-- Collection 1 -->
+          <div class="relative h-80 rounded-3xl overflow-hidden group shadow-xs">
+            <img src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=600&q=80" alt="Cozy Minimalist" class="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500 animate-pulse-slow">
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent flex flex-col justify-end p-6">
+              <h4 class="font-serif text-lg font-bold text-white mb-1">Cozy Minimalist</h4>
+              <p class="text-[10px] text-slate-350 leading-normal">Clean lines, soft earth-tones, and high-texture fabrics built for small apartments.</p>
+              <a href="#concierge" class="text-white text-[10px] font-bold mt-4 flex items-center gap-1 hover:underline">
+                Explore Concierge 
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Collection 2 -->
+          <div class="relative h-80 rounded-3xl overflow-hidden group shadow-xs">
+            <img src="https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=600&q=80" alt="Urban Jungle" class="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500">
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent flex flex-col justify-end p-6">
+              <h4 class="font-serif text-lg font-bold text-white mb-1">Urban Jungle</h4>
+              <p class="text-[10px] text-slate-350 leading-normal">Bring the outdoors inside with tall, leafy tropical plants and natural rattan accents.</p>
+              <a href="#concierge" class="text-white text-[10px] font-bold mt-4 flex items-center gap-1 hover:underline">
+                Explore Concierge 
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Collection 3 -->
+          <div class="relative h-80 rounded-3xl overflow-hidden group shadow-xs">
+            <img src="https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80" alt="Boho Bedroom Vibes" class="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500">
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent flex flex-col justify-end p-6">
+              <h4 class="font-serif text-lg font-bold text-white mb-1">Boho Bedroom Vibes</h4>
+              <p class="text-[10px] text-slate-350 leading-normal">Free-spirited bohemian layout combining macrame elements and warm ambient lighting.</p>
+              <a href="#concierge" class="text-white text-[10px] font-bold mt-4 flex items-center gap-1 hover:underline">
+                Explore Concierge 
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Collection 4 -->
+          <div class="relative h-80 rounded-3xl overflow-hidden group shadow-xs">
+            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80" alt="Spa Retreat" class="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500">
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent flex flex-col justify-end p-6">
+              <h4 class="font-serif text-lg font-bold text-white mb-1">Spa Retreat</h4>
+              <p class="text-[10px] text-slate-350 leading-normal">Elevate your primary bathroom into a serene personal spa sanctuary with stone textures.</p>
+              <a href="#concierge" class="text-white text-[10px] font-bold mt-4 flex items-center gap-1 hover:underline">
+                Explore Concierge 
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS SECTION -->
+  <section id="how-it-works" class="py-24 relative overflow-hidden bg-dot-grid">
+    <div class="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-slate-200/20 blur-[120px] pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-6">
+      
+      <!-- Section Title -->
+      <div class="max-w-3xl mx-auto text-center mb-20">
+        <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Step-by-step</span>
+        <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl text-brand-slate font-bold mt-2 mb-6">
+          How Fijadora Works
+        </h2>
+        <p class="text-base text-slate-500 max-w-xl mx-auto leading-relaxed">
+          High-end design intelligence and professional trade support delivered seamlessly.
+        </p>
+      </div>
+
+      <!-- Process Steps Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+        
+        <!-- Step 1 -->
+        <div class="bg-white rounded-3xl p-8 border border-slate-200/40 shadow-xs relative group">
+          <div class="font-display text-5xl font-extrabold text-slate-100 group-hover:text-slate-200 transition-colors absolute top-4 right-6 select-none">01</div>
+          <div class="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center mb-8">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <h3 class="font-serif text-lg font-bold text-brand-slate mb-3">Choose Your Fix or Look</h3>
+          <p class="text-xs text-slate-450 leading-relaxed">
+            Select a home repair service or browse collections. Upload room photos to analyze with our AI Concierge for recommendations.
+          </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="bg-white rounded-3xl p-8 border border-slate-200/40 shadow-xs relative group">
+          <div class="font-display text-5xl font-extrabold text-slate-100 group-hover:text-slate-200 transition-colors absolute top-4 right-6 select-none">02</div>
+          <div class="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center mb-8">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <h3 class="font-serif text-lg font-bold text-brand-slate mb-3">Instant Match</h3>
+          <p class="text-xs text-slate-450 leading-relaxed">
+            Connect automatically with local background-checked trade professionals at upfront flat rates, or buy decor packages in one click.
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="bg-white rounded-3xl p-8 border border-slate-200/40 shadow-xs relative group">
+          <div class="font-display text-5xl font-extrabold text-slate-100 group-hover:text-slate-200 transition-colors absolute top-4 right-6 select-none">03</div>
+          <div class="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center mb-8">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <h3 class="font-serif text-lg font-bold text-brand-slate mb-3">Live Track & Enjoy</h3>
+          <p class="text-xs text-slate-450 leading-relaxed">
+            Monitor dispatch updates on your active booking screen. Escrow funds are released securely only after styling or repairs are completed to your satisfaction.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- TRUST & CALL-TO-ACTION FOOTER -->
+  <footer class="bg-slate-900 text-slate-400 pt-20 pb-12 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6">
+      
+      <!-- Top Newsletter CTA Block -->
+      <div class="bg-slate-800/40 border border-slate-700/50 rounded-3xl p-8 md:p-12 flex flex-col lg:flex-row items-center justify-between gap-8 mb-16 relative z-10">
+        <div class="max-w-xl">
+          <h3 class="font-serif text-2xl text-white font-bold mb-2">Ready to elevate your home?</h3>
+          <p class="text-xs text-slate-450 leading-normal">Subscribe for weekly interior inspiration, local care tips, and exclusive services updates.</p>
+        </div>
+        
+        <form onsubmit="handleNewsletter(event)" class="w-full lg:w-auto shrink-0">
+          <div class="flex flex-col sm:flex-row gap-3 w-full">
+            <input type="email" id="newsletter-email" required placeholder="Email address" class="px-4 py-3 rounded-xl bg-slate-950 border border-slate-850 text-white placeholder-slate-600 focus:outline-none focus:border-slate-500 text-xs w-full sm:w-72 transition-all">
+            <button type="submit" class="px-5 py-3 rounded-xl bg-white text-slate-900 font-semibold text-xs hover:bg-slate-100 transition-all">Subscribe</button>
+          </div>
+          <span id="newsletter-msg" class="text-[10px] mt-2 block transition-all duration-300 opacity-0"></span>
+        </form>
+      </div>
+
+      <!-- Footer Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
+        <!-- Logo & App Downloads -->
+        <div class="md:col-span-4 space-y-6">
+          <span class="font-display font-bold text-lg tracking-tight text-white block">Fijadora</span>
+          <p class="text-xs text-slate-500 leading-relaxed max-w-xs">
+            Fijadora combines vetted local repair professionals, curated designer styling packages, and Gemini AI space consultations into one simplified home app.
+          </p>
+          
+          <!-- Badges -->
+          <div class="flex flex-wrap gap-3">
+            <!-- App Store -->
+            <a href="javascript:void(0)" onclick="openInfoModal('app')" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-750 text-white transition-colors">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.2.67-2.92 1.49-.62.71-1.16 1.85-1.02 2.96 1.1.09 2.23-.58 2.95-1.39z"/>
+              </svg>
+              <div class="text-left leading-none">
+                <div class="text-[7px] text-slate-500">Download on the</div>
+                <div class="text-[10px] font-bold font-display">App Store</div>
+              </div>
+            </a>
+            
+            <!-- Google Play -->
+            <a href="javascript:void(0)" onclick="openInfoModal('app')" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-750 text-white transition-colors">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M5.23 3.001c-.13 0-.25.04-.36.12l10.23 10.22 3.84-3.84L5.59 3.121c-.1-.08-.23-.12-.36-.12zm-1 .85c-.14.2-.23.47-.23.79v14.72c0 .32.09.59.23.79l8.03-8.03L4.23 3.851zM15.1 14.891L7.07 22.921c.11.08.23.12.36.12.13 0 .26-.04.36-.12l13.35-6.381-3.84-3.84-2.2 2.19zM19.14 10.151l-2.2 2.2 2.2 2.2 4.41-2.11c.29-.14.45-.44.45-.77 0-.33-.16-.63-.45-.77l-4.41-2.11-.01.36z"/>
+              </svg>
+              <div class="text-left leading-none">
+                <div class="text-[7px] text-slate-500">GET IT ON</div>
+                <div class="text-[10px] font-bold font-display">Google Play</div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Footer Links Cols (Col 8) -->
+        <div class="md:col-span-8 grid grid-cols-2 sm:grid-cols-3 gap-8">
+          <div>
+            <h4 class="text-[10px] font-bold text-white uppercase tracking-wider mb-4">Core Services</h4>
+            <ul class="space-y-2 text-xs text-slate-500">
+              <li><a href="#services" onclick="filterServices('design')" class="hover:text-white transition-colors">Interior Design</a></li>
+              <li><a href="#services" onclick="filterServices('maintenance')" class="hover:text-white transition-colors">Electrical Repairs</a></li>
+              <li><a href="#services" onclick="filterServices('maintenance')" class="hover:text-white transition-colors">Plumbing & Leaks</a></li>
+              <li><a href="#services" onclick="filterServices('maintenance')" class="hover:text-white transition-colors">AC Engineering</a></li>
+              <li><a href="#services" onclick="filterServices('maintenance')" class="hover:text-white transition-colors">Gardening & Lawns</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 class="text-[10px] font-bold text-white uppercase tracking-wider mb-4">Shop Collections</h4>
+            <ul class="space-y-2 text-xs text-slate-500">
+              <li><a href="#shop" class="hover:text-white transition-colors">Cozy Minimalist Pack</a></li>
+              <li><a href="#shop" class="hover:text-white transition-colors">Urban Jungle Blueprints</a></li>
+              <li><a href="#shop" class="hover:text-white transition-colors">Boho Bedroom Vibes</a></li>
+              <li><a href="#shop" class="hover:text-white transition-colors">Spa Bathroom Refresh</a></li>
+              <li><a href="#shop" class="hover:text-white transition-colors">Smart Home Kits</a></li>
+            </ul>
+          </div>
+
+          <div class="col-span-2 sm:col-span-1">
+            <h4 class="text-[10px] font-bold text-white uppercase tracking-wider mb-4">Fijadora</h4>
+            <ul class="space-y-2 text-xs text-slate-500">
+              <li><a href="javascript:void(0)" onclick="openInfoModal('about')" class="hover:text-white transition-colors">About Us</a></li>
+              <li><a href="javascript:void(0)" onclick="openInfoModal('press')" class="hover:text-white transition-colors">Press & Media</a></li>
+              <li><a href="javascript:void(0)" onclick="openInfoModal('careers')" class="hover:text-white transition-colors">Careers</a></li>
+              <li><a href="javascript:void(0)" onclick="openInfoModal('trust')" class="hover:text-white transition-colors">Trust Guidelines</a></li>
+              <li><a href="javascript:void(0)" onclick="openInfoModal('privacy')" class="hover:text-white transition-colors">Privacy Policy</a></li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Copyright Bar -->
+      <div class="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-4">
+        <span>© 2026 Fijadora Inc. All rights reserved. Your home, refined.</span>
+        <div class="flex gap-4">
+          <a href="javascript:void(0)" onclick="openInfoModal('terms')" class="hover:text-slate-400">Terms of Service</a>
+          <a href="javascript:void(0)" onclick="openInfoModal('privacy')" class="hover:text-slate-400">Privacy Policy</a>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- INQUIRY MODAL (Popup layout email collector) -->
+  <div id="inquiry-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300 opacity-0 pointer-events-none">
+    <div id="inquiry-card" class="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl relative border border-slate-200/50 transition-all duration-300 transform scale-95 opacity-0">
+      
+      <!-- Close Button -->
+      <button onclick="closeInquiryModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 focus:outline-none p-1 rounded-full hover:bg-slate-100 transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+
+      <!-- Form View -->
+      <div id="inquiry-form-view">
+        <span class="text-[9px] font-bold tracking-widest text-slate-400 uppercase block mb-1">Styling Consultation</span>
+        <h3 class="font-display text-lg font-bold text-slate-900 mb-2">Inquire About Package</h3>
+        <h4 id="inquiry-item-title" class="font-display text-xs font-bold text-slate-500 mb-6 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 inline-block">Cozy Minimalist Pack</h4>
+        
+        <p class="text-xs text-slate-450 leading-relaxed mb-6">
+          Enter your email address. Our design concierge team will reach out with layout variations, material samples, and direct advice for your space.
+        </p>
+
+        <form onsubmit="handleInquirySubmit(event)" class="space-y-4">
+          <div>
+            <label for="inquiry-email" class="block text-[9px] font-bold text-slate-700 uppercase tracking-wider mb-2">Email Address</label>
+            <input type="email" id="inquiry-email" required placeholder="name@domain.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 text-xs transition-all">
+          </div>
+          
+          <div>
+            <label for="inquiry-note" class="block text-[9px] font-bold text-slate-700 uppercase tracking-wider mb-2">Additional details (Optional)</label>
+            <textarea id="inquiry-note" rows="3" placeholder="Tell us about your room size, current style, or specific questions..." class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 text-xs transition-all resize-none"></textarea>
+          </div>
+
+          <button type="submit" class="w-full py-3 rounded-xl bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition-all shadow-xs">
+            Send Design Inquiry
+          </button>
+        </form>
+      </div>
+
+      <!-- Success State View -->
+      <div id="inquiry-success-view" class="hidden text-center py-6">
+        <div class="w-12 h-12 rounded-full bg-slate-50 text-slate-900 flex items-center justify-center mx-auto mb-4">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <h3 class="font-display text-lg font-bold text-slate-900 mb-2">Inquiry Submitted</h3>
+        <p class="text-xs text-slate-400 leading-relaxed mb-6 max-w-xs mx-auto">
+          Thank you! A copy of the styling blueprint has been dispatched. Our team will contact you at <span id="inquiry-success-email" class="font-semibold text-slate-800"></span> within 2 hours.
+        </p>
+        <button onclick="closeInquiryModal()" class="w-full py-2.5 rounded-xl border border-slate-200 text-slate-800 text-xs font-semibold hover:bg-slate-50 transition-all">
+          Close Window
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LEGAL/INFORMATION MODAL (Simple overlay text box) -->
+  <div id="info-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300 opacity-0 pointer-events-none">
+    <div id="info-card" class="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl relative border border-slate-200/50 transition-all duration-300 transform scale-95 opacity-0">
+      
+      <!-- Close Button -->
+      <button onclick="closeInfoModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 focus:outline-none p-1 rounded-full hover:bg-slate-100 transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+
+      <div>
+        <h3 id="info-modal-title" class="font-display text-base font-bold text-slate-900 mb-4">Information</h3>
+        <p id="info-modal-text" class="text-xs text-slate-500 leading-relaxed mb-6">
+          Modal text content.
+        </p>
+        <button onclick="closeInfoModal()" class="w-full py-2.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-all shadow-xs">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DYNAMIC DATA & INTERACTIVITY JAVASCRIPT -->
+  <script>
+    // ----------------------------------------------------
+    // CONSTANTS & STATE
+    // ----------------------------------------------------
+    const SERVICES_DATA = [
+      { id: 1, name: 'Interior Design', category: 'design', price: 150, desc: 'Full interior styling, space planning & layout design.', icon: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4' },
+      { id: 2, name: 'Electrical', category: 'maintenance', price: 75, desc: 'Wiring, fixtures, breaker panels & smart device setup.', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+      { id: 3, name: 'Plumbing', category: 'maintenance', price: 85, desc: 'Fix leaks, drain cleaning, water faucets & bath installs.', icon: 'M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z' },
+      { id: 4, name: 'Masonry', category: 'maintenance', price: 120, desc: 'Brick laying, concrete pouring, crack fills & wall repairs.', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
+      { id: 5, name: 'Tiling', category: 'maintenance', price: 95, desc: 'Bathroom & kitchen tiles, grout repairs & waterproofing.', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
+      { id: 6, name: 'Design Consultation', category: 'design', price: 80, desc: 'Layout ideas, color matches, mood boards & materials.', icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z' },
+      { id: 7, name: 'AC Engineering', category: 'maintenance', price: 110, desc: 'A/C servicing, repairs, duct cleans & smart thermostat connection.', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' },
+      { id: 8, name: 'Kitchen Designs', category: 'design', price: 200, desc: 'Bespoke cabinet blueprints, stone selections & workspace layouts.', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
+      { id: 9, name: 'Cleaning', category: 'maintenance', price: 65, desc: 'Deep cleaning, routine maid care & moving sanitation.', icon: 'M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z' },
+      { id: 10, name: 'Gardening', category: 'maintenance', price: 90, desc: 'Lawn upkeep, tree pruning, soil seeding & landscaping.', icon: 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z' }
+    ];
+
+    const TRACKER_STAGES = [
+      {
+        label: "Stage 1: Dispatch broadcasting",
+        title: "Finding Professional",
+        desc: "Broadcasting your kitchen repair order to certified professionals in your zip code.",
+        barWidth: "0%",
+        eta: "Matching...",
+        provider: {
+          name: "Pending Assignment...",
+          role: "Searching local provider network",
+          img: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23e2e8f0'/><path d='M50 30a15 15 0 1 0 0 30 15 15 0 0 0 0-30zm0 35c-20 0-30 10-30 15v5h60v-5c0-5-10-15-30-15z' fill='%2394a3b8'/></svg>"
+        }
+      },
+      {
+        label: "Stage 2: Provider Confirmed",
+        title: "Professional Matched",
+        desc: "Lucas Miller has confirmed and scheduled your order. Lucas holds a 5.0★ rating with 42 completed repairs.",
+        barWidth: "25%",
+        eta: "Scheduled",
+        provider: {
+          name: "Lucas Miller",
+          role: "Licensed Plumber (5.0★)",
+          img: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&w=80&h=80&q=80"
+        }
+      },
+      {
+        label: "Stage 3: Dispatching",
+        title: "Lucas is En Route",
+        desc: "Lucas has collected tools and is driving to your home. Transit alerts are active.",
+        barWidth: "50%",
+        eta: "Arriving in 8 mins",
+        provider: {
+          name: "Lucas Miller",
+          role: "Licensed Plumber (5.0★)",
+          img: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&w=80&h=80&q=80"
+        }
+      },
+      {
+        label: "Stage 4: Arrived",
+        title: "Lucas has Arrived",
+        desc: "Lucas Miller has arrived at your address and is setting up equipment.",
+        barWidth: "75%",
+        eta: "Arrived",
+        provider: {
+          name: "Lucas Miller",
+          role: "Licensed Plumber (5.0★)",
+          img: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&w=80&h=80&q=80"
+        }
+      },
+      {
+        label: "Stage 5: Service Active",
+        title: "Repair Underway",
+        desc: "Work is active. Escrow funds will only release to the technician upon your approval.",
+        barWidth: "100%",
+        eta: "Active Service",
+        provider: {
+          name: "Lucas Miller",
+          role: "Licensed Plumber (5.0★)",
+          img: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&w=80&h=80&q=80"
+        }
+      }
+    ];
+
+    const AI_ROOM_DATA = {
+      living: {
+        title: "Modern Living Room Recommendations",
+        desc: "Analysis: Minimalist layout with neutral color story. Adding task lighting layers and fresh olive greens will elevate natural balance and spatial proportions.",
+        products: [
+          { name: "Sleek Floor Lamp", price: 189, img: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=300&q=80", tag: "Task Light" },
+          { name: "Faux Olive Tree", price: 179, img: "https://images.unsplash.com/photo-1509223197845-458d87318791?auto=format&fit=crop&w=300&q=80", tag: "Accent Green" },
+          { name: "Cozy Minimalist Pack", price: 299, img: "https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?auto=format&fit=crop&w=300&q=80", tag: "Decor Bundle" }
+        ]
+      },
+      bedroom: {
+        title: "Boho Bedroom Vibes Matches",
+        desc: "Analysis: High-texture free-spirited layout. Combining organic woven cotton, pure wool textiles, and soft accent lighting will create a cozy sanctuary.",
+        products: [
+          { name: "Linen Throw Blanket", price: 129, img: "https://images.unsplash.com/photo-1580301762395-21ce84d00bc6?auto=format&fit=crop&w=300&q=80", tag: "Woven Linen" },
+          { name: "Wool Throw Pillow", price: 69, img: "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=300&q=80", tag: "Organic Wool" },
+          { name: "Boho Bedroom Bundle", price: 249, img: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=300&q=80", tag: "Decor Bundle" }
+        ]
+      },
+      bathroom: {
+        title: "Spa Retreat Bathroom Matches",
+        desc: "Analysis: Cool slate tiles and sleek textures. Upgrading hardware to matte black fixtures and introducing waffle knit robes creates a sensory escape.",
+        products: [
+          { name: "Matte Black Fixtures", price: 149, img: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=300&q=80", tag: "Hardware" },
+          { name: "Waffle Knit Bathrobe", price: 89, img: "https://images.unsplash.com/photo-1616627547584-bf28cee262db?auto=format&fit=crop&w=300&q=80", tag: "Waffle Knit" },
+          { name: "Spa Retreat Bundle", price: 199, img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=300&q=80", tag: "Decor Bundle" }
+        ]
+      }
+    };
+
+    let cartCount = 0;
+    let currentTrackerStep = 2; // Start on stage 3 (Lucas is En Route)
+
+    // ----------------------------------------------------
+    // ON LOAD INIT
+    // ----------------------------------------------------
+    window.addEventListener('DOMContentLoaded', () => {
+      renderServices('all');
+      setTrackerStep(currentTrackerStep);
+      initNavbarScroll();
+    });
+
+    // ----------------------------------------------------
+    // NAVIGATION & NAVBAR SCROLL BEHAVIOR
+    // ----------------------------------------------------
+    function scrollToSection(id) {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function toggleMenu() {
+      const menu = document.getElementById('mobile-menu');
+      const icon = document.getElementById('menu-icon');
+      menu.classList.toggle('hidden');
+      if (menu.classList.contains('hidden')) {
+        icon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+      } else {
+        icon.setAttribute('d', 'M6 18L18 6M6 6l12 12');
+      }
+    }
+
+    function initNavbarScroll() {
+      const headerWrapper = document.getElementById('header-wrapper');
+      const navContainer = document.getElementById('nav-container');
+      const mobileMenu = document.getElementById('mobile-menu');
+
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 40) {
+          // Change navbar container to floating pill
+          headerWrapper.classList.remove('bg-brand-cream/80', 'backdrop-blur-md', 'border-b', 'border-slate-200/40');
+          headerWrapper.classList.add('bg-transparent', 'py-3', 'px-4');
+          
+          navContainer.classList.remove('max-w-7xl', 'px-6', 'h-20');
+          navContainer.classList.add('max-w-3xl', 'px-8', 'h-14', 'rounded-full', 'border', 'border-slate-200/60', 'bg-white/80', 'backdrop-blur-md', 'shadow-lg', 'mx-auto');
+          
+          // Align mobile dropdown under the floating pill
+          mobileMenu.classList.remove('top-20');
+          mobileMenu.classList.add('top-16', 'max-w-md', 'mx-auto');
+        } else {
+          // Restore full-width navbar
+          headerWrapper.classList.add('bg-brand-cream/80', 'backdrop-blur-md', 'border-b', 'border-slate-200/40');
+          headerWrapper.classList.remove('bg-transparent', 'py-3', 'px-4');
+          
+          navContainer.classList.add('max-w-7xl', 'px-6', 'h-20');
+          navContainer.classList.remove('max-w-3xl', 'px-8', 'h-14', 'rounded-full', 'border', 'border-slate-200/60', 'bg-white/80', 'backdrop-blur-md', 'shadow-lg', 'mx-auto');
+          
+          // Restore mobile dropdown to standard position
+          mobileMenu.classList.remove('top-16', 'max-w-md', 'mx-auto');
+          mobileMenu.classList.add('top-20');
+        }
+      });
+    }
+
+    // ----------------------------------------------------
+    // SERVICES RENDERING & FILTER
+    // ----------------------------------------------------
+    function renderServices(catFilter) {
+      const grid = document.getElementById('services-grid');
+      grid.innerHTML = '';
+      
+      const filtered = catFilter === 'all' 
+        ? SERVICES_DATA 
+        : SERVICES_DATA.filter(s => s.category === catFilter);
+
+      filtered.forEach(s => {
+        const card = document.createElement('div');
+        card.className = "bg-white p-5 rounded-2xl border border-slate-200/50 hover:shadow-xs transition-all duration-300 group flex items-start gap-4";
+        card.innerHTML = `
+          <div class="w-10 h-10 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors duration-300">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="${s.icon}" />
+            </svg>
+          </div>
+          <div class="flex-grow">
+            <div class="flex justify-between items-start gap-2">
+              <h4 class="font-serif text-sm font-bold text-slate-800">${s.name}</h4>
+              <span class="text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full shrink-0">From $${s.price}</span>
+            </div>
+            <p class="text-[11px] text-slate-450 mt-1 leading-relaxed">${s.desc}</p>
+            <button onclick="bookServiceAction('${s.name}')" class="mt-3 text-[10px] font-bold text-slate-800 flex items-center gap-0.5 hover:underline">
+              Request Booking 
+              <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterServices(category) {
+      const btns = ['all', 'maintenance', 'design'];
+      btns.forEach(b => {
+        const element = document.getElementById(`filter-btn-${b}`);
+        if (b === category) {
+          element.className = "px-4 py-1.5 text-[10px] font-semibold tracking-wider uppercase rounded-full transition-all text-white bg-slate-900";
+        } else {
+          element.className = "px-4 py-1.5 text-[10px] font-semibold tracking-wider uppercase rounded-full transition-all text-slate-500 hover:text-slate-900";
+        }
+      });
+
+      renderServices(category);
+    }
+
+    function bookServiceAction(serviceName) {
+      alert(`🎉 Service request queued for "${serviceName}"! Vetting active providers in your location.`);
+    }
+
+    // ----------------------------------------------------
+    // LIVE TRACKING SIMULATOR
+    // ----------------------------------------------------
+    function setTrackerStep(stepIndex) {
+      if (stepIndex < 0 || stepIndex >= TRACKER_STAGES.length) return;
+      currentTrackerStep = stepIndex;
+      const stage = TRACKER_STAGES[stepIndex];
+
+      // Labels and updates
+      document.getElementById('tracker-label').innerText = `Stage ${stepIndex + 1}`;
+      document.getElementById('tracker-title').innerText = stage.title;
+      document.getElementById('tracker-desc').innerText = stage.desc;
+      document.getElementById('tracker-eta-val').innerText = stage.eta;
+
+      // Provider details
+      document.getElementById('tracker-provider-name').innerText = stage.provider.name;
+      document.getElementById('tracker-provider-role').innerText = stage.provider.role;
+      document.getElementById('tracker-provider-img').src = stage.provider.img;
+
+      // Timeline line fill
+      document.getElementById('tracker-bar').style.width = stage.barWidth;
+
+      // Timeline nodes coloring
+      for (let i = 0; i < TRACKER_STAGES.length; i++) {
+        const node = document.getElementById(`step-node-${i}`);
+        if (i < stepIndex) {
+          node.className = "w-3.5 h-3.5 rounded-full border-2 border-slate-900 bg-slate-900 z-10 transition-all focus:outline-none";
+        } else if (i === stepIndex) {
+          node.className = "w-3.5 h-3.5 rounded-full border-2 border-slate-900 bg-white z-10 transition-all scale-125 shadow-sm focus:outline-none";
+        } else {
+          node.className = "w-3.5 h-3.5 rounded-full border-2 border-white bg-slate-200 z-10 transition-all focus:outline-none";
+        }
+      }
+    }
+
+    function shiftTracker(dir) {
+      let target = currentTrackerStep + dir;
+      if (target >= 0 && target < TRACKER_STAGES.length) {
+        setTrackerStep(target);
+      }
+    }
+
+    // ----------------------------------------------------
+    // AI CONCIERGE SIMULATION
+    // ----------------------------------------------------
+    function simulateAI(roomKey) {
+      const emptyPanel = document.getElementById('ai-state-empty');
+      const loadingPanel = document.getElementById('ai-state-loading');
+      const resultPanel = document.getElementById('ai-state-result');
+
+      emptyPanel.classList.add('hidden');
+      resultPanel.classList.add('hidden');
+      resultPanel.classList.remove('opacity-100');
+      resultPanel.classList.add('opacity-0');
+      
+      loadingPanel.classList.remove('hidden');
+
+      const stages = [
+        { title: "Analyzing space layout...", desc: "Scanning room structural parameters." },
+        { title: "Detecting natural lighting...", desc: "Analyzing shadows and window directions." },
+        { title: "Matching premium decor...", desc: "Searching catalog for matched bundles." }
+      ];
+
+      let count = 0;
+      const loaderInterval = setInterval(() => {
+        if (count < stages.length) {
+          document.getElementById('ai-loading-title').innerText = stages[count].title;
+          document.getElementById('ai-loading-desc').innerText = stages[count].desc;
+          count++;
+        }
+      }, 600);
+
+      setTimeout(() => {
+        clearInterval(loaderInterval);
+        loadingPanel.classList.add('hidden');
+        resultPanel.classList.remove('hidden');
+
+        setTimeout(() => {
+          resultPanel.classList.remove('opacity-0');
+          resultPanel.classList.add('opacity-100');
+        }, 50);
+
+        const roomData = AI_ROOM_DATA[roomKey];
+        document.getElementById('result-title').innerText = roomData.title;
+        document.getElementById('result-desc').innerText = roomData.desc;
+
+        const recGrid = document.getElementById('recommendation-grid');
+        recGrid.innerHTML = '';
+
+        roomData.products.forEach(p => {
+          const card = document.createElement('div');
+          card.className = "bg-brand-pearl rounded-2xl overflow-hidden border border-slate-200/50 hover:shadow-xs transition-all duration-300 flex flex-col justify-between";
+          card.innerHTML = `
+            <div>
+              <div class="h-28 w-full overflow-hidden relative">
+                <img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover">
+                <span class="absolute top-2 left-2 bg-slate-900/90 text-white text-[7px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">${p.tag}</span>
+              </div>
+              <div class="p-3 leading-none">
+                <h5 class="font-serif text-xs font-bold text-slate-800 leading-tight mb-1">${p.name}</h5>
+                <span class="text-[10px] font-bold text-slate-900">$${p.price}</span>
+              </div>
+            </div>
+            <div class="p-3 pt-0">
+              <button onclick="inquireAction('${p.name}')" class="w-full py-1.5 rounded-lg bg-slate-900 text-white text-[9px] font-semibold hover:bg-slate-800 transition-colors">
+                Inquire
+              </button>
+            </div>
+          `;
+          recGrid.appendChild(card);
+        });
+
+      }, 1800);
+    }
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      let roomKey = 'living';
+      const nameLower = file.name.toLowerCase();
+      if (nameLower.includes('bed')) {
+        roomKey = 'bedroom';
+      } else if (nameLower.includes('bath')) {
+        roomKey = 'bathroom';
+      }
+
+      simulateAI(roomKey);
+    }
+
+    // ----------------------------------------------------
+    // CURATED SHOPPING ACTIONS & MODALS
+    // ----------------------------------------------------
+    let activeInquiryItem = '';
+
+    function inquireAction(itemName) {
+      activeInquiryItem = itemName;
+      document.getElementById('inquiry-item-title').innerText = itemName;
+      
+      // Reset view states
+      document.getElementById('inquiry-form-view').classList.remove('hidden');
+      document.getElementById('inquiry-success-view').classList.add('hidden');
+      document.getElementById('inquiry-email').value = '';
+      document.getElementById('inquiry-note').value = '';
+
+      const modal = document.getElementById('inquiry-modal');
+      const card = document.getElementById('inquiry-card');
+
+      // Trigger overlay fade
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      modal.classList.add('opacity-100', 'pointer-events-auto');
+
+      // Trigger card scale pop
+      setTimeout(() => {
+        card.classList.remove('scale-95', 'opacity-0');
+        card.classList.add('scale-100', 'opacity-100');
+      }, 30);
+    }
+
+    function closeInquiryModal() {
+      const modal = document.getElementById('inquiry-modal');
+      const card = document.getElementById('inquiry-card');
+
+      // Scale card down
+      card.classList.remove('scale-100', 'opacity-100');
+      card.classList.add('scale-95', 'opacity-0');
+
+      // Fade overlay out after card scales down
+      setTimeout(() => {
+        modal.classList.remove('opacity-100', 'pointer-events-auto');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+      }, 150);
+    }
+
+    function handleInquirySubmit(event) {
+      event.preventDefault();
+      const email = document.getElementById('inquiry-email').value;
+      if (email.includes('@')) {
+        document.getElementById('inquiry-success-email').innerText = email;
+        document.getElementById('inquiry-form-view').classList.add('hidden');
+        document.getElementById('inquiry-success-view').classList.remove('hidden');
+      }
+    }
+
+    const INFO_CONTENT = {
+      about: {
+        title: "About Fijadora",
+        text: "Fijadora was founded in 2026 to bridge the gap between architectural-grade interior styling and verified local trades. We curate custom layouts, dispatch background-checked service professionals, and utilize Gemini AI spatial models to parse decor. Our goal is to bring care, precision, and simplicity to homes worldwide."
+      },
+      press: {
+        title: "Press & Media Room",
+        text: "Welcome to the Fijadora pressroom. For all media inquiries, brand guidelines, interviews, and high-resolution assets, please contact press@fijadora.com. Learn how we are building the future of physical spaces using generative AI logistics."
+      },
+      careers: {
+        title: "Careers at Fijadora",
+        text: "We are always looking for passionate builders, designers, and trade managers. Fijadora is remote-first, with local hub operations in 12 major metro areas. Explore active roles in engineering, product design, logistics, and trust. Send your portfolio to careers@fijadora.com."
+      },
+      trust: {
+        title: "Trust & Safety Guidelines",
+        text: "Your peace of mind is our primary measure. Every trade provider on Fijadora undergoes strict verification, criminal background checks, licensing reviews, and regular rating audits. All payments are held in secure escrow and released only after your approval."
+      },
+      privacy: {
+        title: "Privacy Policy",
+        text: "Fijadora is committed to protecting your personal data. We process room photos securely and locally solely to identify style matches. We do not sell your spatial layouts, addresses, or email addresses to third parties. Contact privacy@fijadora.com for full data access requests."
+      },
+      terms: {
+        title: "Terms of Service",
+        text: "By using Fijadora, you agree to our trade service logistics agreements, escrow policies, and customized decor inquiry terms. Bookings are backed by our $1M Satisfaction Guarantee policy scheme. All services are governed by local trade regulations."
+      },
+      app: {
+        title: "Fijadora App Download",
+        text: "Our mobile app is currently in early developer beta testing for iOS and Android. Register your email in our footer newsletter to receive the early access beta invite and secure a 10% discount on your first trade booking!"
+      }
+    };
+
+    function openInfoModal(key) {
+      const data = INFO_CONTENT[key];
+      if (data) {
+        document.getElementById('info-modal-title').innerText = data.title;
+        document.getElementById('info-modal-text').innerText = data.text;
+        
+        const modal = document.getElementById('info-modal');
+        const card = document.getElementById('info-card');
+
+        // Trigger overlay fade
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.classList.add('opacity-100', 'pointer-events-auto');
+
+        // Trigger card scale pop
+        setTimeout(() => {
+          card.classList.remove('scale-95', 'opacity-0');
+          card.classList.add('scale-100', 'opacity-100');
+        }, 30);
+      }
+    }
+
+    function closeInfoModal() {
+      const modal = document.getElementById('info-modal');
+      const card = document.getElementById('info-card');
+
+      // Scale card down
+      card.classList.remove('scale-100', 'opacity-100');
+      card.classList.add('scale-95', 'opacity-0');
+
+      // Fade overlay out after card scales down
+      setTimeout(() => {
+        modal.classList.remove('opacity-100', 'pointer-events-auto');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+      }, 150);
+    }
+
+    // ----------------------------------------------------
+    // SUPABASE INIT
+    // ----------------------------------------------------
+    const SUPABASE_URL = 'https://nmcxkoahokihzqnfkmvg.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tY3hrb2Fob2tpaHpxbmZrbXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MTUyNDYsImV4cCI6MjA5ODQ5MTI0Nn0.dLuCnzb2bvwHrFC7lGmH1k1qTQrv15vmwQHSh6cXnNU';
+    const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ----------------------------------------------------
+    // NEWSLETTER CAPTURE
+    // ----------------------------------------------------
+    async function handleNewsletter(event) {
+      event.preventDefault();
+      const email = document.getElementById('newsletter-email').value;
+      const msg = document.getElementById('newsletter-msg');
+      const btn = event.target.querySelector('button[type="submit"]');
+
+      if (!email.includes('@')) {
+        msg.className = "text-[10px] mt-2 block text-brand-rose font-semibold opacity-100";
+        msg.innerText = "⚠️ Please enter a valid email address.";
+        setTimeout(() => msg.classList.add('opacity-0'), 4000);
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = 'Subscribing...';
+
+      const { error } = await supabase
+        .from('newsletter_subscribers')
+        .insert({ email, source: 'landing-page' });
+
+      btn.disabled = false;
+      btn.innerText = 'Subscribe';
+
+      if (error) {
+        if (error.code === '23505') {
+          msg.className = "text-[10px] mt-2 block text-slate-300 font-semibold opacity-100";
+          msg.innerText = "✨ You're already subscribed!";
+        } else {
+          msg.className = "text-[10px] mt-2 block text-brand-rose font-semibold opacity-100";
+          msg.innerText = "⚠️ Something went wrong. Try again later.";
+        }
+      } else {
+        msg.className = "text-[10px] mt-2 block text-slate-300 font-semibold opacity-100";
+        msg.innerText = "✨ Welcome to Fijadora. You're all set!";
+        document.getElementById('newsletter-email').value = '';
+      }
+
+      setTimeout(() => msg.classList.add('opacity-0'), 4000);
+    }
+  </script>
+</body>
+</html>

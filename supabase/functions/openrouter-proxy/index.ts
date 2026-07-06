@@ -20,8 +20,8 @@ Deno.serve(async (req) => {
       headers: {
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://phoebe.app',
-        'X-Title': 'Phoebe',
+        'HTTP-Referer': 'https://fijadora.com',
+        'X-Title': 'Fijadora',
       },
       body: JSON.stringify({
         model: model ?? MODEL,

@@ -1,4 +1,4 @@
-import 'package:phoebe_core/app_config.dart';
-import 'package:phoebe_core/app_entry.dart';
+import 'package:fijadora_core/app_config.dart';
+import 'package:fijadora_core/app_entry.dart';
 
-void main() => runPhoebeApp(AppConfig.staff);
+void main() => runFijadoraApp(AppConfig.staff);
