@@ -57,7 +57,7 @@ final staffTabProvider = StateProvider<int>((ref) => 0);
 final workerTabProvider = StateProvider<int>((ref) => 0);
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authViewModel = ref.watch(authViewModelProvider);
+  final authViewModel = ref.read(authViewModelProvider);
   final appConfig = ref.read(appConfigProvider);
   final initialUri = ref.read(initialUriProvider);
 
