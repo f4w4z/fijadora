@@ -71,8 +71,10 @@ class AuthViewModel extends ChangeNotifier {
         _user = user;
         _isLoading = false;
         _errorMessage = null;
-        _needsEmailVerification = false;
-        _signUpEmail = null;
+        if (user != null && user.emailConfirmedAt != null) {
+          _needsEmailVerification = false;
+          _signUpEmail = null;
+        }
         notifyListeners();
       },
       onError: (e) {
