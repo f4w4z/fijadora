@@ -63,7 +63,7 @@ class AdminProductsViewModel extends ChangeNotifier {
 
       return created;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not add product.';
       notifyListeners();
       rethrow;
     } finally {
@@ -110,7 +110,7 @@ class AdminProductsViewModel extends ChangeNotifier {
 
       return updated;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not update product.';
       notifyListeners();
       rethrow;
     } finally {
@@ -136,7 +136,7 @@ class AdminProductsViewModel extends ChangeNotifier {
         body: 'Product "$name" has been successfully removed from the shop.',
       );
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not remove product.';
       notifyListeners();
       rethrow;
     } finally {
@@ -157,7 +157,7 @@ class AdminProductsViewModel extends ChangeNotifier {
       });
       return url;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not upload image.';
       notifyListeners();
       rethrow;
     } finally {

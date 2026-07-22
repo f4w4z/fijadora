@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../data/repositories/auth_repository.dart';
+import '../../../../data/repositories/users_repository.dart';
 import '../../../../data/repositories/properties_repository.dart';
 import '../../../../domain/models/job_status.dart';
 import '../../../../domain/models/maintenance_job.dart';
@@ -58,9 +58,7 @@ class StaffManagerDashboardView extends ConsumerWidget {
                         Text('Recent Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
                         const SizedBox(height: 12),
                         ...jobs.take(5).map((job) {
-                          final workers = ref
-                              .read(authRepositoryProvider)
-                              .getAllWorkers()
+                          final workers = (ref.watch(workersProvider).valueOrNull ?? const [])
                               .map((w) => {'id': w.id, 'name': w.name})
                               .toList();
                           return _ActivityRow(job: job, theme: theme, workers: workers);

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:app_links/app_links.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'supabase_service.dart';
@@ -24,7 +23,6 @@ class DeepLinkService {
   void startListening() {
     final appLinks = AppLinks();
     _sub = appLinks.uriLinkStream.listen((uri) {
-      debugPrint('DeepLinkService - Incoming link: ${uri.host}${uri.path}');
       if (_router != null && _ref != null) {
         _handleLink(uri);
       } else {
@@ -46,7 +44,6 @@ class DeepLinkService {
     _notificationSub = PushNotificationService.instance.onMessage.listen((message) {
       final route = message.data['route'] as String?;
       if (route != null && route.isNotEmpty) {
-        debugPrint('DeepLinkService - Push notification route tapped');
         handlePath(route);
       }
     });
@@ -76,7 +73,9 @@ class DeepLinkService {
     final path = uri.path;
 
     // Check if this is a Supabase auth callback (recovery/verification)
+    // Only process auth callbacks from the app's own scheme to prevent spoofing
     if (_isAuthCallback(uri)) {
+      if (uri.scheme != 'fijadora') return;
       SupabaseService.instance.client.auth.getSessionFromUrl(uri);
       if (uri.fragment.contains('type=recovery')) {
         _navigate(router, '/reset-password');
@@ -92,6 +91,9 @@ class DeepLinkService {
       if (path == '/services') {
         ref.read(customerTabProvider.notifier).state = 0;
         _navigate(router, '/');
+        return;
+      } else if (path.startsWith('/product/')) {
+        _navigate(router, path);
         return;
       } else if (path == '/shop') {
         ref.read(customerTabProvider.notifier).state = 1;

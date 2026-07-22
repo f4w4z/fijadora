@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import '../../../../domain/models/job_status.dart';
-import '../../../shared/widgets/animated_tap_scale.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/custom_pinned_header.dart';
 import '../../../shared/widgets/floating_header_layout.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
@@ -235,18 +235,21 @@ class _WorkerDashboardTabState extends ConsumerState<WorkerDashboardTab>
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: ['All', 'My Jobs', 'Available', 'Completed']
-                            .map((f) => _FilterChip(
-                                  label: f,
-                                  count: switch (f) {
-                                    'My Jobs' => myJobs.length,
-                                    'Available' => openJobs.length,
-                                    'Completed' => myJobs.where((j) => j.status == JobStatus.completed).length,
-                                    _ => allDisplayJobs.length,
-                                  },
-                                  isSelected: filter == f,
-                                  onTap: () =>
-                                      ref.read(_dashboardFilterProvider.notifier).state = f,
-                                  theme: theme,
+                            .map((f) => Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: AppFilterChip(
+                                    label: f,
+                                    count: switch (f) {
+                                      'My Jobs' => myJobs.length,
+                                      'Available' => openJobs.length,
+                                      'Completed' => myJobs.where((j) => j.status == JobStatus.completed).length,
+                                      _ => allDisplayJobs.length,
+                                    },
+                                    selected: filter == f,
+                                    onTap: () =>
+                                        ref.read(_dashboardFilterProvider.notifier).state = f,
+                                    theme: theme,
+                                  ),
                                 ))
                             .toList(),
                       ),
@@ -426,50 +429,6 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.count,
-    required this.isSelected,
-    required this.onTap,
-    required this.theme,
-  });
 
-  final String label;
-  final int count;
-  final bool isSelected;
-  final VoidCallback onTap;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedTapScale(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        height: 36,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected ? Colors.transparent : theme.colorScheme.outlineVariant,
-          ),
-        ),
-        child: Text(
-          '$label ($count)',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-            color: isSelected
-                ? theme.colorScheme.onPrimary
-                : theme.colorScheme.onSurface,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 

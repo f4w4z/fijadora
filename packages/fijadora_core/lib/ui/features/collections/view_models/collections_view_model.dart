@@ -27,13 +27,15 @@ class CollectionsViewModel extends ChangeNotifier {
   String? get _userId => _authRepository.currentUser?.id;
 
   void _init() {
+    _isLoading = true;
+    notifyListeners();
     _collectionsSub = _repository.streamCollections().listen((collections) {
       _allCollections = collections;
       _isLoading = false;
       _error = null;
       notifyListeners();
     }, onError: (e) {
-      _error = e.toString();
+      _error = 'Could not load collections.';
       _isLoading = false;
       notifyListeners();
     });

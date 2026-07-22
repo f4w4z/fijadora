@@ -224,7 +224,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                                 children: [
                                   _buildLabel('Category'),
                                   DropdownButtonFormField<String>(
-                                    value: AdminProductsView.categories.contains(_categoryController.text) ? _categoryController.text : 'Lighting',
+                                    initialValue: AdminProductsView.categories.contains(_categoryController.text) ? _categoryController.text : 'Lighting',
                                     decoration: _inputDecoration('', theme),
                                     items: AdminProductsView.categories
                                         .where((c) => c != 'All')
@@ -468,166 +468,76 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
 
   Widget _buildLivePreviewCard(ThemeData theme, bool isDark) {
     final name = _nameController.text.trim().isEmpty ? 'Product Name' : _nameController.text.trim();
-    final category = _categoryController.text;
     final priceText = _priceController.text.trim();
     final double price = priceText.isNotEmpty ? (double.tryParse(priceText) ?? 0.0) : 0.0;
-    final String priceFormatted = '\$${price.toStringAsFixed(2)}';
 
     final stockText = _stockController.text.trim();
     final int stock = stockText.isNotEmpty ? (int.tryParse(stockText) ?? 0) : 0;
-
-    Color stockBadgeColor;
-    String stockLabel;
-    if (stock <= 0) {
-      stockBadgeColor = theme.colorScheme.error;
-      stockLabel = 'Out of Stock';
-    } else if (stock <= 5) {
-      stockBadgeColor = Colors.orange;
-      stockLabel = 'Low Stock: $stock left';
-    } else {
-      stockBadgeColor = const Color(0xFF2E7D32);
-      stockLabel = 'In Stock: $stock';
-    }
+    final bool outOfStock = stock <= 0;
 
     Widget imageWidget;
     if (_pickedImageBytes != null) {
-      imageWidget = Image.memory(
-        _pickedImageBytes!,
-        fit: BoxFit.cover,
-      );
+      imageWidget = Image.memory(_pickedImageBytes!, fit: BoxFit.cover);
     } else if (_imageUrlController.text.trim().isNotEmpty) {
       imageWidget = CachedNetworkImage(
         imageUrl: _imageUrlController.text.trim(),
         fit: BoxFit.cover,
+        placeholder: (c, u) => Container(color: theme.colorScheme.surfaceContainerLow),
         errorWidget: (context, url, err) => _buildImagePlaceholder(theme),
       );
     } else {
       imageWidget = _buildImagePlaceholder(theme);
     }
 
+    // Mirrors the customer-facing shop grid card (see shop_tab_view.dart).
     return Center(
-      child: Container(
-        width: 280,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.15)),
-          boxShadow: [
-            BoxShadow(
-              color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
+      child: SizedBox(
+        width: 200,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Preview Image
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                  child: AspectRatio(
-                    aspectRatio: 1.1,
-                    child: imageWidget,
-                  ),
-                ),
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      category,
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            // Card content
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
+            AspectRatio(
+              aspectRatio: 0.82,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16.0),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    imageWidget,
+                    if (outOfStock)
+                      Container(color: Colors.black.withValues(alpha: 0.45)),
+                    if (outOfStock)
+                      const Center(
                         child: Text(
-                          name,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          'Out of Stock',
+                          style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        priceFormatted,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
-                        ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: CircleAvatar(
+                        radius: 16,
+                        backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.9),
+                        child: Icon(CupertinoIcons.add, size: 14, color: theme.colorScheme.onSurface),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _descriptionController.text.trim().isEmpty
-                        ? 'Write a description for your product. It will show up here.'
-                        : _descriptionController.text.trim(),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 12),
-                  // stock representation
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: stockBadgeColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(color: stockBadgeColor, shape: BoxShape.circle),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              stockLabel,
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: stockBadgeColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
+            ),
+            const SizedBox(height: 10.0),
+            Text(
+              name,
+              style: TextStyle(fontSize: 16, height: 1.1, color: theme.colorScheme.onSurface),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4.0),
+            Text(
+              '\$${price.toStringAsFixed(0)}',
+              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12, color: theme.colorScheme.primary),
             ),
           ],
         ),
@@ -717,7 +627,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
           Icon(CupertinoIcons.photo, size: 36, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
           const SizedBox(height: 8),
           Text(
-            'Paste image URL below',
+            'No image selected',
             style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
           ),
         ],

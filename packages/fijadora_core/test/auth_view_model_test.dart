@@ -76,10 +76,9 @@ class StubAuthRepository implements AuthRepository {
   }
 
   @override
-  List<AppUser> getAllWorkers() => [];
+  Future<void> refreshUser() async {}
 
-  @override
-  Future<void> refreshWorkers() async {}
+
 
   @override
   Future<void> updateWorkerStatus({required String userId, required String status}) async {}
@@ -129,7 +128,7 @@ void main() {
   group('signUp', () {
     test('signs up and sets needsEmailVerification flag', () async {
       await vm.signUp(email: 'test@test.com', password: 'Password1', name: 'Test', role: UserRole.customer);
-      expect(vm.needsEmailVerification, isTrue);
+      expect(vm.signUpJustCompleted, isTrue);
       expect(vm.signUpEmail, 'test@test.com');
       expect(vm.isLoading, isFalse);
     });
@@ -140,7 +139,7 @@ void main() {
       try {
         await vm.signUp(email: 'test@test.com', password: 'Password1', name: 'Test', role: UserRole.customer);
       } catch (_) {}
-      expect(vm.errorMessage, contains('Failed to sign up'));
+      expect(vm.errorMessage, contains('Could not create account'));
       expect(vm.isLoading, isFalse);
     });
 
@@ -177,7 +176,7 @@ void main() {
     test('sets error message on failure', () async {
       stubRepo.failNextSignIn = true;
       try { await vm.signIn(email: 'a@b.com', password: 'Password1'); } catch (_) {}
-      expect(vm.errorMessage, contains('Failed to sign in'));
+      expect(vm.errorMessage, contains('Invalid email or password'));
     });
 
     test('sets loading state during sign in', () async {
@@ -222,17 +221,17 @@ void main() {
     test('clears verification state on sign out', () async {
       stubRepo.failNextSignIn = true;
       await vm.signUp(email: 'a@b.com', password: 'Password1', name: 'T', role: UserRole.customer);
-      expect(vm.needsEmailVerification, isTrue);
+      expect(vm.signUpJustCompleted, isTrue);
 
       await vm.signOut();
-      expect(vm.needsEmailVerification, isFalse);
+      expect(vm.signUpJustCompleted, isFalse);
       expect(vm.signUpEmail, isNull);
     });
 
     test('sets error message on failure', () async {
       stubRepo.failNextSignOut = true;
       try { await vm.signOut(); } catch (_) {}
-      expect(vm.errorMessage, contains('Sign out failed'));
+      expect(vm.errorMessage, contains('Could not sign out'));
     });
   });
 
@@ -246,7 +245,7 @@ void main() {
     test('sets error on failure', () async {
       stubRepo.failNextPasswordReset = true;
       try { await vm.forgotPassword(email: 'a@b.com'); } catch (_) {}
-      expect(vm.errorMessage, contains('Reset failed'));
+      expect(vm.errorMessage, contains('Could not send password reset'));
     });
   });
 
@@ -260,7 +259,7 @@ void main() {
     test('sets error on failure', () async {
       stubRepo.failNextPasswordUpdate = true;
       try { await vm.updatePassword('new-pw'); } catch (_) {}
-      expect(vm.errorMessage, contains('Update failed'));
+      expect(vm.errorMessage, contains('Could not update password'));
     });
   });
 
@@ -284,17 +283,17 @@ void main() {
     test('sets error on auth state stream error', () async {
       stubRepo._controller.addError('Stream error');
       await Future(() {});
-      expect(vm.errorMessage, contains('Stream error'));
+      expect(vm.errorMessage, contains('Something went wrong'));
     });
   });
 
   group('resetVerification', () {
     test('resets verification state', () async {
       await vm.signUp(email: 'a@b.com', password: 'Password1', name: 'T', role: UserRole.customer);
-      expect(vm.needsEmailVerification, isTrue);
+      expect(vm.signUpJustCompleted, isTrue);
 
       vm.resetVerification();
-      expect(vm.needsEmailVerification, isFalse);
+      expect(vm.signUpJustCompleted, isFalse);
       expect(vm.signUpEmail, isNull);
     });
   });

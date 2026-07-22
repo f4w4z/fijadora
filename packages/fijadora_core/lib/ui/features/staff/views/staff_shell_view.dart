@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../data/services/app_notification_service.dart';
 import '../../../shared/utils/notification_helper.dart';
 import '../../../shared/widgets/offline_banner.dart';
+import '../../../shared/widgets/signature_edge_fade.dart';
 import '../../../../domain/models/user_role.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import 'admin_jobs_view.dart';
@@ -16,7 +17,6 @@ import 'staff_profile_view.dart';
 import 'staff_admin_dashboard_view.dart';
 import 'staff_manager_dashboard_view.dart';
 import 'staff_approvals_view.dart';
-import '../../../shared/widgets/app_animations.dart';
 import '../../../core/router.dart';
 class StaffShellView extends ConsumerStatefulWidget {
   const StaffShellView({super.key});
@@ -28,6 +28,7 @@ class StaffShellView extends ConsumerStatefulWidget {
 class _StaffShellViewState extends ConsumerState<StaffShellView>
     with TickerProviderStateMixin {
   StreamSubscription<AppNotification>? _notificationSubscription;
+  late final PageController _pageController;
 
   List<_NavItem> _navItems = [];
   List<Widget> _tabs = [];
@@ -95,11 +96,13 @@ class _StaffShellViewState extends ConsumerState<StaffShellView>
     } else {
       _initRoleTabs(role);
     }
+    _pageController = PageController();
     _listenToNotifications();
   }
 
   @override
   void dispose() {
+    _pageController.dispose();
     _notificationSubscription?.cancel();
     for (final ctrl in _bounceControllers) {
       ctrl.dispose();
@@ -131,12 +134,28 @@ class _StaffShellViewState extends ConsumerState<StaffShellView>
     ref.read(staffTabProvider.notifier).state = index;
   }
 
+  void _onPageChanged(int index) {
+    if (index != ref.read(staffTabProvider)) {
+      ref.read(staffTabProvider.notifier).state = index;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final items = _activeNavItems;
     final tabs = _activeTabs;
     final currentIndex = ref.watch(staffTabProvider);
+
+    ref.listen<int>(staffTabProvider, (previous, next) {
+      if (_pageController.hasClients && _pageController.page?.round() != next) {
+        _pageController.animateToPage(
+          next,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
 
     return CallbackShortcuts(
       bindings: {
@@ -151,8 +170,9 @@ class _StaffShellViewState extends ConsumerState<StaffShellView>
           body: Stack(
             fit: StackFit.expand,
             children: [
-              FadeIndexedStack(
-                index: currentIndex,
+              PageView(
+                controller: _pageController,
+                onPageChanged: _onPageChanged,
                 children: tabs,
               ),
               const Positioned(
@@ -161,6 +181,7 @@ class _StaffShellViewState extends ConsumerState<StaffShellView>
                 right: 0,
                 child: OfflineBanner(),
               ),
+              const BottomEdgeFade(),
               Positioned(
                 left: 0,
                 right: 0,

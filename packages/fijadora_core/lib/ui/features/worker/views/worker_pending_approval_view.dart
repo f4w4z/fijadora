@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../../core/utilities/responsive_helpers.dart';
+import '../../../shared/utils/notification_helper.dart';
+import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../../shared/widgets/app_animations.dart';
 
 class WorkerPendingApprovalView extends ConsumerStatefulWidget {
@@ -16,6 +18,7 @@ class _WorkerPendingApprovalViewState extends ConsumerState<WorkerPendingApprova
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
+  bool _isRechecking = false;
 
   @override
   void initState() {
@@ -33,6 +36,24 @@ class _WorkerPendingApprovalViewState extends ConsumerState<WorkerPendingApprova
   void dispose() {
     _pulseController.dispose();
     super.dispose();
+  }
+
+  Future<void> _recheck() async {
+    setState(() => _isRechecking = true);
+    final statusBefore = ref.read(authViewModelProvider).user?.workerStatus;
+    try {
+      await ref.read(authViewModelProvider.notifier).refreshUser();
+      if (!mounted) return;
+      final statusAfter = ref.read(authViewModelProvider).user?.workerStatus;
+      if (statusAfter == statusBefore) {
+        context.showSnackBar('Still pending — check back later', type: SnackBarType.info);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      context.showSnackBar('Could not check status. Try again.', type: SnackBarType.error);
+    } finally {
+      if (mounted) setState(() => _isRechecking = false);
+    }
   }
 
   @override
@@ -103,7 +124,31 @@ class _WorkerPendingApprovalViewState extends ConsumerState<WorkerPendingApprova
                       ),
                     ),
                   ],
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
+                  AnimatedTapScale(
+                    onTap: _isRechecking ? () {} : () { _recheck(); },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE65100),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _isRechecking
+                              ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              : const Icon(CupertinoIcons.arrow_clockwise, size: 16, color: Colors.white),
+                          const SizedBox(width: 8),
+                          Text(
+                            _isRechecking ? 'Checking...' : 'Re-check Status',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   TextButton.icon(
                     onPressed: () => ref.read(authViewModelProvider.notifier).signOut(),
                     icon: const Icon(CupertinoIcons.square_arrow_right, size: 16),

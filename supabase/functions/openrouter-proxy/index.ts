@@ -32,8 +32,11 @@ Deno.serve(async (req) => {
     })
 
     const data = await resp.json()
-    return new Response(JSON.stringify(data), {
-      status: resp.status,
+    const sanitized = resp.ok
+      ? data
+      : { error: 'Request failed', status: resp.status }
+    return new Response(JSON.stringify(sanitized), {
+      status: resp.ok ? resp.status : 500,
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (e) {

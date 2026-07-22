@@ -68,15 +68,13 @@ class StubAuthRepository implements AuthRepository {
   @override
   Future<void> resendEmailVerification({required String email}) async {}
   @override
-  List<AppUser> getAllWorkers() => [];
-  @override
-  Future<void> refreshWorkers() async {}
-  @override
   Future<void> updateWorkerStatus({required String userId, required String status}) async {}
   @override
   Future<void> sendPasswordResetEmail({required String email}) async {}
   @override
   Future<void> updatePassword({required String newPassword}) async {}
+  @override
+  Future<void> refreshUser() async {}
   @override
   Future<void> signOut() async {}
   @override
@@ -108,7 +106,7 @@ void main() {
   group('initial state', () {
     test('starts empty with no error', () {
       expect(vm.allCollections, isEmpty);
-      expect(vm.isLoading, isFalse);
+      expect(vm.isLoading, isTrue);
       expect(vm.error, isNull);
     });
   });

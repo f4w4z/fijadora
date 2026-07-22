@@ -40,7 +40,9 @@ class _LoginViewState extends ConsumerState<LoginView> {
       );
     } catch (e) {
       if (mounted) {
-        final msg = e.toString().replaceAll('Exception: ', '');
+        final msg = e is RateLimitExceeded
+            ? 'Please wait ${e.secondsRemaining}s before trying again.'
+            : 'Invalid email or password.';
         context.showSnackBar(msg, type: SnackBarType.error);
       }
     }

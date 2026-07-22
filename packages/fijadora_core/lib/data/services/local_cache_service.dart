@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' show Random;
 import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -10,7 +11,7 @@ class LocalCacheService {
 
   static const _boxName = 'app_cache';
   static const _keyStorageKey = 'hive_encryption_key';
-  final _secureStorage = const FlutterSecureStorage();
+  FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   Future<List<int>> _getOrCreateKey(String storageKey) async {
     final stored = await _secureStorage.read(key: storageKey);
@@ -23,12 +24,12 @@ class LocalCacheService {
   }
 
   List<int> _randomBytes(int length) {
-    final bytes = List<int>.generate(length, (_) => DateTime.now().microsecondsSinceEpoch % 256);
-    final hash = sha256.convert(bytes).bytes;
-    return hash.sublist(0, length);
+    final random = Random.secure();
+    return List<int>.generate(length, (_) => random.nextInt(256));
   }
 
-  Future<void> init() async {
+  Future<void> init({FlutterSecureStorage? secureStorage}) async {
+    if (secureStorage != null) _secureStorage = secureStorage;
     final key = await _getOrCreateKey(_keyStorageKey);
     await Hive.openBox(_boxName, encryptionCipher: HiveAesCipher(key));
   }

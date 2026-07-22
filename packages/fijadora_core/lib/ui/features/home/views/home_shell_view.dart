@@ -9,6 +9,7 @@ import '../../collections/views/collections_tab_view.dart';
 import '../../../../data/services/app_notification_service.dart';
 import '../../../shared/utils/notification_helper.dart';
 import '../../../shared/widgets/offline_banner.dart';
+import '../../../shared/widgets/signature_edge_fade.dart';
 import 'home_view.dart';
 import '../../../core/router.dart';
 
@@ -159,6 +160,9 @@ class _HomeShellViewState extends ConsumerState<HomeShellView>
                 right: 0,
                 child: OfflineBanner(),
               ),
+
+              // ── Bottom edge fade (behind the floating nav bar) ────────────
+              const BottomEdgeFade(),
 
               // ── Floating nav bar ──────────────────────────────────────────
               Positioned(

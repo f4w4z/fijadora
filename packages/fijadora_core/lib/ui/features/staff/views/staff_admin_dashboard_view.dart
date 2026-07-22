@@ -2,7 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/repositories/auth_repository.dart';
+import '../../../../data/repositories/users_repository.dart';
 import '../../../../data/services/app_notification_service.dart';
+import '../../../../data/services/push_notification_service.dart';
 import '../../../../domain/models/app_user.dart';
 import '../../../../domain/models/job_status.dart';
 import '../../../../domain/models/maintenance_job.dart';
@@ -185,44 +187,49 @@ class _JobRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final statusColor = job.status.color(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 6),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
+          color: theme.colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.brightness == Brightness.dark ? const Color(0xFF222222) : const Color(0xFFE5E5E5)),
         ),
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: job.status.color(context).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(job.tradeType.displayName[0], style: TextStyle(fontWeight: FontWeight.bold, color: job.status.color(context), fontSize: 14)),
-            ),
-            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(job.tradeType.displayName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  Text(
+                    job.tradeType.displayName,
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.onSurface),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   const SizedBox(height: 2),
-                  Text(job.address, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(
+                    job.address,
+                    style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: job.status.color(context).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
+                color: statusColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(job.status.displayName, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: job.status.color(context)), maxLines: 1),
+              child: Text(
+                job.status.displayName,
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor),
+                maxLines: 1,
+              ),
             ),
           ],
         ),
@@ -290,25 +297,14 @@ class _StatusBar extends StatelessWidget {
   }
 }
 
-class _PendingWorkerApprovalsSection extends ConsumerStatefulWidget {
+class _PendingWorkerApprovalsSection extends ConsumerWidget {
   const _PendingWorkerApprovalsSection();
 
   @override
-  ConsumerState<_PendingWorkerApprovalsSection> createState() => _PendingWorkerApprovalsSectionState();
-}
-
-class _PendingWorkerApprovalsSectionState extends ConsumerState<_PendingWorkerApprovalsSection> {
-  @override
-  void initState() {
-    super.initState();
-    ref.read(authRepositoryProvider).refreshWorkers();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final authWorkers = ref.watch(authRepositoryProvider).getAllWorkers();
-    final pending = authWorkers.where((w) => w.workerStatus == 'pending').toList();
+    final workers = ref.watch(workersProvider).valueOrNull ?? const [];
+    final pending = workers.where((w) => w.workerStatus == 'pending').toList();
 
     if (pending.isEmpty) return const SizedBox.shrink();
 
@@ -332,10 +328,7 @@ class _PendingWorkerApprovalsSectionState extends ConsumerState<_PendingWorkerAp
         const SizedBox(height: 10),
         ...pending.map((worker) => _DashboardPendingWorkerCard(
           worker: worker,
-          onStatusChanged: () {
-            ref.read(authRepositoryProvider).refreshWorkers();
-            setState(() {});
-          },
+          onStatusChanged: () => ref.invalidate(workersProvider),
         )),
       ],
     );
@@ -351,65 +344,71 @@ class _DashboardPendingWorkerCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE65100).withValues(alpha: 0.3)),
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            radius: 22,
-            backgroundColor: const Color(0xFFE65100).withValues(alpha: 0.1),
+            radius: 20,
+            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
             child: Text(
               worker.name.isNotEmpty ? worker.name[0].toUpperCase() : 'W',
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFE65100), fontSize: 18),
+              style: TextStyle(fontWeight: FontWeight.w700, color: theme.colorScheme.primary, fontSize: 16),
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(worker.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                Text(
+                  worker.name,
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.onSurface),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 2),
-                Text(worker.email, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+                Text(
+                  worker.email,
+                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE65100).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text('PENDING', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: const Color(0xFFE65100))),
-          ),
-          const SizedBox(width: 8),
-          AnimatedTapScale(
-            onTap: () => _approve(context, ref),
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF34C759).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+          const SizedBox(width: 12),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedTapScale(
+                onTap: () => _reject(context, ref),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.error.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(CupertinoIcons.xmark, size: 16, color: theme.colorScheme.error),
+                ),
               ),
-              child: const Icon(CupertinoIcons.checkmark_alt, size: 18, color: Color(0xFF34C759)),
-            ),
-          ),
-          const SizedBox(width: 4),
-          AnimatedTapScale(
-            onTap: () => _reject(context, ref),
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+              const SizedBox(width: 6),
+              AnimatedTapScale(
+                onTap: () => _approve(context, ref),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF34C759).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(CupertinoIcons.checkmark_alt, size: 16, color: Color(0xFF34C759)),
+                ),
               ),
-              child: Icon(CupertinoIcons.xmark, size: 18, color: theme.colorScheme.error),
-            ),
+            ],
           ),
         ],
       ),
@@ -418,6 +417,11 @@ class _DashboardPendingWorkerCard extends ConsumerWidget {
 
   void _approve(BuildContext context, WidgetRef ref) async {
     await ref.read(authRepositoryProvider).updateWorkerStatus(userId: worker.id, status: 'approved');
+    PushNotificationService.sendNotification(
+      userId: worker.id,
+      title: 'Account Approved',
+      body: 'You can now access the worker app.',
+    );
     ref.read(notificationServiceProvider).sendNotification(
       title: 'Worker Approved',
       body: '${worker.name} can now access the worker app.',
@@ -430,6 +434,11 @@ class _DashboardPendingWorkerCard extends ConsumerWidget {
 
   void _reject(BuildContext context, WidgetRef ref) async {
     await ref.read(authRepositoryProvider).updateWorkerStatus(userId: worker.id, status: 'rejected');
+    PushNotificationService.sendNotification(
+      userId: worker.id,
+      title: 'Account Rejected',
+      body: 'Your worker registration was not approved.',
+    );
     onStatusChanged();
     if (context.mounted) {
       context.showSnackBar('${worker.name} rejected', type: SnackBarType.error);

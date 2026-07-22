@@ -9,6 +9,9 @@ import '../../../shared/widgets/delete_account_button.dart';
 import '../../profile/views/home_detail_list_view.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 import '../../settings/views/settings_view.dart';
+import '../../shop/views/customer_orders_view.dart';
+import '../../shop/views/item_requests_view.dart';
+import '../../shop/views/announcements_view.dart';
 
 
 class HomeView extends ConsumerWidget {
@@ -221,6 +224,84 @@ class HomeView extends ConsumerWidget {
                         const SizedBox(width: 16),
                         Expanded(
                           child: Text('Settings', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface)),
+                        ),
+                        Icon(CupertinoIcons.chevron_right, size: 15, color: theme.colorScheme.onSurfaceVariant),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              const Divider(),
+              const SizedBox(height: AppSpacing.md),
+              FadeSlideTransition(
+                delay: const Duration(milliseconds: 260),
+                child: AnimatedTapScale(
+                  onTap: () => Navigator.of(context).push(AppPageRoute(builder: (_) => const CustomerOrdersView())),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(CupertinoIcons.bag, size: 18, color: theme.colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text('My Orders', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface)),
+                        ),
+                        Icon(CupertinoIcons.chevron_right, size: 15, color: theme.colorScheme.onSurfaceVariant),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              // ─── Item Requests ───────────────────────────────────────
+              FadeSlideTransition(
+                delay: const Duration(milliseconds: 270),
+                child: AnimatedTapScale(
+                  onTap: () => Navigator.of(context).push(AppPageRoute(builder: (_) => const ItemRequestsView())),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(CupertinoIcons.search, size: 18, color: theme.colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text('Request an Item', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface)),
+                        ),
+                        Icon(CupertinoIcons.chevron_right, size: 15, color: theme.colorScheme.onSurfaceVariant),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              // ─── Announcements ───────────────────────────────────────
+              FadeSlideTransition(
+                delay: const Duration(milliseconds: 280),
+                child: AnimatedTapScale(
+                  onTap: () => Navigator.of(context).push(AppPageRoute(builder: (_) => const AnnouncementsView())),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(CupertinoIcons.bell, size: 18, color: theme.colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text('Announcements', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface)),
                         ),
                         Icon(CupertinoIcons.chevron_right, size: 15, color: theme.colorScheme.onSurfaceVariant),
                       ],

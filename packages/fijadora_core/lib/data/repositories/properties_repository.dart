@@ -51,6 +51,7 @@ class SupabasePropertiesRepository implements PropertiesRepository {
             if (!_controller.isClosed) _controller.add(properties);
           } else {
             CrashReportingService.captureException(e);
+            if (!_controller.isClosed) _controller.addError(e);
           }
         });
 

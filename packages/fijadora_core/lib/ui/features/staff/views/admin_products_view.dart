@@ -13,6 +13,7 @@ import '../view_models/admin_products_view_model.dart';
 import 'admin_collections_view.dart';
 import 'product_form_page.dart';
 import 'product_list_card.dart';
+import 'staff_commerce_view.dart';
 
 class AdminProductsView extends ConsumerStatefulWidget {
   const AdminProductsView({super.key});
@@ -58,6 +59,13 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
+          IconButton(
+            icon: Icon(CupertinoIcons.creditcard, color: theme.colorScheme.onSurfaceVariant),
+            tooltip: 'Commerce (Orders, Requests, Payouts, Workers)',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const StaffCommerceView()),
+            ),
+          ),
           IconButton(
             icon: Icon(CupertinoIcons.collections, color: theme.colorScheme.onSurfaceVariant),
             tooltip: 'Manage Looks',
@@ -186,7 +194,7 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                   child: EmptyStateWidget(
                     icon: CupertinoIcons.exclamationmark_triangle,
                     title: 'Error Loading Products',
-                    message: err.toString(),
+                    message: 'Something went wrong while loading products. Pull to retry.',
                   ),
                 ),
                 data: (products) {

@@ -46,10 +46,9 @@ class StubAuthRepository implements AuthRepository {
   Future<void> updatePassword({required String newPassword}) async {}
 
   @override
-  List<AppUser> getAllWorkers() => [];
+  Future<void> refreshUser() async {}
 
-  @override
-  Future<void> refreshWorkers() async {}
+
 
   @override
   Future<void> updateWorkerStatus({required String userId, required String status}) async {}

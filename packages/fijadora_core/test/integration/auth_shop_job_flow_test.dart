@@ -58,15 +58,13 @@ class TestAuthRepository implements AuthRepository {
   }
 
   @override
-  List<AppUser> getAllWorkers() => [];
-  @override
-  Future<void> refreshWorkers() async {}
-  @override
   Future<void> updateWorkerStatus({required String userId, required String status}) async {}
   @override
   Future<void> sendPasswordResetEmail({required String email}) async {}
   @override
   Future<void> updatePassword({required String newPassword}) async {}
+  @override
+  Future<void> refreshUser() async {}
   @override
   Future<void> deleteAccount() async {}
   @override
@@ -245,7 +243,7 @@ void main() {
 
       // Sign up (email verification required)
       await authVM.signUp(email: 'user@test.com', password: 'Password1', name: 'Test', role: UserRole.customer);
-      expect(authVM.needsEmailVerification, isTrue);
+      expect(authVM.signUpJustCompleted, isTrue);
       expect(authVM.isAuthenticated, isFalse);
       expect(authVM.user, isNull);
 
@@ -267,14 +265,14 @@ void main() {
       authRepo.setFailure(true);
 
       try { await authVM.signUp(email: 'bad@test.com', password: 'Password1', name: 'Bad', role: UserRole.customer); } catch (_) {}
-      expect(authVM.needsEmailVerification, isFalse);
+      expect(authVM.signUpJustCompleted, isFalse);
       expect(authVM.isAuthenticated, isFalse);
       expect(authVM.user, isNull);
 
       // Failure clears on next successful attempt
       authRepo.setFailure(false);
       await authVM.signUp(email: 'good@test.com', password: 'Password1', name: 'Good', role: UserRole.customer);
-      expect(authVM.needsEmailVerification, isTrue);
+      expect(authVM.signUpJustCompleted, isTrue);
       expect(authVM.isAuthenticated, isFalse);
       expect(authVM.errorMessage, isNull);
 

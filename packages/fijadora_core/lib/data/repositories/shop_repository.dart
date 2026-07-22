@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import '../../domain/models/product.dart';
 import '../services/local_cache_service.dart';
+import '../services/push_notification_service.dart';
 import '../services/supabase_service.dart';
 
 abstract class ShopRepository {
@@ -114,7 +115,15 @@ class SupabaseShopRepository implements ShopRepository {
         .insert(json)
         .select()
         .single();
-    return Product.fromJson(response);
+    final created = Product.fromJson(response);
+    // Announce to all customers (DB row is created by a trigger; push here).
+    await PushNotificationService.sendNotification(
+      role: 'customer',
+      title: 'New product: ${created.name}',
+      body: 'We just added "${created.name}" to the shop. Tap to view it now!',
+      data: {'route': '/product/${created.id}'},
+    );
+    return created;
   }
 
   @override
@@ -159,4 +168,18 @@ final shopRepositoryProvider = Provider<ShopRepository>((ref) {
   final repo = SupabaseShopRepository(client);
   ref.onDispose(() => repo.dispose());
   return repo;
+});
+
+/// Cached review stream for a product. Riverpod keeps a single subscription so
+/// the reviews list doesn't re-subscribe (and re-flicker) on every rebuild.
+final productReviewsProvider =
+    StreamProvider.family<List<Map<String, dynamic>>, String>((ref, productId) {
+  return ref.watch(shopRepositoryProvider).streamReviews(productId);
+});
+
+/// Cached lookup of a single product by id (deep links / announcement taps).
+final productByIdProvider = FutureProvider.family<Product?, String>((ref, id) async {
+  final list = await ref.watch(shopRepositoryProvider).streamProducts().first;
+  final matches = list.where((p) => p.id == id).toList();
+  return matches.isEmpty ? null : matches.first;
 });

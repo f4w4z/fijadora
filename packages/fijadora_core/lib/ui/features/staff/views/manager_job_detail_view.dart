@@ -121,7 +121,6 @@ class _ManagerJobDetailViewState extends ConsumerState<ManagerJobDetailView> {
             backgroundColor: theme.scaffoldBackgroundColor,
             surfaceTintColor: Colors.transparent,
             scrolledUnderElevation: 0,
-            expandedHeight: 120,
             pinned: true,
             leading: GestureDetector(
               onTap: () => Navigator.pop(context),
@@ -134,70 +133,67 @@ class _ManagerJobDetailViewState extends ConsumerState<ManagerJobDetailView> {
                 ),
               ),
             ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                padding: EdgeInsets.fromLTRB(
-                    context.pagePad, 60, context.pagePad, AppSpacing.lg),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: tradeColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child:
-                          Icon(job.tradeType.icon, size: 20, color: tradeColor),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            job.tradeType.displayName,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.onSurface,
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Job #${job.id.length > 8 ? job.id.substring(0, 8) : job.id}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color:
-                            job.status.color(context).withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        job.status.displayName.toUpperCase(),
+            titleSpacing: 8,
+            title: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: tradeColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(job.tradeType.icon, size: 18, color: tradeColor),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        job.tradeType.displayName,
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: job.status.color(context),
-                          letterSpacing: 0.5,
+                          color: theme.colorScheme.onSurface,
+                          letterSpacing: -0.3,
                         ),
                       ),
+                      const SizedBox(height: 1),
+                      Text(
+                        'Job #${job.id.length > 8 ? job.id.substring(0, 8) : job.id}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              Padding(
+                padding: EdgeInsets.only(right: context.pagePad),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: job.status.color(context).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    job.status.displayName.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: job.status.color(context),
+                      letterSpacing: 0.5,
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
 
           SliverToBoxAdapter(

@@ -61,13 +61,18 @@ class UnitCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: borderColor),
                     ),
-                    child: Center(
-                      child: Text(unit['number'] as String, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                    ),
+                    child: Icon(CupertinoIcons.square_grid_2x2, size: 15, color: theme.colorScheme.onSurface),
                   ),
                   const SizedBox(width: 12),
-                  Text('Unit ${unit['number']}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                  const Spacer(),
+                  Expanded(
+                    child: Text(
+                      'Unit ${unit['number']}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   AnimatedTapScale(
                     onTap: onDelete,
                     child: Icon(CupertinoIcons.trash, size: 14, color: theme.colorScheme.error.withValues(alpha: 0.6)),

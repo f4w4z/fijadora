@@ -2,9 +2,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../data/repositories/auth_repository.dart';
+import '../../../../data/repositories/users_repository.dart';
 import '../../../../data/repositories/jobs_repository.dart';
 import '../../../../data/services/app_notification_service.dart';
+import '../../../../data/services/push_notification_service.dart';
 import '../../../../domain/models/job_status.dart';
 import '../../../shared/utils/notification_helper.dart';
 import '../../../../domain/models/maintenance_job.dart';
@@ -63,14 +64,16 @@ class _StaffApprovalsViewState extends ConsumerState<StaffApprovalsView> {
             ),
             const SizedBox(height: 8),
             Expanded(
-              child: jobsAsync.maybeWhen(
-                data: (jobs) {
-                  final approvalsList = jobs
-                      .where((j) => j.status == JobStatus.waitingApproval)
-                      .toList()
-                    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+              child: Builder(
+                builder: (context) {
+                  if (cachedJobs == null) {
+                    if (jobsAsync.hasError) {
+                      return Center(child: Text('Error: ${jobsAsync.error}'));
+                    }
+                    return const ShimmerApprovalCard(count: 2);
+                  }
 
-                  if (approvalsList.isEmpty) {
+                  if (approvals.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -83,23 +86,28 @@ class _StaffApprovalsViewState extends ConsumerState<StaffApprovalsView> {
                     );
                   }
 
-                  final workers = ref
-                      .read(authRepositoryProvider)
-                      .getAllWorkers()
+                  final workers = (ref.watch(workersProvider).valueOrNull ?? const [])
                       .map((w) => {'id': w.id, 'name': w.name})
                       .toList();
 
                   return ListView.builder(
                     padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.sm, context.pagePad, 120),
-                    itemCount: approvalsList.length,
+                    itemCount: approvals.length,
                     itemBuilder: (context, index) {
-                      final job = approvalsList[index];
+                      final job = approvals[index];
                       return _ApprovalCard(
                         job: job,
                         workers: workers,
                         onApprove: () async {
                           try {
                             await jobsRepo.updateJobStatus(jobId: job.id, status: JobStatus.completed);
+                            if (job.workerId != null) {
+                              PushNotificationService.sendNotification(
+                                userId: job.workerId!,
+                                title: 'Job Completed',
+                                body: 'Your ${job.tradeType.displayName} job has been approved.',
+                              );
+                            }
                             notificationService.sendNotification(
                               title: 'Job Approved',
                               body: '${job.tradeType.displayName} job has been approved',
@@ -116,6 +124,13 @@ class _StaffApprovalsViewState extends ConsumerState<StaffApprovalsView> {
                         onReject: () async {
                           try {
                             await ref.read(jobsViewModelProvider).rejectJob(job.id);
+                            if (job.workerId != null) {
+                              PushNotificationService.sendNotification(
+                                userId: job.workerId!,
+                                title: 'Job Returned',
+                                body: 'Your ${job.tradeType.displayName} job was returned for revision.',
+                              );
+                            }
                             if (context.mounted) {
                               context.showSnackBar('Job rejected & returned to pending list', type: SnackBarType.success);
                             }
@@ -129,12 +144,6 @@ class _StaffApprovalsViewState extends ConsumerState<StaffApprovalsView> {
                       );
                     },
                   );
-                },
-                orElse: () {
-                  if (jobsAsync.hasError) {
-                    return Center(child: Text('Error: ${jobsAsync.error}'));
-                  }
-                  return const ShimmerApprovalCard(count: 2);
                 },
               ),
             ),

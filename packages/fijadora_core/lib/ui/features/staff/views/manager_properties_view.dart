@@ -6,7 +6,7 @@ import '../../../shared/utils/notification_helper.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../../../data/repositories/jobs_repository.dart';
 import '../../../../data/repositories/properties_repository.dart';
-import '../../../../data/repositories/auth_repository.dart';
+import '../../../../data/repositories/users_repository.dart';
 import '../../../../data/services/app_notification_service.dart';
 import '../../../../domain/models/maintenance_job.dart';
 import '../../../../domain/models/job_status.dart';
@@ -29,25 +29,35 @@ class ManagerPropertiesView extends ConsumerStatefulWidget {
 
 class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
   final Set<String> _expandedUnits = {};
-  StreamSubscription<List<Property>>? _sub;
   List<Map<String, dynamic>> _properties = [];
+  ProviderSubscription<AsyncValue<List<Property>>>? _propertiesSub;
 
   @override
   void initState() {
     super.initState();
-    final repo = ref.read(propertiesRepositoryProvider);
     final userId = ref.read(authViewModelProvider).user?.id ?? '';
-    _sub = repo.streamProperties(userId).listen((props) {
-      if (!mounted) return;
-      setState(() {
-        _properties = props.map(_propertyToMap).toList();
-      });
+    // Seed the first frame from the cached provider value (no re-fetch).
+    ref.read(propertiesStreamProvider(userId)).whenData((props) {
+      _properties = props.map(_propertyToMap).toList();
     });
+    // Update via setState from an async listener so rebuilds never happen
+    // during another widget's build scope (e.g. while a dialog keyboard
+    // animates the viewport).
+    _propertiesSub = ref.listenManual(
+      propertiesStreamProvider(userId),
+      (prev, next) {
+        next.whenData((props) {
+          if (mounted) {
+            setState(() => _properties = props.map(_propertyToMap).toList());
+          }
+        });
+      },
+    );
   }
 
   @override
   void dispose() {
-    _sub?.cancel();
+    _propertiesSub?.close();
     super.dispose();
   }
 
@@ -685,7 +695,7 @@ class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
     try {
       final [jobs, workers] = await Future.wait([
         ref.read(jobsRepositoryProvider).fetchJobsForAsset(assetId: assetId),
-        Future.value(ref.read(authRepositoryProvider).getAllWorkers()),
+        ref.read(workersProvider.future),
       ]);
 
       final assetJobs = jobs as List<MaintenanceJob>;

@@ -61,7 +61,7 @@ class _AiConciergeBodyState extends State<_AiConciergeBody> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          _error = 'Could not get recommendations. Please try again.';
           _analyzing = false;
         });
       }

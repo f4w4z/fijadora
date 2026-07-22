@@ -60,4 +60,13 @@ supabase/.temp/
 # Local scripts and run files
 run.bat
 run.ps1
+install-*.txt
+
+# Root-level Flutter project artifacts (created by flutter create at wrong level)
+/ios/
+/lib/
+/linux/
+/macos/
+/web/
+/test/
 

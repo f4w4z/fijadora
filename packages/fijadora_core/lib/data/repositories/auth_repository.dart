@@ -13,11 +13,10 @@ abstract class AuthRepository {
   Future<void> signUp({required String email, required String password, required String name, required UserRole role});
   Future<void> signIn({required String email, required String password});
   Future<void> resendEmailVerification({required String email});
-  List<AppUser> getAllWorkers();
-  Future<void> refreshWorkers();
   Future<void> updateWorkerStatus({required String userId, required String status});
   Future<void> sendPasswordResetEmail({required String email});
   Future<void> updatePassword({required String newPassword});
+  Future<void> refreshUser();
   Future<void> signOut();
   Future<void> deleteAccount();
   void dispose();
@@ -39,14 +38,12 @@ class SupabaseAuthRepository implements AuthRepository {
       );
     }
     _initStream();
-    _fetchWorkers();
   }
 
   final sb.SupabaseClient _client;
   final _controller = StreamController<AppUser?>.broadcast();
   AppUser? _currentUser;
   StreamSubscription? _authSubscription;
-  List<AppUser> _cachedWorkers = [];
 
   void _initStream() {
     _authSubscription = _client.auth.onAuthStateChange.listen((data) async {
@@ -104,6 +101,7 @@ class SupabaseAuthRepository implements AuthRepository {
         'name': name,
         'role': role.key,
       },
+      emailRedirectTo: 'fijadora://app',
     );
   }
 
@@ -120,6 +118,7 @@ class SupabaseAuthRepository implements AuthRepository {
     await _client.auth.resend(
       type: sb.OtpType.signup,
       email: email,
+      emailRedirectTo: 'fijadora://app',
     );
   }
 
@@ -129,9 +128,27 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> refreshUser() async {
+    try {
+      await _client.auth.refreshSession();
+    } catch (_) {}
+    final sbUser = _client.auth.currentUser;
+    if (sbUser == null) return;
+    try {
+      final profile = await _fetchProfile(sbUser.id);
+      _currentUser = profile.copyWith(
+        emailConfirmedAt:
+            sbUser.emailConfirmedAt != null ? DateTime.parse(sbUser.emailConfirmedAt!) : null,
+      );
+      if (!_controller.isClosed) _controller.add(_currentUser);
+    } catch (e) {
+      CrashReportingService.captureException(e);
+    }
+  }
+
+  @override
   Future<void> signOut() async {
     await LocalCacheService.instance.clear();
-    _cachedWorkers = [];
     await _client.auth.signOut();
   }
 
@@ -139,37 +156,12 @@ class SupabaseAuthRepository implements AuthRepository {
   Future<void> deleteAccount() async {
     await _client.rpc('delete_user_account');
     _currentUser = null;
-    _cachedWorkers = [];
     await LocalCacheService.instance.clear();
-  }
-
-  Future<void> _fetchWorkers() async {
-    try {
-      final data = await _client
-          .from('users')
-          .select()
-          .eq('role', 'worker');
-      _cachedWorkers = data.map((json) => AppUser.fromJson(json)).toList();
-    } catch (e) {
-      CrashReportingService.captureException(e);
-    }
-  }
-
-  @override
-  List<AppUser> getAllWorkers() => _cachedWorkers;
-
-  @override
-  Future<void> refreshWorkers() async {
-    await _fetchWorkers();
   }
 
   @override
   Future<void> updateWorkerStatus({required String userId, required String status}) async {
     await _client.from('users').update({'worker_status': status}).eq('id', userId);
-    final idx = _cachedWorkers.indexWhere((w) => w.id == userId);
-    if (idx != -1) {
-      _cachedWorkers[idx] = _cachedWorkers[idx].copyWith(workerStatus: status);
-    }
   }
 
   @override

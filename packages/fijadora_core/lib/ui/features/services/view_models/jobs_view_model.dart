@@ -8,6 +8,7 @@ import '../../../../domain/models/trade_type.dart';
 import '../../../../domain/models/user_role.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../../../data/services/app_notification_service.dart';
+import '../../../../data/services/push_notification_service.dart';
 import '../../../../data/services/telemetry_service.dart';
 
 class JobsViewModel extends ChangeNotifier {
@@ -56,7 +57,7 @@ class JobsViewModel extends ChangeNotifier {
         notifyListeners();
       },
       onError: (e) {
-        _errorMessage = e.toString();
+        _errorMessage = 'Could not load jobs.';
         _isLoading = false;
         notifyListeners();
       },
@@ -95,7 +96,7 @@ class JobsViewModel extends ChangeNotifier {
       );
       return created;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not submit service request.';
       notifyListeners();
       rethrow;
     } finally {
@@ -117,7 +118,7 @@ class JobsViewModel extends ChangeNotifier {
         body: 'Job status is now ${status.displayName.toUpperCase()}.',
       );
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not update job status.';
       notifyListeners();
       rethrow;
     } finally {
@@ -130,7 +131,7 @@ class JobsViewModel extends ChangeNotifier {
     try {
       return await jobsRepository.getJob(jobId: jobId);
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not load job details.';
       notifyListeners();
       rethrow;
     }
@@ -143,7 +144,7 @@ class JobsViewModel extends ChangeNotifier {
     try {
       return await jobsRepository.uploadJobImage(fileName, fileBytes);
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not upload image.';
       notifyListeners();
       rethrow;
     } finally {
@@ -159,12 +160,22 @@ class JobsViewModel extends ChangeNotifier {
     try {
       await jobsRepository.completeJob(jobId: jobId, notes: notes, images: images);
       telemetryService.logEvent('complete_job', {'job_id': jobId});
+      PushNotificationService.sendNotification(
+        role: 'admin',
+        title: 'Job Completed',
+        body: 'A job is ready for your review and approval.',
+      );
+      PushNotificationService.sendNotification(
+        role: 'manager',
+        title: 'Job Completed',
+        body: 'A job is ready for your review and approval.',
+      );
       notificationService.sendNotification(
         title: 'Job Completed',
         body: 'Job completion request submitted for approval.',
       );
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not complete job.';
       notifyListeners();
       rethrow;
     } finally {
@@ -185,7 +196,7 @@ class JobsViewModel extends ChangeNotifier {
         body: 'Job was rejected by the manager and returned to pending assignment.',
       );
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not reject job.';
       notifyListeners();
       rethrow;
     } finally {
@@ -224,8 +235,13 @@ final jobsViewModelProvider = ChangeNotifierProvider<JobsViewModel>((ref) {
   );
 });
 
-// Shared StreamProvider for caching and sharing the jobs stream
+// Shared StreamProvider for caching and sharing the jobs stream.
+// keepAlive() prevents the subscription from being torn down when the current
+// tab stops watching it (e.g. swiping between shell tabs), so re-entering a
+// page shows cached data instantly instead of flashing a loading shimmer.
+// It still recomputes when userId/role change (login/logout/role switch).
 final jobsStreamProvider = StreamProvider.autoDispose<List<MaintenanceJob>>((ref) {
+  ref.keepAlive();
   final repository = ref.watch(jobsRepositoryProvider);
   final userId = ref.watch(authViewModelProvider.select((vm) => vm.user?.id ?? ''));
   final role = ref.watch(authViewModelProvider.select((vm) => vm.user?.role ?? UserRole.customer));

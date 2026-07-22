@@ -12,6 +12,7 @@ import '../features/auth/views/forgot_password_view.dart';
 import '../features/auth/views/reset_password_view.dart';
 import '../../domain/models/user_role.dart';
 import '../features/home/views/home_shell_view.dart';
+import '../features/shop/views/product_detail_view.dart';
 import '../features/worker/views/worker_shell_view.dart';
 import '../features/worker/views/worker_pending_approval_view.dart';
 import '../features/staff/views/staff_shell_view.dart';
@@ -92,7 +93,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAccessDenied = location == '/access-denied';
       final isForgotPassword = location == '/forgot-password';
       final isResetPassword = location == '/reset-password';
-      final isPendingApproval = location == '/pending-approval';
 
       // Unauthenticated — only allow auth screens
       if (!isAuthenticated) {
@@ -122,6 +122,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             if (location != '/pending-approval') return '/pending-approval';
           } else if (status == 'rejected') {
             if (location != '/access-denied') return '/access-denied';
+          } else if (status == 'approved' && location == '/pending-approval') {
+            return '/';
           }
         }
       }
@@ -152,6 +154,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/pending-approval',
         pageBuilder: (context, state) => _fadePage(const WorkerPendingApprovalView(), state),
+      ),
+      GoRoute(
+        path: '/product/:id',
+        pageBuilder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          return _fadePage(ProductDetailByIdView(productId: id), state);
+        },
       ),
       GoRoute(
         path: '/',

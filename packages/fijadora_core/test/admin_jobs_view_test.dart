@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fijadora_core/data/repositories/auth_repository.dart';
 import 'package:fijadora_core/data/repositories/jobs_repository.dart';
+import 'package:fijadora_core/data/repositories/users_repository.dart';
 import 'package:fijadora_core/data/services/app_notification_service.dart';
 import 'package:fijadora_core/domain/models/app_user.dart';
 import 'package:fijadora_core/domain/models/job_status.dart';
@@ -31,25 +32,19 @@ class _StubAuthRepository implements AuthRepository {
   Stream<AppUser?> get authStateChanges => _controller.stream;
 
   @override
-  List<AppUser> getAllWorkers() => [
-    AppUser(id: 'worker-1', email: 'worker@test.com', name: 'Worker One', role: UserRole.worker, createdAt: DateTime(2026)),
-    AppUser(id: 'worker-2', email: 'worker2@test.com', name: 'Worker Two', role: UserRole.worker, createdAt: DateTime(2026)),
-  ];
-
-  @override
   Future<void> signUp({required String email, required String password, required String name, required UserRole role}) async {}
   @override
   Future<void> signIn({required String email, required String password}) async {}
   @override
   Future<void> resendEmailVerification({required String email}) async {}
   @override
-  Future<void> refreshWorkers() async {}
-  @override
   Future<void> updateWorkerStatus({required String userId, required String status}) async {}
   @override
   Future<void> sendPasswordResetEmail({required String email}) async {}
   @override
   Future<void> updatePassword({required String newPassword}) async {}
+  @override
+  Future<void> refreshUser() async {}
   @override
   Future<void> signOut() async {}
   @override
@@ -129,6 +124,10 @@ Widget _buildTestWidget({
     overrides: [
       jobsRepositoryProvider.overrideWithValue(jobsRepo),
       authRepositoryProvider.overrideWithValue(authRepo),
+      workersProvider.overrideWith((ref) => [
+        AppUser(id: 'worker-1', email: 'worker@test.com', name: 'Worker One', role: UserRole.worker, createdAt: DateTime(2026)),
+        AppUser(id: 'worker-2', email: 'worker2@test.com', name: 'Worker Two', role: UserRole.worker, createdAt: DateTime(2026)),
+      ]),
       notificationServiceProvider.overrideWithValue(notificationService),
       authViewModelProvider.overrideWith((ref) => AuthViewModel(ref.watch(authRepositoryProvider))),
     ],

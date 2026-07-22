@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../view_models/cart_view_model.dart';
+import 'checkout_view.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 
@@ -226,20 +227,8 @@ class CartView extends ConsumerWidget {
                   height: 50,
                   child: ElevatedButton(
                     onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Coming Soon'),
-                          content: const Text(
-                            'Online ordering is not yet available. Please contact our team at hello@fijadora.com to inquire about this order.',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('Got it'),
-                            ),
-                          ],
-                        ),
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => const CheckoutView()),
                       );
                     },
                     style: ElevatedButton.styleFrom(

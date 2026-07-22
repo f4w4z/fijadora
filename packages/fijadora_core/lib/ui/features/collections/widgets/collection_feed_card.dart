@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../domain/models/collection.dart';
-import '../../../core/utilities/responsive_helpers.dart';
 import '../../../core/theme.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
 
@@ -22,20 +21,17 @@ class CollectionFeedCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-      child: AnimatedTapScale(
-        onTap: onTap ?? () {},
-        scaleFactor: 0.97,
-        child: Container(
-          height: 25.h(context),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
+    return AnimatedTapScale(
+      onTap: onTap ?? () {},
+      scaleFactor: 0.97,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
               if (collection.coverImageUrl != null)
                 CachedNetworkImage(
                   imageUrl: collection.coverImageUrl!,
@@ -106,7 +102,6 @@ class CollectionFeedCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }

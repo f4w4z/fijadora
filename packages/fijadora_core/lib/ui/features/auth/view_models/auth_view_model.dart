@@ -34,8 +34,8 @@ class AuthViewModel extends ChangeNotifier {
   String? _signUpEmail;
   String? get signUpEmail => _signUpEmail;
 
-  @Deprecated('Use signUpJustCompleted instead')
-  bool get needsEmailVerification => _signUpJustCompleted;
+  DateTime? _lastSignInAt;
+  DateTime? _lastSignUpAt;
 
   int _cooldownSeconds = 0;
   int get cooldownSeconds => _cooldownSeconds;
@@ -71,7 +71,6 @@ class AuthViewModel extends ChangeNotifier {
     _user = _authRepository.currentUser;
     _subscription = _authRepository.authStateChanges.listen(
       (user) {
-        final wasSignUpMode = _signUpJustCompleted;
         _user = user;
         _isLoading = false;
         _errorMessage = null;
@@ -82,7 +81,7 @@ class AuthViewModel extends ChangeNotifier {
         notifyListeners();
       },
       onError: (e) {
-        _errorMessage = e.toString();
+        _errorMessage = 'Something went wrong. Please try again.';
         _isLoading = false;
         notifyListeners();
       },
@@ -98,13 +97,17 @@ class AuthViewModel extends ChangeNotifier {
     _setLoading(true);
     _clearError();
     try {
+      if (_lastSignUpAt != null && DateTime.now().difference(_lastSignUpAt!).inSeconds < _cooldownDuration) {
+        throw RateLimitExceeded(_cooldownDuration - DateTime.now().difference(_lastSignUpAt!).inSeconds);
+      }
       await _authRepository.signUp(email: email, password: password, name: name, role: role);
+      _lastSignUpAt = DateTime.now();
       _signUpEmail = email;
       _signUpJustCompleted = true;
       _startCooldown();
       notifyListeners();
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not create account. Please try again.';
       notifyListeners();
       rethrow;
     } finally {
@@ -119,9 +122,13 @@ class AuthViewModel extends ChangeNotifier {
     _setLoading(true);
     _clearError();
     try {
+      if (_lastSignInAt != null && DateTime.now().difference(_lastSignInAt!).inSeconds < _cooldownDuration) {
+        throw RateLimitExceeded(_cooldownDuration - DateTime.now().difference(_lastSignInAt!).inSeconds);
+      }
       await _authRepository.signIn(email: email, password: password);
+      _lastSignInAt = DateTime.now();
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Invalid email or password.';
       notifyListeners();
       rethrow;
     } finally {
@@ -144,12 +151,16 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       if (e is RateLimitExceeded) rethrow;
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not resend verification email.';
       notifyListeners();
       rethrow;
     } finally {
       _setLoading(false);
     }
+  }
+
+  Future<void> refreshUser() async {
+    await _authRepository.refreshUser();
   }
 
   Future<void> signOut() async {
@@ -161,7 +172,7 @@ class AuthViewModel extends ChangeNotifier {
       _signUpJustCompleted = false;
       _signUpEmail = null;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not sign out.';
       notifyListeners();
       rethrow;
     } finally {
@@ -178,7 +189,7 @@ class AuthViewModel extends ChangeNotifier {
       _signUpJustCompleted = false;
       _signUpEmail = null;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not delete account.';
       notifyListeners();
       rethrow;
     } finally {
@@ -192,7 +203,7 @@ class AuthViewModel extends ChangeNotifier {
     try {
       await _authRepository.sendPasswordResetEmail(email: email);
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not send password reset email.';
       notifyListeners();
       rethrow;
     } finally {
@@ -206,7 +217,7 @@ class AuthViewModel extends ChangeNotifier {
     try {
       await _authRepository.updatePassword(newPassword: newPassword);
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not update password.';
       notifyListeners();
       rethrow;
     } finally {

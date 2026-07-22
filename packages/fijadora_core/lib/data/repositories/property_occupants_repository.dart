@@ -39,6 +39,9 @@ class SupabasePropertyOccupantsRepository implements PropertyOccupantsRepository
           }
         }, onError: (e) {
           CrashReportingService.captureException(e);
+          if (!_userController.isClosed) {
+            _userController.addError(e);
+          }
         });
 
     return _userController.stream;
@@ -56,6 +59,9 @@ class SupabasePropertyOccupantsRepository implements PropertyOccupantsRepository
           }
         }, onError: (e) {
           CrashReportingService.captureException(e);
+          if (!_propertyController.isClosed) {
+            _propertyController.addError(e);
+          }
         });
 
     return _propertyController.stream;

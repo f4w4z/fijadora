@@ -138,18 +138,24 @@ class _PropertyHeader extends StatelessWidget {
               children: [
                 Text(
                   property['name'] as String,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                     letterSpacing: -0.3,
+                    height: 1.25,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   property['address'] as String,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontSize: 12,
+                    height: 1.3,
                   ),
                 ),
               ],

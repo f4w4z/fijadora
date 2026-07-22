@@ -1,18 +1,19 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../data/repositories/auth_repository.dart';
+import '../../../../data/repositories/users_repository.dart';
 import '../../../../data/repositories/jobs_repository.dart';
 import '../../../../data/services/app_notification_service.dart';
+import '../../../../data/services/push_notification_service.dart';
 import '../../../../domain/models/job_status.dart';
 import '../../../../domain/models/maintenance_job.dart';
 import '../../../../domain/models/trade_type.dart';
-import '../../../../domain/models/user_role.dart';
 import '../../../shared/utils/notification_helper.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/app_bottom_sheet.dart';
 import '../../../shared/utils/date_extensions.dart';
-import '../../auth/view_models/auth_view_model.dart';
+import '../../services/view_models/jobs_view_model.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
 import 'manager_job_detail_view.dart';
@@ -29,8 +30,10 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
   String _searchQuery = '';
 
   List<Map<String, String>> get _workers {
-    final authWorkers = ref.read(authRepositoryProvider).getAllWorkers();
-    return authWorkers.map((w) => {
+    final workers = ref.watch(workersProvider).valueOrNull ?? const [];
+    return workers
+        .where((w) => w.workerStatus == 'approved')
+        .map((w) => {
       'id': w.id,
       'name': w.name,
     }).toList();
@@ -55,9 +58,6 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final jobsRepo = ref.watch(jobsRepositoryProvider);
-    final authUser = ref.watch(authViewModelProvider).user;
-    final adminUserId = authUser?.id ?? '';
 
     return Scaffold(
       body: SafeArea(
@@ -85,11 +85,11 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: StreamBuilder<List<MaintenanceJob>>(
-                stream: jobsRepo.streamJobs(userId: adminUserId, role: UserRole.admin),
-                builder: (context, snapshot) {
-                  final isLoading = snapshot.connectionState == ConnectionState.waiting;
-                  final allJobs = snapshot.data ?? [];
+              child: Consumer(
+                builder: (context, ref, _) {
+                  final jobsAsync = ref.watch(jobsStreamProvider);
+                  final isLoading = jobsAsync.isLoading && !jobsAsync.hasValue;
+                  final allJobs = jobsAsync.value ?? <MaintenanceJob>[];
                   final jobs = _filterJobs(allJobs);
                   final counts = _buildCounts(allJobs);
 
@@ -102,7 +102,7 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
                             scrollDirection: Axis.horizontal,
                             child: Row(
                               children: [
-                                _FilterChip(
+                                AppFilterChip(
                                   label: 'All',
                                   count: counts.total,
                                   selected: _activeFilter == null,
@@ -110,7 +110,7 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
                                   theme: theme,
                                 ),
                                 const SizedBox(width: 6),
-                                _FilterChip(
+                                AppFilterChip(
                                   label: 'Pending',
                                   count: counts.pending,
                                   selected: _activeFilter == JobStatus.pending,
@@ -118,7 +118,7 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
                                   theme: theme,
                                 ),
                                 const SizedBox(width: 6),
-                                _FilterChip(
+                                AppFilterChip(
                                   label: 'Active',
                                   count: counts.active,
                                   selected: _activeFilter == JobStatus.inProgress,
@@ -126,7 +126,7 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
                                   theme: theme,
                                 ),
                                 const SizedBox(width: 6),
-                                _FilterChip(
+                                AppFilterChip(
                                   label: 'Done',
                                   count: counts.completed,
                                   selected: _activeFilter == JobStatus.completed,
@@ -142,9 +142,9 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
                       const SliverToBoxAdapter(child: SizedBox(height: 12)),
                       if (isLoading)
                         const ShimmerJobCard(itemCount: 3)
-                      else if (snapshot.hasError)
+                      else if (jobsAsync.hasError)
                         SliverFillRemaining(
-                          child: Center(child: Text('Error: ${snapshot.error}')),
+                          child: Center(child: Text('Error: ${jobsAsync.error}')),
                         )
                       else if (jobs.isEmpty)
                         SliverFillRemaining(
@@ -212,70 +212,7 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final int count;
-  final bool selected;
-  final VoidCallback onTap;
-  final ThemeData theme;
 
-  const _FilterChip({
-    required this.label,
-    required this.count,
-    required this.selected,
-    required this.onTap,
-    required this.theme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedTapScale(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? theme.colorScheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: selected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
-              ),
-            ),
-            if (count > 0) ...[
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: selected ? theme.colorScheme.onPrimary.withValues(alpha: 0.2) : theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '$count',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: selected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class JobCard extends ConsumerStatefulWidget {
   final MaintenanceJob job;
@@ -453,6 +390,11 @@ class _JobCardState extends ConsumerState<JobCard> {
 
     try {
       await ref.read(jobsRepositoryProvider).assignWorker(jobId: widget.job.id, workerId: workerId);
+      PushNotificationService.sendNotification(
+        userId: workerId,
+        title: 'New Job Assigned',
+        body: 'You have been assigned a ${widget.job.tradeType.displayName} job.',
+      );
       ref.read(notificationServiceProvider).sendNotification(title: 'Worker Dispatched', body: 'Job assigned to $workerName.');
       if (mounted) {
         Navigator.of(context).pop();

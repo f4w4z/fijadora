@@ -102,6 +102,7 @@ class PushNotificationService {
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.denied) {
+      // Notification permission denied by user
     }
   }
 
@@ -174,6 +175,30 @@ class PushNotificationService {
         'user_id': user.id,
         'token': token,
       }, onConflict: 'user_id,token');
+    } catch (e) {
+      CrashReportingService.captureException(e);
+    }
+  }
+
+  static Future<void> sendNotification({
+    String? userId,
+    String? role,
+    required String title,
+    required String body,
+    Map<String, String>? data,
+  }) async {
+    try {
+      final bodyMap = <String, dynamic>{
+        'title': title,
+        'body': body,
+        'data': data ?? {},
+      };
+      if (userId != null) bodyMap['userId'] = userId;
+      if (role != null) bodyMap['role'] = role;
+      await SupabaseService.instance.client.functions.invoke(
+        'fcm-send',
+        body: bodyMap,
+      );
     } catch (e) {
       CrashReportingService.captureException(e);
     }

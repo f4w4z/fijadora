@@ -48,7 +48,9 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
       );
     } catch (e) {
       if (mounted) {
-        final msg = e.toString().replaceAll('Exception: ', '');
+        final msg = e is RateLimitExceeded
+            ? 'Please wait ${e.secondsRemaining}s before trying again.'
+            : 'Could not create account. Please try again.';
         context.showSnackBar(msg, type: SnackBarType.error);
       }
     }
@@ -78,7 +80,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
     final theme = Theme.of(context);
 
     // ── Show verification screen after signup ──
-    if (viewModel.needsEmailVerification) {
+    if (viewModel.signUpJustCompleted) {
       final canResend = viewModel.cooldownSeconds == 0;
       return Scaffold(
         appBar: AppBar(

@@ -203,13 +203,13 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  StreamBuilder<List<Map<String, dynamic>>>(
-                    stream: shopRepo.streamReviews(widget.product.id),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final reviewsAsync = ref.watch(productReviewsProvider(widget.product.id));
+                      if (reviewsAsync.isLoading && !reviewsAsync.hasValue) {
                         return const ShimmerReviewCard(count: 2);
                       }
-                      if (snapshot.hasError) {
+                      if (reviewsAsync.hasError) {
                         return Padding(
                           padding: const EdgeInsets.all(20),
                           child: Center(child: Text('Could not load reviews',
@@ -217,7 +217,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                           )),
                         );
                       }
-                      final reviews = snapshot.data ?? [];
+                      final reviews = reviewsAsync.value ?? [];
                       if (reviews.isEmpty) {
                         return Container(
                           padding: const EdgeInsets.all(20),
@@ -363,5 +363,32 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
         },
       ),
     );
+  }
+}
+
+/// Loads a product by id (used for deep links / push announcement taps).
+class ProductDetailByIdView extends ConsumerWidget {
+  const ProductDetailByIdView({super.key, required this.productId});
+
+  final String productId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ref.watch(productByIdProvider(productId)).when(
+          loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+          error: (_, __) => Scaffold(
+            appBar: AppBar(title: const Text('Product')),
+            body: const Center(child: Text('Product not found')),
+          ),
+          data: (product) {
+            if (product == null) {
+              return Scaffold(
+                appBar: AppBar(title: const Text('Product')),
+                body: const Center(child: Text('Product not found')),
+              );
+            }
+            return ProductDetailView(product: product);
+          },
+        );
   }
 }

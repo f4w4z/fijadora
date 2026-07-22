@@ -208,7 +208,7 @@ void main() {
         );
       } catch (_) {}
 
-      expect(vm.errorMessage, contains('Create failed'));
+      expect(vm.errorMessage, contains('Could not submit service request'));
     });
 
     test('resets isCreating after completion', () async {

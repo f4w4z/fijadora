@@ -6,10 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/services/app_notification_service.dart';
 import '../../../shared/utils/notification_helper.dart';
 import '../../../shared/widgets/offline_banner.dart';
+import '../../../shared/widgets/signature_edge_fade.dart';
 import 'worker_dashboard_view.dart';
 import 'worker_schedule_view.dart';
 import 'worker_profile_view.dart';
-import '../../../shared/widgets/app_animations.dart';
+import 'worker_wallet_view.dart';
 import '../../../core/router.dart';
 class WorkerShellView extends ConsumerStatefulWidget {
   const WorkerShellView({super.key});
@@ -21,6 +22,7 @@ class WorkerShellView extends ConsumerStatefulWidget {
 class _WorkerShellViewState extends ConsumerState<WorkerShellView>
     with TickerProviderStateMixin {
   StreamSubscription<AppNotification>? _notificationSubscription;
+  late final PageController _pageController;
 
   late final List<AnimationController> _bounceControllers = List.generate(_navItems.length, (_) {
     return AnimationController(
@@ -53,22 +55,30 @@ class _WorkerShellViewState extends ConsumerState<WorkerShellView>
       activeIcon: CupertinoIcons.person_fill,
       label: 'Profile',
     ),
+    _NavItem(
+      icon: CupertinoIcons.creditcard,
+      activeIcon: CupertinoIcons.creditcard_fill,
+      label: 'Wallet',
+    ),
   ];
 
   final List<Widget> _tabs = const [
     RepaintBoundary(child: WorkerDashboardTab()),
     RepaintBoundary(child: WorkerScheduleView()),
     RepaintBoundary(child: WorkerProfileView()),
+    RepaintBoundary(child: WorkerWalletView()),
   ];
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: ref.read(workerTabProvider));
     _listenToNotifications();
   }
 
   @override
   void dispose() {
+    _pageController.dispose();
     _notificationSubscription?.cancel();
     for (final ctrl in _bounceControllers) {
       ctrl.dispose();
@@ -100,16 +110,33 @@ class _WorkerShellViewState extends ConsumerState<WorkerShellView>
     ref.read(workerTabProvider.notifier).state = index;
   }
 
+  void _onPageChanged(int index) {
+    if (index != ref.read(workerTabProvider)) {
+      ref.read(workerTabProvider.notifier).state = index;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final currentIndex = ref.watch(workerTabProvider);
+
+    ref.listen<int>(workerTabProvider, (previous, next) {
+      if (_pageController.hasClients && _pageController.page?.round() != next) {
+        _pageController.animateToPage(
+          next,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
 
     return CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.digit1, control: true): () => _onTabTap(0),
         const SingleActivator(LogicalKeyboardKey.digit2, control: true): () => _onTabTap(1),
         const SingleActivator(LogicalKeyboardKey.digit3, control: true): () => _onTabTap(2),
+        const SingleActivator(LogicalKeyboardKey.digit4, control: true): () => _onTabTap(3),
       },
       child: Focus(
         autofocus: true,
@@ -117,8 +144,9 @@ class _WorkerShellViewState extends ConsumerState<WorkerShellView>
           body: Stack(
             fit: StackFit.expand,
             children: [
-              FadeIndexedStack(
-                index: currentIndex,
+              PageView(
+                controller: _pageController,
+                onPageChanged: _onPageChanged,
                 children: _tabs,
               ),
               const Positioned(
@@ -127,6 +155,7 @@ class _WorkerShellViewState extends ConsumerState<WorkerShellView>
                 right: 0,
                 child: OfflineBanner(),
               ),
+              const BottomEdgeFade(),
               Positioned(
                 left: 0,
                 right: 0,

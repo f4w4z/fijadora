@@ -240,12 +240,21 @@ class _BrowseFeed extends StatelessWidget {
       );
     }
 
+    final columns = AppBreakpoints.value(context, mobile: 1, tablet: 2, desktop: 3);
+    final aspectRatio = AppBreakpoints.value(context, mobile: 1.7, tablet: 1.4, desktop: 1.55);
+
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: SizedBox(height: topPadding)),
         SliverPadding(
           padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.lg, context.pagePad, AppSpacing.xxl),
-          sliver: SliverList(
+          sliver: SliverGrid(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              mainAxisSpacing: AppGrid.spacing(context),
+              crossAxisSpacing: AppGrid.spacing(context),
+              childAspectRatio: aspectRatio,
+            ),
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 final collection = collections[index];

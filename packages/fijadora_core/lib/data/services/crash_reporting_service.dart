@@ -12,11 +12,35 @@ class CrashReportingService {
           options.enableAppHangTracking = true;
           options.environment =
               const String.fromEnvironment('APP_ENV', defaultValue: 'development');
+          options.beforeSend = (event, hint) {
+            return _scrubPii(event);
+          };
         },
         appRunner: () {},
       );
     }
   }
+
+  static SentryEvent _scrubPii(SentryEvent event) {
+    final exceptions = event.exceptions;
+    if (exceptions != null) {
+      for (final exc in exceptions) {
+        final value = exc.value;
+        if (value != null) {
+          exc.value = value
+              .replaceAllMapped(_emailPattern, (_) => '[EMAIL]')
+              .replaceAllMapped(_uuidPattern, (_) => '[UUID]');
+        }
+      }
+    }
+    return event;
+  }
+
+  static final _emailPattern = RegExp(r'[\w\.\-]+@[\w\-]+\.\w{2,4}');
+  static final _uuidPattern = RegExp(
+    r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+    caseSensitive: false,
+  );
 
   static void captureException(dynamic exception, {StackTrace? stackTrace}) {
     if (kReleaseMode) {

@@ -212,24 +212,29 @@ class _FijadoraAppState extends ConsumerState<FijadoraApp> with WidgetsBindingOb
         (themeMode == ThemeMode.system &&
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
 
-    final textScale = MediaQuery.textScalerOf(context).scale(1.0).clamp(0.85, 1.3);
-
-    return _TextScaleWrapper(
-      textScale: textScale,
-      child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: isDark
-            ? const SystemUiOverlayStyle(
-                statusBarColor: Colors.transparent,
-                statusBarIconBrightness: Brightness.light,
-                systemNavigationBarColor: Colors.transparent,
-                systemNavigationBarIconBrightness: Brightness.light,
-              )
-            : const SystemUiOverlayStyle(
-                statusBarColor: Colors.transparent,
-                statusBarIconBrightness: Brightness.dark,
-                systemNavigationBarColor: Colors.transparent,
-                systemNavigationBarIconBrightness: Brightness.dark,
-              ),
+    // NOTE: Clamp text scaling via MediaQuery.withClampedTextScaling, which only
+    // creates an aspect dependency on the text scaler. Using MediaQuery.of(context)
+    // here would subscribe to *all* MediaQuery aspects (including viewInsets), so
+    // every keyboard animation would rebuild MaterialApp — and the whole app from
+    // [root] — orphaning any open dialog's InputDecorator mid-animation and
+    // throwing "Tried to build dirty widget in the wrong build scope".
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: isDark
+          ? const SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness: Brightness.light,
+              systemNavigationBarColor: Colors.transparent,
+              systemNavigationBarIconBrightness: Brightness.light,
+            )
+          : const SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness: Brightness.dark,
+              systemNavigationBarColor: Colors.transparent,
+              systemNavigationBarIconBrightness: Brightness.dark,
+            ),
+      child: MediaQuery.withClampedTextScaling(
+        minScaleFactor: 0.85,
+        maxScaleFactor: 1.3,
         child: MaterialApp.router(
           title: 'Fijadora',
           debugShowCheckedModeBanner: false,
@@ -244,20 +249,6 @@ class _FijadoraAppState extends ConsumerState<FijadoraApp> with WidgetsBindingOb
           localizationsDelegates: GlobalMaterialLocalizations.delegates,
         ),
       ),
-    );
-  }
-}
-
-class _TextScaleWrapper extends StatelessWidget {
-  const _TextScaleWrapper({required this.textScale, required this.child});
-  final double textScale;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return MediaQuery(
-      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
-      child: child,
     );
   }
 }

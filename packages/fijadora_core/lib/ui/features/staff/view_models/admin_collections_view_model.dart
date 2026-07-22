@@ -64,7 +64,7 @@ class AdminCollectionsViewModel extends ChangeNotifier {
       );
       return created;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not create look.';
       notifyListeners();
       rethrow;
     } finally {
@@ -107,7 +107,7 @@ class AdminCollectionsViewModel extends ChangeNotifier {
       );
       return updated;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not update look.';
       notifyListeners();
       rethrow;
     } finally {
@@ -132,7 +132,7 @@ class AdminCollectionsViewModel extends ChangeNotifier {
         body: 'Look "$title" has been successfully removed.',
       );
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not remove look.';
       notifyListeners();
       rethrow;
     } finally {
@@ -150,7 +150,7 @@ class AdminCollectionsViewModel extends ChangeNotifier {
       final url = await collectionsRepository.uploadCoverImage(fileName, fileBytes);
       return url;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Could not upload cover image.';
       notifyListeners();
       rethrow;
     } finally {
