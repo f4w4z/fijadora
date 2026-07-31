@@ -10,8 +10,10 @@ import '../../profile/views/home_detail_list_view.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 import '../../settings/views/settings_view.dart';
 import '../../shop/views/customer_orders_view.dart';
-import '../../shop/views/item_requests_view.dart';
+import '../../shop/views/item_requests_view.dart' show NewItemRequestView;
 import '../../shop/views/announcements_view.dart';
+import '../../services/view_models/jobs_view_model.dart';
+import '../../../../domain/models/job_status.dart';
 
 
 class HomeView extends ConsumerWidget {
@@ -38,6 +40,15 @@ class HomeView extends ConsumerWidget {
     final propertyAddress = property?.address;
     final rooms = property?.units.expand((u) => u.rooms).toList() ?? <dynamic>[];
     final appliances = rooms.expand((r) => (r as dynamic).assets?.where((a) => a.type == 'Appliance') ?? []).toList();
+
+    // Derive property status from active jobs
+    final jobsAsync = ref.watch(jobsStreamProvider);
+    final activeJobCount = jobsAsync.valueOrNull?.where((j) =>
+      j.status != JobStatus.completed &&
+      j.status != JobStatus.cancelled &&
+      j.status != JobStatus.rejected,
+    ).length ?? 0;
+    final hasIssues = activeJobCount > 0;
 
     return Scaffold(
       body: SafeArea(
@@ -119,10 +130,18 @@ class HomeView extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: Color(0xFF4CAF50).withValues(alpha: 0.1),
+                              color: (hasIssues ? Colors.orange : Color(0xFF4CAF50)).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Text('ALL GOOD', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w600, letterSpacing: 0.8, color: Color(0xFF4CAF50))),
+                            child: Text(
+                              hasIssues ? 'NEEDS ATTENTION' : 'ALL GOOD',
+                              style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.8,
+                                color: hasIssues ? Colors.orange : Color(0xFF4CAF50),
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -158,25 +177,24 @@ class HomeView extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: AppSpacing.md),
 
               // ─── Stats Row ─────────────────────────────────────────────────
-              if (property != null)
-                FadeSlideTransition(
-                  delay: const Duration(milliseconds: 100),
-                  child: Row(
-                    children: [
-                      _StatPill(icon: CupertinoIcons.square_grid_2x2, value: '${rooms.length}', label: 'Rooms', onTap: () {
-                        Navigator.of(context).push(AppPageRoute(builder: (context) => HomeDetailListView(type: 'rooms', property: property)));
-                      }),
-                      const SizedBox(width: 10),
-                      _StatPill(icon: CupertinoIcons.device_desktop, value: '${appliances.length}', label: 'Appliances', onTap: () {
-                        Navigator.of(context).push(AppPageRoute(builder: (context) => HomeDetailListView(type: 'appliances', property: property)));
-                      }),
-                    ],
-                  ),
+              FadeSlideTransition(
+                delay: const Duration(milliseconds: 100),
+                child: Row(
+                  children: [
+                    _StatPill(icon: CupertinoIcons.square_grid_2x2, value: property != null ? '${rooms.length}' : '--', label: 'Rooms', onTap: property != null ? () {
+                      Navigator.of(context).push(AppPageRoute(builder: (context) => HomeDetailListView(type: 'rooms', property: property)));
+                    } : null),
+                    const SizedBox(width: 10),
+                    _StatPill(icon: CupertinoIcons.device_desktop, value: property != null ? '${appliances.length}' : '--', label: 'Appliances', onTap: property != null ? () {
+                      Navigator.of(context).push(AppPageRoute(builder: (context) => HomeDetailListView(type: 'appliances', property: property)));
+                    } : null),
+                  ],
                 ),
-              const SizedBox(height: AppSpacing.xl),
+              ),
+              const SizedBox(height: AppSpacing.md),
 
               // ─── Maintenance History ───────────────────────────────────────
               FadeSlideTransition(
@@ -263,7 +281,7 @@ class HomeView extends ConsumerWidget {
               FadeSlideTransition(
                 delay: const Duration(milliseconds: 270),
                 child: AnimatedTapScale(
-                  onTap: () => Navigator.of(context).push(AppPageRoute(builder: (_) => const ItemRequestsView())),
+                  onTap: () => Navigator.of(context).push(AppPageRoute(builder: (_) => const NewItemRequestView())),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
                     decoration: BoxDecoration(
@@ -329,37 +347,39 @@ class _StatPill extends StatelessWidget {
     required this.icon,
     required this.value,
     required this.label,
-    required this.onTap,
+    this.onTap,
   });
   final IconData icon;
   final String value;
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+
+  Widget _buildContent(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 16, color: theme.colorScheme.primary),
+          const SizedBox(height: 6),
+          Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface, height: 1.0)),
+          const SizedBox(height: AppSpacing.xs),
+          Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w400, color: theme.colorScheme.onSurfaceVariant, letterSpacing: 0.3)),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Expanded(
-      child: AnimatedTapScale(
-        scaleFactor: 0.95,
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, size: 16, color: theme.colorScheme.primary),
-              const SizedBox(height: 6),
-              Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface, height: 1.0)),
-              const SizedBox(height: AppSpacing.xs),
-              Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w400, color: theme.colorScheme.onSurfaceVariant, letterSpacing: 0.3)),
-            ],
-          ),
-        ),
-      ),
+      child: onTap != null
+          ? AnimatedTapScale(scaleFactor: 0.95, onTap: onTap!, child: _buildContent(theme))
+          : _buildContent(theme),
     );
   }
 }

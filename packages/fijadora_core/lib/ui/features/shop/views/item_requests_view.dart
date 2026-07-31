@@ -4,98 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../data/repositories/item_request_repository.dart';
-import '../../../../domain/models/item_request.dart';
-import '../../../shared/widgets/empty_state_widget.dart';
-import '../../../shared/widgets/error_state_widget.dart';
-import '../../../shared/widgets/status_pill.dart';
 import '../../../core/utilities/responsive_helpers.dart';
-
-final itemRequestsStreamProvider = StreamProvider<List<ItemRequest>>((ref) {
-  return ref.watch(itemRequestRepositoryProvider).streamCustomerRequests();
-});
-
-class ItemRequestsView extends ConsumerWidget {
-  const ItemRequestsView({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final requestsAsync = ref.watch(itemRequestsStreamProvider);
-
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(title: const Text('My Requests')),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const NewItemRequestView()),
-        ),
-        icon: const Icon(CupertinoIcons.plus),
-        label: const Text('Request Item'),
-      ),
-      body: requestsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => ErrorStateWidget(
-          message: 'Could not load your requests.',
-          onRetry: () => ref.invalidate(itemRequestsStreamProvider),
-        ),
-        data: (requests) {
-          if (requests.isEmpty) {
-            return const EmptyStateWidget(
-              icon: CupertinoIcons.search,
-              title: 'No requests yet',
-              message: 'Can\'t find something in the shop? Request it here.',
-            );
-          }
-          return ListView.separated(
-            padding: EdgeInsets.all(context.pagePad),
-            itemCount: requests.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) => _RequestCard(request: requests[index]),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _RequestCard extends StatelessWidget {
-  const _RequestCard({required this.request});
-  final ItemRequest request;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = switch (request.status) {
-      ItemRequestStatus.open => theme.colorScheme.primary,
-      ItemRequestStatus.reviewing => Colors.orange,
-      ItemRequestStatus.fulfilled => Colors.green,
-      ItemRequestStatus.rejected => theme.colorScheme.error,
-      ItemRequestStatus.closed => theme.colorScheme.onSurfaceVariant,
-    };
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(request.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-              ),
-              StatusPill(label: request.status.label, color: color),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(request.description,
-              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14, height: 1.4)),
-          const SizedBox(height: 10),
-          Text('${request.createdAt.day}/${request.createdAt.month}/${request.createdAt.year}',
-              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
-        ],
-      ),
-    );
-  }
-}
 
 class NewItemRequestView extends ConsumerStatefulWidget {
   const NewItemRequestView({super.key});
@@ -151,7 +60,23 @@ class _NewItemRequestViewState extends ConsumerState<NewItemRequestView> {
             category: _categoryController.text.trim().isEmpty ? null : _categoryController.text.trim(),
             imageUrl: imageUrl,
           );
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showMaterialBanner(
+          MaterialBanner(
+            content: const Text('Request submitted! We\'ll notify you if this product becomes available.'),
+            leading: const Icon(CupertinoIcons.bell_fill),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
     } finally {

@@ -70,6 +70,8 @@ class JobsViewModel extends ChangeNotifier {
     required DateTime schedule,
     required String address,
     required List<String> images,
+    String contactPhone = '',
+    String accessNotes = '',
   }) async {
     _isCreating = true;
     _errorMessage = null;
@@ -85,6 +87,8 @@ class JobsViewModel extends ChangeNotifier {
         address: address,
         images: images,
         customerId: userId,
+        contactPhone: contactPhone,
+        accessNotes: accessNotes,
         createdAt: DateTime.now(),
       );
 

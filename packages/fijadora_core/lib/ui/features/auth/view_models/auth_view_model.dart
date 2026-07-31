@@ -31,8 +31,14 @@ class AuthViewModel extends ChangeNotifier {
   bool _signUpJustCompleted = false;
   bool get signUpJustCompleted => _signUpJustCompleted;
 
+  bool _showOnboarding = false;
+  bool get showOnboarding => _showOnboarding;
+
   String? _signUpEmail;
   String? get signUpEmail => _signUpEmail;
+
+  bool _isVerifyingOtp = false;
+  bool get isVerifyingOtp => _isVerifyingOtp;
 
   DateTime? _lastSignInAt;
   DateTime? _lastSignUpAt;
@@ -71,9 +77,13 @@ class AuthViewModel extends ChangeNotifier {
     _user = _authRepository.currentUser;
     _subscription = _authRepository.authStateChanges.listen(
       (user) {
-        _user = user;
+        if (_showOnboarding) return;
         _isLoading = false;
         _errorMessage = null;
+        if (_signUpJustCompleted && (user == null || user.emailConfirmedAt == null)) {
+          return;
+        }
+        _user = user;
         if (user != null && user.emailConfirmedAt != null) {
           _signUpJustCompleted = false;
           _signUpEmail = null;
@@ -146,17 +156,42 @@ class AuthViewModel extends ChangeNotifier {
     _setLoading(true);
     _clearError();
     try {
-      await _authRepository.resendEmailVerification(email: email);
+      await _authRepository.resendOtp(email: email);
       _startCooldown();
       notifyListeners();
     } catch (e) {
       if (e is RateLimitExceeded) rethrow;
-      _errorMessage = 'Could not resend verification email.';
+      _errorMessage = 'Could not resend verification code.';
       notifyListeners();
       rethrow;
     } finally {
       _setLoading(false);
     }
+  }
+
+  Future<void> verifyOtp({required String email, required String token}) async {
+    _setLoading(true);
+    _clearError();
+    try {
+      await _authRepository.verifyOtp(email: email, token: token);
+      _signUpJustCompleted = false;
+      _signUpEmail = null;
+      await _authRepository.refreshUser();
+      _user = _authRepository.currentUser;
+      _showOnboarding = true;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Invalid or expired code. Please try again.';
+      notifyListeners();
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  void completeOnboarding() {
+    _showOnboarding = false;
+    notifyListeners();
   }
 
   Future<void> refreshUser() async {
@@ -170,6 +205,7 @@ class AuthViewModel extends ChangeNotifier {
       await _authRepository.signOut();
       _user = null;
       _signUpJustCompleted = false;
+      _showOnboarding = false;
       _signUpEmail = null;
     } catch (e) {
       _errorMessage = 'Could not sign out.';
@@ -187,6 +223,7 @@ class AuthViewModel extends ChangeNotifier {
       await _authRepository.deleteAccount();
       _user = null;
       _signUpJustCompleted = false;
+      _showOnboarding = false;
       _signUpEmail = null;
     } catch (e) {
       _errorMessage = 'Could not delete account.';
@@ -227,6 +264,7 @@ class AuthViewModel extends ChangeNotifier {
 
   void resetVerification() {
     _signUpJustCompleted = false;
+    _showOnboarding = false;
     _signUpEmail = null;
     notifyListeners();
   }

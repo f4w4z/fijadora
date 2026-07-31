@@ -21,6 +21,8 @@ import '../../../shared/utils/date_extensions.dart';
 import '../../../core/theme.dart';
 import '../../../shared/utils/notification_helper.dart';
 import '../../../core/utilities/responsive_helpers.dart';
+import '../../profile/views/home_detail_list_view.dart';
+import '../service_constants.dart';
 
 const _quotes = [
   'Your home runs on care',
@@ -31,58 +33,6 @@ const _quotes = [
   'Your peace of mind, delivered',
 ];
 
-const _serviceGradients = {
-  TradeType.interiorDesign: [Color(0xFF8E44AD), Color(0xFFBB8FCE), Color(0xFFD7BDE2)],
-  TradeType.electrical: [Color(0xFF7D3C98), Color(0xFFA569BD), Color(0xFFD2B4DE)],
-  TradeType.plumbing: [Color(0xFF1A5276), Color(0xFF2980B9), Color(0xFF5DADE2)],
-  TradeType.masonry: [Color(0xFF935116), Color(0xFFCA6F1E), Color(0xFFE59866)],
-  TradeType.tiling: [Color(0xFF0E6251), Color(0xFF148F77), Color(0xFF52BE80)],
-  TradeType.designConsultation: [Color(0xFFC0392B), Color(0xFFE74C3C), Color(0xFFF1948A)],
-  TradeType.acEngineering: [Color(0xFF1B4F72), Color(0xFF2E86C1), Color(0xFF85C1E9)],
-  TradeType.kitchenDesigns: [Color(0xFF4A235A), Color(0xFF76448A), Color(0xFFBB8FCE)],
-  TradeType.cleaning: [Color(0xFF1A5276), Color(0xFF2980B9), Color(0xFF5DADE2)],
-  TradeType.gardening: [Color(0xFF0E6251), Color(0xFF148F77), Color(0xFF52BE80)],
-};
-
-const _serviceTaglines = {
-  TradeType.interiorDesign: 'Full interior styling, space planning & decor',
-  TradeType.electrical: 'Wiring, switches, panels & smart home',
-  TradeType.plumbing: 'Fix leaks, unclog drains, install fixtures',
-  TradeType.masonry: 'Brickwork, blockwork, concrete & stone repairs',
-  TradeType.tiling: 'Floor & wall tiling, grout repair & waterproofing',
-  TradeType.designConsultation: 'Expert advice on layout, materials & finishes',
-  TradeType.acEngineering: 'AC installation, servicing & ductwork',
-  TradeType.kitchenDesigns: 'Custom kitchen cabinetry, countertops & layout',
-  TradeType.cleaning: 'Deep clean, move-in/out & routine upkeep',
-  TradeType.gardening: 'Landscaping, lawn care, pruning & planting',
-};
-
-const _startingPrices = {
-  TradeType.interiorDesign: r'$150',
-  TradeType.electrical: r'$75',
-  TradeType.plumbing: r'$85',
-  TradeType.masonry: r'$120',
-  TradeType.tiling: r'$95',
-  TradeType.designConsultation: r'$80',
-  TradeType.acEngineering: r'$110',
-  TradeType.kitchenDesigns: r'$200',
-  TradeType.cleaning: r'$65',
-  TradeType.gardening: r'$90',
-};
-
-const _serviceImages = {
-  TradeType.interiorDesign: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=400&h=500&fit=crop&auto=format',
-  TradeType.electrical: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=400&h=500&fit=crop&auto=format',
-  TradeType.plumbing: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=400&h=500&fit=crop&auto=format',
-  TradeType.masonry: 'https://images.unsplash.com/photo-1613665813446-82a78c468a1d?w=400&h=500&fit=crop&auto=format',
-  TradeType.tiling: 'https://images.unsplash.com/photo-1622372738946-62e02505f1a4?w=400&h=500&fit=crop&auto=format',
-  TradeType.designConsultation: 'https://images.unsplash.com/photo-1618220179428-22790b461013?w=400&h=500&fit=crop&auto=format',
-  TradeType.acEngineering: 'https://images.unsplash.com/photo-1631545806600-52e4fdc2cade?w=400&h=500&fit=crop&auto=format',
-  TradeType.kitchenDesigns: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=500&fit=crop&auto=format',
-  TradeType.cleaning: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=500&fit=crop&auto=format',
-  TradeType.gardening: 'https://images.unsplash.com/photo-1558904541-efa843a96f01?w=400&h=500&fit=crop&auto=format',
-};
-
 class ServicesTabView extends ConsumerStatefulWidget {
   const ServicesTabView({super.key});
 
@@ -92,11 +42,18 @@ class ServicesTabView extends ConsumerStatefulWidget {
 
 class _ServicesTabViewState extends ConsumerState<ServicesTabView> with AutomaticKeepAliveClientMixin {
   int _quoteIndex = 0;
+  final _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _loadAndUpdateQuoteIndex();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   void _loadAndUpdateQuoteIndex() {
@@ -205,6 +162,7 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> with Automati
           return RefreshIndicator(
             onRefresh: () async => ref.read(jobsViewModelProvider).refresh(),
             child: CustomScrollView(
+              controller: _scrollController,
             slivers: [
               SliverToBoxAdapter(child: SizedBox(height: topPadding)),
 
@@ -303,7 +261,9 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> with Automati
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface, letterSpacing: -0.3),
                         ),
                         TextButton(
-                          onPressed: () {},
+                          onPressed: () => Navigator.of(context).push(
+                            AppPageRoute(builder: (_) => const HomeDetailListView(type: 'history')),
+                          ),
                           child: Text('${jobs.length - activeJobs.length} past', style: TextStyle(color: theme.colorScheme.primary, fontSize: 13)),
                         ),
                       ],
@@ -355,7 +315,16 @@ class _ServicesTabViewState extends ConsumerState<ServicesTabView> with Automati
     Navigator.push(context, AppPageRoute(builder: (_) => const NewRequestPage()));
   }
 
-  void _scrollToMyRequests() {}
+  void _scrollToMyRequests() {
+    if (!_scrollController.hasClients) return;
+    final target = 460.0; // estimated offset past header + greeting + grid
+    final max = _scrollController.position.maxScrollExtent;
+    _scrollController.animateTo(
+      target > max ? max : target,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+    );
+  }
 }
 
 class _ServiceGrid extends StatefulWidget {
@@ -507,9 +476,9 @@ class _ServiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final gradients = _serviceGradients[trade]!;
-    final tagline = _serviceTaglines[trade]!;
-    final price = _startingPrices[trade]!;
+    final gradients = serviceGradients[trade]!;
+    final tagline = serviceTaglines[trade]!;
+    final price = serviceStartingPrices[trade]!;
 
     return AnimatedTapScale(
       scaleFactor: 0.95,
@@ -525,7 +494,7 @@ class _ServiceCard extends StatelessWidget {
           children: [
             // 1. Background image or fallback gradient
             CachedNetworkImage(
-              imageUrl: _serviceImages[trade]!,
+              imageUrl: serviceImages[trade]!,
               memCacheWidth: 360,
               fit: BoxFit.cover,
               fadeInDuration: AppDurations.normal,
@@ -890,6 +859,30 @@ class _JobDetailsSheetState extends ConsumerState<_JobDetailsSheet> {
         Text('Address / Location', style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 6),
         Text(job.address, style: theme.textTheme.bodyMedium),
+        if (job.contactPhone.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.lg),
+          Text('Contact Phone', style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant)),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(CupertinoIcons.phone, size: 14, color: theme.colorScheme.primary),
+              const SizedBox(width: 6),
+              Text(job.contactPhone, style: theme.textTheme.bodyMedium),
+            ],
+          ),
+        ],
+        if (job.accessNotes.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.lg),
+          Text('Access Instructions', style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant)),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(CupertinoIcons.lock_fill, size: 14, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 6),
+              Expanded(child: Text(job.accessNotes, style: theme.textTheme.bodyMedium)),
+            ],
+          ),
+        ],
         const SizedBox(height: AppSpacing.lg),
         Text('Scheduled Time', style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 6),

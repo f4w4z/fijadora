@@ -205,19 +205,16 @@ class _HomeDetailListViewState extends ConsumerState<HomeDetailListView> {
                                   ),
                                 ),
                                 onTap: isAppliance
-                                    ? () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) => ApplianceDetailPage(
-                                              title: asset.name,
-                                              subtitle: '${asset.id} | ${room.name}',
-                                              statusText: asset.status,
-                                              statusColor: isHealthy ? Colors.green : Colors.orange,
-                                              icon: _roomIcon(room.name),
+                                      ? () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) => ApplianceDetailPage(
+                                                asset: asset,
+                                                roomName: room.name,
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      }
+                                          );
+                                        }
                                     : null,
                               );
                             }).toList(),
@@ -270,11 +267,8 @@ class _HomeDetailListViewState extends ConsumerState<HomeDetailListView> {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => ApplianceDetailPage(
-                    title: asset.name,
-                    subtitle: '${asset.id} | ${room.name}',
-                    statusText: asset.status,
-                    statusColor: isHealthy ? Colors.green : Colors.orange,
-                    icon: _roomIcon(room.name),
+                    asset: asset,
+                    roomName: room.name,
                   ),
                 ),
               );
@@ -517,6 +511,30 @@ class _JobHistoryDetailsSheet extends ConsumerWidget {
         Text('Address / Location', style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 6),
         Text(job.address, style: theme.textTheme.bodyMedium),
+        if (job.contactPhone.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.lg),
+          Text('Contact Phone', style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant)),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(CupertinoIcons.phone, size: 14, color: theme.colorScheme.primary),
+              const SizedBox(width: 6),
+              Text(job.contactPhone, style: theme.textTheme.bodyMedium),
+            ],
+          ),
+        ],
+        if (job.accessNotes.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.lg),
+          Text('Access Instructions', style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant)),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(CupertinoIcons.lock_fill, size: 14, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 6),
+              Expanded(child: Text(job.accessNotes, style: theme.textTheme.bodyMedium)),
+            ],
+          ),
+        ],
         const SizedBox(height: AppSpacing.lg),
         Text('Created Date', style: theme.textTheme.titleLarge?.copyWith(fontSize: 14, color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 6),

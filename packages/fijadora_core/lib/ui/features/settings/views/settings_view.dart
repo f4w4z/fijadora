@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme_provider.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
@@ -26,7 +27,7 @@ class SettingsView extends ConsumerWidget {
             icon: CupertinoIcons.bell_fill,
             title: 'Notifications',
             subtitle: 'Alert preferences',
-            onTap: () {},
+            onTap: () => _showComingSoon(context, 'Notifications'),
           ),
           const Divider(height: 1, indent: 44),
           const _AppearanceRow(),
@@ -35,7 +36,7 @@ class SettingsView extends ConsumerWidget {
             icon: CupertinoIcons.creditcard,
             title: 'Payment Methods',
             subtitle: 'Cards & billing',
-            onTap: () {},
+            onTap: () => _showComingSoon(context, 'Payment Methods'),
           ),
           const SizedBox(height: 28),
           _section(context, 'About'),
@@ -43,25 +44,68 @@ class SettingsView extends ConsumerWidget {
             icon: CupertinoIcons.doc_text,
             title: 'Terms & Conditions',
             subtitle: 'Platform terms',
-            onTap: () {},
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const _StaticContentPage(
+                title: 'Terms & Conditions',
+                body: _termsContent,
+              )),
+            ),
           ),
           const Divider(height: 1, indent: 44),
           _SettingsRow(
             icon: CupertinoIcons.shield,
             title: 'Privacy Policy',
             subtitle: 'Data handling',
-            onTap: () {},
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const _StaticContentPage(
+                title: 'Privacy Policy',
+                body: _privacyContent,
+              )),
+            ),
           ),
           const Divider(height: 1, indent: 44),
           _SettingsRow(
             icon: CupertinoIcons.question_circle,
             title: 'Help & Support',
             subtitle: 'Get help',
-            onTap: () {},
+            onTap: () => _showHelp(context),
           ),
         ],
       ),
     );
+  }
+
+  void _showComingSoon(BuildContext context, String feature) {
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(feature),
+        content: Text('$feature settings are coming soon. Stay tuned!'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(c).pop(), child: const Text('OK')),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showHelp(BuildContext context) async {
+    final email = Uri(scheme: 'mailto', path: 'support@fijadora.com', queryParameters: {'subject': 'Help Request'});
+    if (await canLaunchUrl(email)) {
+      await launchUrl(email);
+    } else {
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (c) => AlertDialog(
+            title: const Text('Help & Support'),
+            content: const Text('Email us at support@fijadora.com or reach out through the app.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(c).pop(), child: const Text('OK')),
+            ],
+          ),
+        );
+      }
+    }
   }
 
   Widget _section(BuildContext context, String title) {
@@ -75,6 +119,66 @@ class SettingsView extends ConsumerWidget {
           fontWeight: FontWeight.w600,
           color: theme.colorScheme.onSurfaceVariant,
           letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
+const _termsContent = '''
+Terms & Conditions
+
+Welcome to Fijadora. By using our service, you agree to the following terms:
+
+1. Services: Fijadora connects customers with vetted service professionals for property maintenance and home improvement.
+
+2. Orders: All orders placed through the platform are subject to acceptance by Fijadora. Delivery fees are provided as quotes and must be accepted before order processing begins.
+
+3. Payments: Payments are processed securely through Paystack. Your payment information is never stored on our servers.
+
+4. Cancellations: Orders may be cancelled before they enter the preparing stage. Contact support for cancellation requests.
+
+5. Liability: Fijadora acts as a marketplace platform and is not directly liable for services rendered by third-party professionals.
+
+6. Privacy: Your data is handled in accordance with our Privacy Policy.
+
+For full terms, please contact support@fijadora.com.
+''';
+
+const _privacyContent = '''
+Privacy Policy
+
+Your privacy matters to us. Here's how Fijadora handles your data:
+
+1. Data Collection: We collect your name, email, address, and payment information necessary to process orders and provide services.
+
+2. Data Usage: Your data is used to fulfill orders, communicate delivery updates, and improve our services.
+
+3. Data Storage: Your data is stored securely on encrypted servers. We use industry-standard security measures.
+
+4. Third Parties: We share necessary data with payment processors (Paystack) and delivery partners solely for order fulfillment.
+
+5. Your Rights: You may request access to, correction of, or deletion of your personal data by contacting support@fijadora.com.
+
+6. Cookies: Our platform uses essential cookies for functionality.
+''';
+
+class _StaticContentPage extends StatelessWidget {
+  const _StaticContentPage({required this.title, required this.body});
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(title: Text(title)),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: Text(
+          body,
+          style: TextStyle(fontSize: 14, height: 1.6, color: theme.colorScheme.onSurface),
         ),
       ),
     );

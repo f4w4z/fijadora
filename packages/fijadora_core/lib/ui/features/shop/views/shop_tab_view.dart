@@ -32,6 +32,13 @@ class ShopTabView extends ConsumerStatefulWidget {
 class _ShopTabViewState extends ConsumerState<ShopTabView> with AutomaticKeepAliveClientMixin {
   String _selectedCategory = 'All Products';
   String _searchQuery = '';
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   bool get wantKeepAlive => true;
@@ -111,6 +118,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> with AutomaticKeepAli
               searchQuery: _searchQuery,
               topPadding: topPadding,
               onCategoryChanged: (c) => setState(() => _selectedCategory = c),
+              scrollController: _scrollController,
             ),
           );
         },
@@ -127,6 +135,7 @@ class _ShopContent extends ConsumerWidget {
     required this.searchQuery,
     required this.topPadding,
     required this.onCategoryChanged,
+    required this.scrollController,
   });
 
   final List<Product> products;
@@ -134,6 +143,7 @@ class _ShopContent extends ConsumerWidget {
   final String searchQuery;
   final double topPadding;
   final ValueChanged<String> onCategoryChanged;
+  final ScrollController scrollController;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -157,6 +167,7 @@ class _ShopContent extends ConsumerWidget {
         await ref.read(productsStreamProvider.future);
       },
       child: CustomScrollView(
+        controller: scrollController,
         slivers: [
           SliverToBoxAdapter(child: SizedBox(height: topPadding)),
           SliverToBoxAdapter(
@@ -252,7 +263,17 @@ class _ShopContent extends ConsumerWidget {
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface, letterSpacing: -0.3),
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          if (scrollController.hasClients) {
+                            final target = 550.0;
+                            final max = scrollController.position.maxScrollExtent;
+                            scrollController.animateTo(
+                              target > max ? max : target,
+                              duration: const Duration(milliseconds: 400),
+                              curve: Curves.easeOutCubic,
+                            );
+                          }
+                        },
                         child: Text('See All', style: TextStyle(color: theme.colorScheme.primary, fontSize: 13)),
                       ),
                     ],

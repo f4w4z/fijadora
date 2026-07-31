@@ -36,10 +36,10 @@ class TopEdgeFade extends StatelessWidget {
               end: Alignment.bottomCenter,
               colors: [
                 c,
-                c.withValues(alpha: 0.92),
+                c.withValues(alpha: 0.88),
                 c.withValues(alpha: 0.0),
               ],
-              stops: const [0.0, 0.6, 1.0],
+              stops: const [0.0, 0.5, 1.0],
             ),
           ),
         ),

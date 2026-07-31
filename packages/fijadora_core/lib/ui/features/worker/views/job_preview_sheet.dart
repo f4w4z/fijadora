@@ -88,6 +88,26 @@ void showJobPreview(BuildContext context, WidgetRef ref, MaintenanceJob job, Str
                 Text(job.scheduleDateTime?.formattedShort ?? 'Not scheduled', style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant)),
               ],
             ),
+            if (job.contactPhone.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Icon(CupertinoIcons.phone, size: 14, color: theme.colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Text(job.contactPhone, style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant)),
+                ],
+              ),
+            ],
+            if (job.accessNotes.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Icon(CupertinoIcons.lock_fill, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(job.accessNotes, style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant))),
+                ],
+              ),
+            ],
             const SizedBox(height: 16),
             Container(
               width: double.infinity,

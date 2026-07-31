@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../view_models/cart_view_model.dart';
 import '../view_models/checkout_view_model.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
@@ -18,7 +17,6 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
   final _addressController = TextEditingController();
   final _phoneController = TextEditingController();
   final _noteController = TextEditingController();
-  static const double _deliveryFee = 1500.0;
 
   @override
   void dispose() {
@@ -28,43 +26,21 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
     super.dispose();
   }
 
-  Future<void> _pay() async {
+  Future<void> _placeOrder() async {
     final checkout = ref.read(checkoutViewModelProvider.notifier);
     await checkout.placeOrder(
-      deliveryFee: _deliveryFee,
       deliveryAddress: _addressController.text.trim(),
       deliveryPhone: _phoneController.text.trim(),
       deliveryNote: _noteController.text.trim(),
     );
     final state = ref.read(checkoutViewModelProvider);
-    if (state.authorizationUrl != null) {
-      if (state.mock) {
-        // Mock mode (Paystack key not configured): skip browser, auto-confirm.
-        if (mounted) _verify();
-        return;
-      }
-      final uri = Uri.parse(state.authorizationUrl!);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-        // After returning, verify payment.
-        if (mounted) _verify();
-      }
+    if (state.done && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Order placed! We\'ll send you a delivery quote shortly.')),
+      );
+      Navigator.of(context).pop(true);
     } else if (state.error != null && mounted) {
       _showError(state.error!);
-    }
-  }
-
-  Future<void> _verify() async {
-    final ok = await ref.read(checkoutViewModelProvider.notifier).verifyAndFinalize();
-    if (mounted) {
-      if (ok) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Payment successful! Your order is confirmed.')),
-        );
-        Navigator.of(context).pop(true);
-      } else {
-        _showError(ref.read(checkoutViewModelProvider).error ?? 'Payment could not be verified');
-      }
     }
   }
 
@@ -72,7 +48,7 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Payment'),
+        title: const Text('Order'),
         content: Text(message),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('OK')),
@@ -87,7 +63,6 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
     final cart = ref.watch(cartViewModelProvider);
     final checkout = ref.watch(checkoutViewModelProvider);
     final subtotal = cart.entries.fold<double>(0, (s, e) => s + e.key.price * e.value);
-    final total = subtotal + _deliveryFee;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Checkout')),
@@ -103,7 +78,7 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
                   TextField(
                     controller: _addressController,
                     decoration: const InputDecoration(labelText: 'Delivery address', border: OutlineInputBorder()),
-                    maxLines: 2,
+                    maxLines: 3,
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -142,16 +117,8 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Delivery fee'),
-                      Text('\$${_deliveryFee.toStringAsFixed(0)}'),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Total', style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('\$${total.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Delivery fee', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+                      Text('TBD', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -163,11 +130,17 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
                   SizedBox(
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: checkout.isSubmitting ? null : _pay,
+                      onPressed: checkout.isSubmitting ? null : _placeOrder,
                       child: checkout.isSubmitting
                           ? const CircularProgressIndicator()
-                          : const Text('Pay with Paystack'),
+                          : const Text('Place Order'),
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Delivery fee will be calculated and sent to you after placing the order.',
+                    style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),

@@ -304,6 +304,7 @@ class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
                   labelText: 'Address',
                   border: OutlineInputBorder(),
                 ),
+                maxLines: 3,
               ),
             ],
           ),
@@ -500,7 +501,7 @@ class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
           children: [
             TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Property Name', border: OutlineInputBorder()), autofocus: true),
             const SizedBox(height: 12),
-            TextField(controller: addrCtrl, decoration: const InputDecoration(labelText: 'Address', border: OutlineInputBorder())),
+            TextField(controller: addrCtrl, decoration: const InputDecoration(labelText: 'Address', border: OutlineInputBorder()), maxLines: 3),
           ],
         ),
         actions: [
@@ -534,7 +535,7 @@ class _ManagerPropertiesViewState extends ConsumerState<ManagerPropertiesView> {
           children: [
             TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Property Name', border: OutlineInputBorder())),
             const SizedBox(height: 12),
-            TextField(controller: addrCtrl, decoration: const InputDecoration(labelText: 'Address', border: OutlineInputBorder())),
+            TextField(controller: addrCtrl, decoration: const InputDecoration(labelText: 'Address', border: OutlineInputBorder()), maxLines: 3),
           ],
         ),
         actions: [

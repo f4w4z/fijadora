@@ -7,38 +7,40 @@ import '../view_models/cart_view_model.dart';
 class CheckoutState {
   final bool isSubmitting;
   final String? error;
-  final String? authorizationUrl;
-  final String? reference;
   final String? orderId;
   final bool done;
+
+  /// Paystack state (used only when paying for an existing order).
+  final String? authorizationUrl;
+  final String? reference;
   final bool mock;
 
   const CheckoutState({
     this.isSubmitting = false,
     this.error,
-    this.authorizationUrl,
-    this.reference,
     this.orderId,
     this.done = false,
+    this.authorizationUrl,
+    this.reference,
     this.mock = false,
   });
 
   CheckoutState copyWith({
     bool? isSubmitting,
     String? error,
-    String? authorizationUrl,
-    String? reference,
     String? orderId,
     bool? done,
+    String? authorizationUrl,
+    String? reference,
     bool? mock,
   }) {
     return CheckoutState(
       isSubmitting: isSubmitting ?? this.isSubmitting,
       error: error,
-      authorizationUrl: authorizationUrl ?? this.authorizationUrl,
-      reference: reference ?? this.reference,
       orderId: orderId ?? this.orderId,
       done: done ?? this.done,
+      authorizationUrl: authorizationUrl ?? this.authorizationUrl,
+      reference: reference ?? this.reference,
       mock: mock ?? this.mock,
     );
   }
@@ -48,8 +50,8 @@ class CheckoutViewModel extends StateNotifier<CheckoutState> {
   CheckoutViewModel(this._ref) : super(const CheckoutState());
   final Ref _ref;
 
+  /// Place an order (no payment). Delivery fee will be added later by staff.
   Future<void> placeOrder({
-    required double deliveryFee,
     required String deliveryAddress,
     String? deliveryPhone,
     String? deliveryNote,
@@ -70,12 +72,21 @@ class CheckoutViewModel extends StateNotifier<CheckoutState> {
             deliveryAddress: deliveryAddress,
             deliveryPhone: deliveryPhone,
             deliveryNote: deliveryNote,
-            deliveryFee: deliveryFee,
           );
 
+      _ref.read(cartViewModelProvider.notifier).clearCart();
+      state = state.copyWith(isSubmitting: false, done: true, orderId: orderId);
+    } catch (e) {
+      state = state.copyWith(isSubmitting: false, error: e.toString());
+    }
+  }
+
+  /// Initialize Paystack payment for an existing order (after delivery quote).
+  Future<void> payForOrder(String orderId, double total) async {
+    state = state.copyWith(isSubmitting: true, error: null);
+    try {
       final user = SupabaseService.instance.client.auth.currentUser;
       final email = user?.email ?? 'customer@fijadora.com';
-      final total = cart.entries.fold<double>(0, (s, e) => s + e.key.price * e.value) + deliveryFee;
       final reference = 'ORD_${DateTime.now().millisecondsSinceEpoch}_$orderId';
 
       final init = await PaystackService.instance.initializeCheckout(
@@ -108,7 +119,6 @@ class CheckoutViewModel extends StateNotifier<CheckoutState> {
       final status = result['status'] as String?;
       if (status == 'success') {
         await _ref.read(orderRepositoryProvider).markOrderPaid(state.orderId!, state.reference!);
-        _ref.read(cartViewModelProvider.notifier).clearCart();
         state = state.copyWith(isSubmitting: false, done: true);
         return true;
       }

@@ -119,6 +119,14 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
                                 ),
                                 const SizedBox(width: 6),
                                 AppFilterChip(
+                                  label: 'Quoted',
+                                  count: counts.quoted,
+                                  selected: _activeFilter == JobStatus.quoted,
+                                  onTap: () => setState(() => _activeFilter = JobStatus.quoted),
+                                  theme: theme,
+                                ),
+                                const SizedBox(width: 6),
+                                AppFilterChip(
                                   label: 'Active',
                                   count: counts.active,
                                   selected: _activeFilter == JobStatus.inProgress,
@@ -185,12 +193,15 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
     );
   }
 
-  ({int total, int pending, int active, int completed}) _buildCounts(List<MaintenanceJob> jobs) {
-    int pending = 0, active = 0, completed = 0;
+  ({int total, int pending, int quoted, int active, int completed}) _buildCounts(
+      List<MaintenanceJob> jobs) {
+    int pending = 0, quoted = 0, active = 0, completed = 0;
     for (final j in jobs) {
       switch (j.status) {
         case JobStatus.pending:
+          pending++;
         case JobStatus.quoted:
+          quoted++;
         case JobStatus.assigned:
           pending++;
         case JobStatus.workerEnRoute:
@@ -208,7 +219,7 @@ class _AdminJobsViewState extends ConsumerState<AdminJobsView> {
           break;
       }
     }
-    return (total: jobs.length, pending: pending, active: active, completed: completed);
+    return (total: jobs.length, pending: pending, quoted: quoted, active: active, completed: completed);
   }
 }
 
@@ -503,7 +514,10 @@ class _JobCardState extends ConsumerState<JobCard> {
                   ],
                 ),
               ),
-              if (isUnassigned && job.status == JobStatus.pending)
+              if (isUnassigned &&
+                  (job.status == JobStatus.pending ||
+                      (job.status == JobStatus.quoted &&
+                          job.paymentStatus == JobPaymentStatus.depositPaid)))
                 AnimatedTapScale(
                   onTap: _showAssignSheet,
                   child: Container(

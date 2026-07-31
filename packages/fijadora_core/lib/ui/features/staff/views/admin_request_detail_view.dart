@@ -24,7 +24,12 @@ class _AdminRequestDetailViewState extends ConsumerState<AdminRequestDetailView>
   Future<void> _update(ItemRequestStatus status) async {
     setState(() => _busy = true);
     try {
-      await ref.read(itemRequestRepositoryProvider).updateStatus(widget.requestId, status);
+      final repo = ref.read(itemRequestRepositoryProvider);
+      if (status == ItemRequestStatus.fulfilled) {
+        await repo.fulfillRequest(widget.requestId);
+      } else {
+        await repo.updateStatus(widget.requestId, status);
+      }
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Request ${status.label}')));

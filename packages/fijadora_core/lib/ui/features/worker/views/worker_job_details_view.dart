@@ -2,10 +2,13 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../../data/repositories/jobs_repository.dart';
 import '../../../../domain/models/job_status.dart';
 import '../../../../domain/models/maintenance_job.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../services/view_models/jobs_view_model.dart';
+import '../../services/service_constants.dart';
 import '../../../shared/utils/date_extensions.dart';
 import 'job_completion_page.dart';
 import '../../../core/utilities/responsive_helpers.dart';
@@ -167,6 +170,24 @@ class _WorkerJobDetailsViewState
                           value: job.scheduleDateTime?.formattedFull ?? 'Not scheduled',
                           theme: theme,
                         ),
+                        if (job.contactPhone.isNotEmpty) ...[
+                          const SizedBox(height: 14),
+                          _InfoRow(
+                            icon: CupertinoIcons.phone,
+                            label: 'Contact',
+                            value: job.contactPhone,
+                            theme: theme,
+                          ),
+                        ],
+                        if (job.accessNotes.isNotEmpty) ...[
+                          const SizedBox(height: 14),
+                          _InfoRow(
+                            icon: CupertinoIcons.lock_fill,
+                            label: 'Access',
+                            value: job.accessNotes,
+                            theme: theme,
+                          ),
+                        ],
                         if (job.status == JobStatus.completed) ...[
                           const SizedBox(height: 14),
                           _InfoRow(
@@ -235,6 +256,14 @@ class _WorkerJobDetailsViewState
                       );
                     },
                   ),
+                  if (_canSubmitChangeOrder(job.status)) ...[
+                    SizedBox(height: 12),
+                    _ChangeOrderSection(job: job),
+                  ],
+                  SizedBox(height: 12),
+
+                  // Navigate to job
+                  _NavigateButton(address: job.address),
                   SizedBox(height: AppSpacing.lg),
 
                   // Body cam notice
@@ -503,6 +532,55 @@ class _ActionControls extends StatelessWidget {
   }
 }
 
+class _NavigateButton extends StatelessWidget {
+  const _NavigateButton({required this.address});
+  final String address;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AnimatedTapScale(
+      onTap: () async {
+        final query = Uri.encodeComponent(address);
+        final googleUrl = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$query');
+        final appleUrl = Uri.parse('https://maps.apple.com/?daddr=$query');
+        final googleLaunchable = await canLaunchUrl(googleUrl);
+        final appleLaunchable = await canLaunchUrl(appleUrl);
+        if (appleLaunchable && theme.platform == TargetPlatform.iOS) {
+          await launchUrl(appleUrl, mode: LaunchMode.externalApplication);
+        } else if (googleLaunchable) {
+          await launchUrl(googleUrl, mode: LaunchMode.externalApplication);
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(CupertinoIcons.map_pin_ellipse,
+                size: 18, color: theme.colorScheme.onSecondaryContainer),
+            const SizedBox(width: 10),
+            Text(
+              'Navigate to Job',
+              style: TextStyle(
+                color: theme.colorScheme.onSecondaryContainer,
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ActionData {
   final IconData icon;
   final String label;
@@ -515,6 +593,210 @@ class _ActionData {
     required this.onTap,
     this.isPrimary = false,
   });
+}
+
+bool _canSubmitChangeOrder(JobStatus status) {
+  return status == JobStatus.workerArrived ||
+      status == JobStatus.inProgress ||
+      status == JobStatus.awaitingParts ||
+      status == JobStatus.onHold ||
+      status == JobStatus.rescheduled;
+}
+
+// ── Change orders (worker submits extra work for approval) ───────────────────
+class _ChangeOrderSection extends ConsumerWidget {
+  const _ChangeOrderSection({required this.job});
+  final MaintenanceJob job;
+
+  String _statusLabel(String status) => switch (status) {
+        'pending' => 'Pending approval',
+        'approved' => 'Awaiting customer payment',
+        'paid' => 'Paid',
+        _ => status,
+      };
+
+  Future<void> _openSubmitSheet(BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController();
+    final amountController = TextEditingController();
+    final submitted = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text('Submit Change Order',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+            const SizedBox(height: 4),
+            Text(
+              'The job will pause until the customer approves and pays the extra amount.',
+              style: TextStyle(
+                  fontSize: 12, color: Theme.of(sheetContext).colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: amountController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'Extra amount (GH₵)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: 'What was the extra work?',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () async {
+                final amount = double.tryParse(amountController.text.trim());
+                final description = controller.text.trim();
+                if (amount == null || amount <= 0 || description.isEmpty) {
+                  ScaffoldMessenger.of(sheetContext).showSnackBar(
+                    const SnackBar(
+                        content: Text('Enter a valid amount and description')),
+                  );
+                  return;
+                }
+                try {
+                  await ref
+                      .read(jobsRepositoryProvider)
+                      .submitChangeOrder(
+                        jobId: job.id,
+                        description: description,
+                        amount: amount,
+                      );
+                  if (sheetContext.mounted) {
+                    Navigator.of(sheetContext).pop(true);
+                  }
+                } catch (e) {
+                  if (sheetContext.mounted) {
+                    ScaffoldMessenger.of(sheetContext)
+                        .showSnackBar(SnackBar(content: Text('Failed: $e')));
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(sheetContext).colorScheme.primary,
+                foregroundColor: Theme.of(sheetContext).colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: const Text('Submit for Approval'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (submitted == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content:
+                Text('Change order submitted — job paused until customer pays')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final pendingCount =
+        job.changeOrders.where((c) => c.status == 'pending').length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (job.changeOrders.isNotEmpty) ...[
+          Text('Change Orders',
+              style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurfaceVariant)),
+          const SizedBox(height: 8),
+          ...job.changeOrders.map((co) => Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: theme.colorScheme.surfaceContainerHighest),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(co.description,
+                          style: TextStyle(
+                              fontSize: 12.5,
+                              color: theme.colorScheme.onSurface),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                    const SizedBox(width: 8),
+                    Text('+${formatGhs(co.amount)}',
+                        style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFFE65100))),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(_statusLabel(co.status),
+                          style: const TextStyle(fontSize: 9.5)),
+                    ),
+                  ],
+                ),
+              )),
+          const SizedBox(height: 8),
+        ],
+        AnimatedTapScale(
+          onTap: () => _openSubmitSheet(context, ref),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.secondaryContainer,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: Colors.orange.withValues(alpha: 0.4),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(CupertinoIcons.hammer, size: 18, color: Color(0xFFE65100)),
+                const SizedBox(width: 10),
+                Text(
+                  pendingCount > 0
+                      ? 'Submit Another Change Order'
+                      : 'Found Extra Work? Submit Change Order',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSecondaryContainer,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _ActiveTimerCard extends StatefulWidget {

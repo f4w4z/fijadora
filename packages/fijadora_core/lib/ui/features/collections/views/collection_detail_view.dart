@@ -7,7 +7,7 @@ import '../../../../domain/models/collection_item.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 import '../../../shared/widgets/animated_tap_scale.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
-import '../view_models/collections_view_model.dart';
+import '../../../../data/repositories/collections_repository.dart';
 import '../widgets/collection_item_tile.dart';
 import '../../shop/views/product_detail_view.dart';
 import '../../shop/view_models/products_provider.dart';
@@ -29,35 +29,50 @@ class CollectionDetailView extends ConsumerStatefulWidget {
 }
 
 class _CollectionDetailViewState extends ConsumerState<CollectionDetailView> {
-  // We only gate on loading if there's a cover image to fetch.
   bool _contentReady = false;
+  bool _isLiked = false;
+  bool _isFollowing = false;
+  late int _likeCount;
+  late int _followerCount;
 
   @override
   void initState() {
     super.initState();
-    // No cover image → skip shimmer entirely.
+    _likeCount = widget.collection.likeCount;
+    _followerCount = widget.collection.followerCount;
     if (widget.collection.coverImageUrl == null) {
       _contentReady = true;
     }
+    _loadUserStatus();
+  }
+
+  Future<void> _loadUserStatus() async {
+    final user = ref.read(authViewModelProvider).user;
+    if (user == null) return;
+    final repo = ref.read(collectionsRepositoryProvider);
+    final liked = await repo.hasUserLiked(widget.collection.id, user.id);
+    final followed = await repo.hasUserFollowed(widget.collection.id, user.id);
+    if (mounted) setState(() { _isLiked = liked; _isFollowing = followed; });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final vm = ref.watch(collectionsViewModelProvider);
     final collection = widget.collection;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 350),
-          switchInCurve: Curves.easeOut,
-          switchOutCurve: Curves.easeIn,
-          child: _contentReady
-              ? _buildContent(context, theme, isDark, vm, collection)
-              : _buildShimmer(context),
+        child: Stack(
+          children: [
+            _buildContent(context, theme, isDark, collection),
+            if (!_contentReady)
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 350),
+                child: _buildShimmer(context),
+              ),
+          ],
         ),
       ),
     );
@@ -91,42 +106,33 @@ class _CollectionDetailViewState extends ConsumerState<CollectionDetailView> {
   }
 
   Widget _buildContent(BuildContext context, ThemeData theme, bool isDark,
-      dynamic vm, Collection collection) {
+      Collection collection) {
+    final hasCover = collection.coverImageUrl != null;
     return CustomScrollView(
       key: const ValueKey('content'),
       slivers: [
         SliverAppBar(
-          floating: false,
+          floating: true,
           pinned: false,
           backgroundColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
-          leading: Padding(
-            padding: const EdgeInsets.only(left: 12),
-            child: AnimatedTapScale(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                width: 40, height: 40,
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1A1A1A) : Colors.white.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Center(child: Icon(CupertinoIcons.back, size: 20)),
-              ),
-            ),
+          leadingWidth: 52,
+          leading: AnimatedTapScale(
+            onTap: () => Navigator.pop(context),
+            child: const Center(child: Icon(CupertinoIcons.back, size: 20)),
           ),
           actions: [
             Padding(
               padding: const EdgeInsets.only(right: 12),
               child: AnimatedTapScale(
-                onTap: () => vm.toggleLike(collection.id),
-                child: Container(
-                  width: 40, height: 40,
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1A1A1A) : Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(12),
+                onTap: _toggleLike,
+                child: Center(
+                  child: Icon(
+                    _isLiked ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
+                    size: 20,
+                    color: _isLiked ? Colors.red : theme.colorScheme.onSurface,
                   ),
-                  child: Center(child: Icon(CupertinoIcons.heart, size: 20, color: theme.colorScheme.onSurface)),
                 ),
               ),
             ),
@@ -135,140 +141,175 @@ class _CollectionDetailViewState extends ConsumerState<CollectionDetailView> {
                 padding: const EdgeInsets.only(right: 12),
                 child: AnimatedTapScale(
                   onTap: () => _showCreatorOptions(context, ref, collection),
-                  child: Container(
-                    width: 40, height: 40,
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1A1A1A) : Colors.white.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Center(child: Icon(CupertinoIcons.ellipsis_vertical, size: 20)),
-                  ),
+                  child: const Center(child: Icon(CupertinoIcons.ellipsis_vertical, size: 20)),
                 ),
               ),
           ],
         ),
-        SliverToBoxAdapter(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (collection.coverImageUrl != null)
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
-                  child: CachedNetworkImage(
-                    imageUrl: collection.coverImageUrl!,
-                    height: 30.h(context),
-                    fit: BoxFit.cover,
-                    placeholder: (_, _) => Container(
-                      height: 30.h(context),
-                      color: theme.colorScheme.surfaceContainer,
-                    ),
-                    errorWidget: (_, _, _) => Container(
-                      height: 30.h(context),
-                      color: theme.colorScheme.surfaceContainer,
-                    ),
-                    imageBuilder: (_, imageProvider) {
-                      // Signal that the image is loaded — only fires once.
-                      if (!_contentReady) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted) setState(() => _contentReady = true);
-                        });
-                      }
-                      return Image(image: imageProvider, fit: BoxFit.cover,
-                        height: 30.h(context), width: double.infinity);
-                    },
-                  ),
+        if (hasCover)
+          SliverToBoxAdapter(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+              child: CachedNetworkImage(
+                imageUrl: collection.coverImageUrl!,
+                height: 30.h(context),
+                width: double.infinity,
+                fit: BoxFit.cover,
+                placeholder: (_, _) => Container(
+                  height: 30.h(context),
+                  color: theme.colorScheme.surfaceContainer,
                 ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xl, context.pagePad, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(collection.title, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface, letterSpacing: -0.3)),
-                    const SizedBox(height: AppSpacing.sm),
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 14,
-                          backgroundImage: collection.creatorAvatarUrl != null ? CachedNetworkImageProvider(collection.creatorAvatarUrl!) : null,
-                          child: collection.creatorAvatarUrl == null
-                              ? Text(collection.creatorName.isNotEmpty ? collection.creatorName[0].toUpperCase() : '?', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface))
-                              : null,
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text('by ${collection.creatorName}', style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant)),
-                        if (collection.isEdited) ...[
-                          const SizedBox(width: 6),
-                          Text('•  Edited', style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6))),
-                        ],
-                        const Spacer(),
-                        Icon(CupertinoIcons.heart, size: 14, color: theme.colorScheme.onSurfaceVariant),
-                        const SizedBox(width: 3),
-                        Text('${collection.likeCount}', style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant)),
-                      ],
-                    ),
-                    if (collection.description.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      Text(collection.description, style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant, height: 1.4)),
-                    ],
-                    const SizedBox(height: AppSpacing.lg),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(collection.category.displayName, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: theme.colorScheme.primary)),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF0EEEA),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text('${collection.itemCount} items', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
-                        ),
-                        const Spacer(),
-                        GestureDetector(
-                          onTap: () => vm.toggleFollow(collection.id),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text('Follow', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: theme.colorScheme.onPrimary)),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
-                    Text('Items', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
+                errorWidget: (_, _, _) => Container(
+                  height: 30.h(context),
+                  color: theme.colorScheme.surfaceContainer,
                 ),
-              ),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.symmetric(horizontal: context.pagePad),
-                itemCount: collection.items.length,
-                itemBuilder: (context, idx) {
-                  final item = collection.items[idx];
-                  return CollectionItemTile(
-                    item: item,
-                    onTap: () => _onItemTap(context, ref, item),
-                  );
+                imageBuilder: (_, imageProvider) {
+                  if (!_contentReady) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) setState(() => _contentReady = true);
+                    });
+                  }
+                  return Image(image: imageProvider, fit: BoxFit.cover,
+                    height: 30.h(context), width: double.infinity);
                 },
               ),
-              const SizedBox(height: AppSpacing.xxl),
-            ],
+            ),
+          ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(context.pagePad, AppSpacing.xl, context.pagePad, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(collection.title, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface, letterSpacing: -0.3)),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 14,
+                      backgroundImage: collection.creatorAvatarUrl != null ? CachedNetworkImageProvider(collection.creatorAvatarUrl!) : null,
+                      child: collection.creatorAvatarUrl == null
+                          ? Text(collection.creatorName.isNotEmpty ? collection.creatorName[0].toUpperCase() : '?', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface))
+                          : null,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text('by ${collection.creatorName}', style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant)),
+                    if (collection.isEdited) ...[
+                      const SizedBox(width: 6),
+                      Text('•  Edited', style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6))),
+                    ],
+                    const Spacer(),
+                    Icon(
+                      _isLiked ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
+                      size: 14,
+                      color: _isLiked ? Colors.red : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 3),
+                    Text('$_likeCount', style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant)),
+                  ],
+                ),
+                if (collection.description.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  Text(collection.description, style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant, height: 1.4)),
+                ],
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(collection.category.displayName, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: theme.colorScheme.primary)),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF0EEEA),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text('${collection.itemCount} items', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: _toggleFollow,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: _isFollowing ? theme.colorScheme.surfaceContainerHighest : theme.colorScheme.primary,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          _isFollowing ? 'Following' : 'Follow',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: _isFollowing ? theme.colorScheme.onSurface : theme.colorScheme.onPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.xxl),
+                Text('Items', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
+                const SizedBox(height: AppSpacing.md),
+              ],
+            ),
           ),
         ),
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: context.pagePad),
+          sliver: SliverList.builder(
+            itemCount: collection.items.length,
+            itemBuilder: (context, idx) {
+              final item = collection.items[idx];
+              return CollectionItemTile(
+                item: item,
+                onTap: () => _onItemTap(context, ref, item),
+              );
+            },
+          ),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
       ],
     );
+  }
+
+  Future<void> _toggleLike() async {
+    final user = ref.read(authViewModelProvider).user;
+    if (user == null) return;
+    final repo = ref.read(collectionsRepositoryProvider);
+    final previous = _isLiked;
+    final previousCount = _likeCount;
+    setState(() {
+      _isLiked = !_isLiked;
+      _likeCount += _isLiked ? 1 : -1;
+    });
+    try {
+      await repo.toggleLike(widget.collection.id, user.id);
+    } catch (e) {
+      if (mounted) setState(() { _isLiked = previous; _likeCount = previousCount; });
+    }
+  }
+
+  Future<void> _toggleFollow() async {
+    final user = ref.read(authViewModelProvider).user;
+    if (user == null) return;
+    final repo = ref.read(collectionsRepositoryProvider);
+    final previous = _isFollowing;
+    final previousCount = _followerCount;
+    setState(() {
+      _isFollowing = !_isFollowing;
+      _followerCount += _isFollowing ? 1 : -1;
+    });
+    try {
+      await repo.toggleFollow(widget.collection.id, user.id);
+    } catch (e) {
+      if (mounted) setState(() { _isFollowing = previous; _followerCount = previousCount; });
+    }
   }
 
   void _showCreatorOptions(BuildContext context, WidgetRef ref, Collection collection) {
@@ -366,12 +407,14 @@ class _CollectionDetailViewState extends ConsumerState<CollectionDetailView> {
         if (item.referenceId != null) {
           final catalog = ref.read(productsStreamProvider).valueOrNull ?? [];
           final product = _resolveProduct(item, catalog);
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ProductDetailView(product: product),
-            ),
-          );
+          if (product != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ProductDetailView(product: product),
+              ),
+            );
+          }
         }
       case CollectionItemType.service:
         if (item.referenceId != null) {
@@ -390,18 +433,7 @@ class _CollectionDetailViewState extends ConsumerState<CollectionDetailView> {
   }
 }
 
-Product _resolveProduct(CollectionItem item, List<Product> catalog) {
+Product? _resolveProduct(CollectionItem item, List<Product> catalog) {
   final match = catalog.where((p) => p.id == item.referenceId).firstOrNull;
-  if (match != null) return match;
-  return Product(
-    id: item.referenceId ?? '',
-    name: item.label,
-    description: item.subtitle ?? '',
-    price: double.tryParse(item.subtitle?.replaceAll('\$', '') ?? '0') ?? 0,
-    imageUrl: item.imageUrl ?? '',
-    imageUrls: item.imageUrl != null ? [item.imageUrl!] : [],
-    category: '',
-    inventoryCount: 0,
-    createdAt: DateTime.now(),
-  );
+  return match;
 }

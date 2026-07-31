@@ -100,7 +100,7 @@ class _StaffApprovalsViewState extends ConsumerState<StaffApprovalsView> {
                         workers: workers,
                         onApprove: () async {
                           try {
-                            await jobsRepo.updateJobStatus(jobId: job.id, status: JobStatus.completed);
+                            await jobsRepo.finalizeJob(jobId: job.id);
                             if (job.workerId != null) {
                               PushNotificationService.sendNotification(
                                 userId: job.workerId!,

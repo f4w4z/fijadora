@@ -7,6 +7,7 @@ import '../../../../domain/models/order.dart';
 import '../../../../domain/models/delivery.dart';
 import '../../../shared/widgets/status_pill.dart';
 import '../../../shared/widgets/avatar.dart';
+import '../../../shared/widgets/order_timeline.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 
 class AdminOrderDetailView extends ConsumerStatefulWidget {
@@ -22,10 +23,40 @@ class _AdminOrderDetailViewState extends ConsumerState<AdminOrderDetailView> {
   late final Future<Order> _orderFuture =
       ref.read(orderRepositoryProvider).getOrderWithItems(widget.orderId);
 
-  Future<void> _updateStatus(OrderStatus status) async {
+  Future<void> _updateStatus(OrderStatus status, {String? trackingId, String? trackingCompany, String? reason}) async {
     setState(() => _busy = true);
     try {
-      await ref.read(orderRepositoryProvider).updateOrderStatus(widget.orderId, status);
+      final repo = ref.read(orderRepositoryProvider);
+
+      if (status == OrderStatus.cancelled) {
+        await repo.rejectOrder(widget.orderId, reason ?? 'No reason provided');
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order rejected')));
+        }
+        return;
+      }
+
+      await repo.updateOrderStatus(widget.orderId, status);
+
+      // Also update delivery status when relevant
+      if (status == OrderStatus.outForDelivery) {
+        final delivery = await repo.streamDeliveryForOrder(widget.orderId).first;
+        if (delivery != null) {
+          await repo.updateDeliveryStatus(delivery.id, DeliveryStatus.inTransit, trackingId: trackingId, trackingCompany: trackingCompany);
+        }
+      } else if (status == OrderStatus.delivered) {
+        final delivery = await repo.streamDeliveryForOrder(widget.orderId).first;
+        if (delivery != null) {
+          await repo.updateDeliveryStatus(delivery.id, DeliveryStatus.delivered);
+        }
+      } else if (status == OrderStatus.preparing) {
+        final delivery = await repo.streamDeliveryForOrder(widget.orderId).first;
+        if (delivery != null && delivery.status == DeliveryStatus.pending) {
+          await repo.updateDeliveryStatus(delivery.id, DeliveryStatus.pickedUp);
+        }
+      }
+
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Order marked ${status.label}')));
@@ -38,6 +69,106 @@ class _AdminOrderDetailViewState extends ConsumerState<AdminOrderDetailView> {
   }
 
   void _confirmAction(OrderStatus status, String label) {
+    if (status == OrderStatus.outForDelivery) {
+      final trackingController = TextEditingController();
+      final companyController = TextEditingController();
+      showDialog(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Out for Delivery'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text('Mark this order as out for delivery?'),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: trackingController,
+                  decoration: const InputDecoration(
+                    labelText: 'Tracking ID (optional)',
+                    hintText: 'e.g. CP123456789',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: companyController,
+                  decoration: const InputDecoration(
+                    labelText: 'Courier company (optional)',
+                    hintText: 'e.g. DHL, FedEx, UPS',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(c).pop(), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(c).pop();
+                final tid = trackingController.text.trim();
+                final company = companyController.text.trim();
+                _updateStatus(status, trackingId: tid.isNotEmpty ? tid : null, trackingCompany: company.isNotEmpty ? company : null);
+              },
+              child: const Text('Mark Out for Delivery'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    if (status == OrderStatus.cancelled) {
+      final reasonController = TextEditingController();
+      showDialog(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Reject Order'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text('Provide a reason the customer can see:'),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: reasonController,
+                  decoration: const InputDecoration(
+                    labelText: 'Rejection reason',
+                    hintText: 'e.g. Address is outside delivery zone',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                  minLines: 2,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(c).pop(), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(c).pop();
+                final reason = reasonController.text.trim();
+                if (reason.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please provide a rejection reason')),
+                  );
+                  return;
+                }
+                _updateStatus(OrderStatus.cancelled, reason: reason);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+              child: const Text('Reject Order'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
@@ -87,16 +218,19 @@ class _Body extends ConsumerWidget {
   final bool busy;
   final void Function(OrderStatus, String) onAction;
 
-  Color _statusColor(OrderStatus s) {
-    if (s == OrderStatus.delivered) return Colors.green;
-    if (s == OrderStatus.cancelled || s == OrderStatus.refunded) return Colors.red;
-    if (s == OrderStatus.paid || s == OrderStatus.shipped || s == OrderStatus.processing) return Colors.orange;
-    return Colors.teal;
-  }
+  Color _statusColor(OrderStatus s) => switch (s) {
+        OrderStatus.delivered => Colors.green,
+        OrderStatus.cancelled || OrderStatus.refunded => Colors.red,
+        OrderStatus.quoteSent => Colors.amber,
+        OrderStatus.preparing || OrderStatus.outForDelivery => Colors.orange,
+        _ => Colors.teal,
+      };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final isPending = order.status == OrderStatus.pending;
+    final isQuoteSent = order.status == OrderStatus.quoteSent;
 
     return ListView(
       padding: EdgeInsets.all(context.pagePad),
@@ -146,6 +280,12 @@ class _Body extends ConsumerWidget {
           },
         ),
         const SizedBox(height: 12),
+
+        // Delivery quote form (shown when pending)
+        if (isPending) ...[
+          _DeliveryQuoteForm(order: order, orderId: order.id),
+          const SizedBox(height: 12),
+        ],
 
         // Delivery info
         AppCard(
@@ -199,112 +339,173 @@ class _Body extends ConsumerWidget {
                     )),
               const Divider(height: 20),
               _TotalRow(label: 'Subtotal', value: order.subtotal),
-              _TotalRow(label: 'Delivery fee', value: order.deliveryFee),
-              _TotalRow(label: 'Total', value: order.total, bold: true),
+              _TotalRow(
+                label: 'Delivery fee',
+                value: order.deliveryFee,
+                muted: isPending,
+              ),
+              if (!isPending)
+                _TotalRow(label: 'Total', value: order.total, bold: true),
             ],
           ),
         ),
         const SizedBox(height: 12),
 
-        // Delivery tracking
-        _DeliveryTracker(orderId: order.id),
+        // Order timeline
+        OrderTimeline(order: order),
         const SizedBox(height: 16),
 
         // Actions
         if (busy) const Center(child: CircularProgressIndicator()),
         if (!busy) ...[
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => onAction(OrderStatus.delivered, 'Mark Delivered'),
-              icon: const Icon(CupertinoIcons.checkmark_circle),
-              label: const Text('Mark Delivered'),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => onAction(OrderStatus.shipped, 'Mark Shipped'),
-                  child: const Text('Shipped'),
-                ),
+          if (isQuoteSent) ...[
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => onAction(OrderStatus.preparing, 'Mark as Preparing'),
+                icon: const Icon(CupertinoIcons.cube_box),
+                label: const Text('Mark as Preparing'),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => onAction(OrderStatus.paid, 'Mark Paid'),
-                  child: const Text('Paid'),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(foregroundColor: theme.colorScheme.error),
-              onPressed: () => onAction(OrderStatus.cancelled, 'Reject / Cancel'),
-              icon: const Icon(CupertinoIcons.xmark_circle),
-              label: const Text('Reject / Cancel Order'),
             ),
-          ),
+            const SizedBox(height: 10),
+          ],
+          if (order.status == OrderStatus.preparing) ...[
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => onAction(OrderStatus.outForDelivery, 'Mark Out for Delivery'),
+                icon: const Icon(CupertinoIcons.car),
+                label: const Text('Out for Delivery'),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          if (order.status == OrderStatus.outForDelivery) ...[
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => onAction(OrderStatus.delivered, 'Mark Delivered'),
+                icon: const Icon(CupertinoIcons.checkmark_circle),
+                label: const Text('Mark Delivered'),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          if (order.status == OrderStatus.pending || isQuoteSent || order.status == OrderStatus.preparing) ...[
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(foregroundColor: theme.colorScheme.error),
+                onPressed: () => onAction(OrderStatus.cancelled, 'Cancel Order'),
+                icon: const Icon(CupertinoIcons.xmark_circle),
+                label: const Text('Cancel Order'),
+              ),
+            ),
+          ],
         ],
       ],
     );
   }
 }
 
-class _DeliveryTracker extends ConsumerWidget {
-  const _DeliveryTracker({required this.orderId});
+// ─── Delivery Quote Form ───
+
+class _DeliveryQuoteForm extends ConsumerStatefulWidget {
+  const _DeliveryQuoteForm({required this.order, required this.orderId});
+  final Order order;
   final String orderId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_DeliveryQuoteForm> createState() => _DeliveryQuoteFormState();
+}
+
+class _DeliveryQuoteFormState extends ConsumerState<_DeliveryQuoteForm> {
+  final _feeController = TextEditingController();
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.order.deliveryFee > 0) {
+      _feeController.text = widget.order.deliveryFee.toStringAsFixed(0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _feeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendQuote() async {
+    final fee = double.tryParse(_feeController.text.trim());
+    if (fee == null || fee < 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Enter a valid delivery fee')));
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      await ref.read(orderRepositoryProvider).sendDeliveryQuote(widget.orderId, fee);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Delivery quote sent to customer')));
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final deliveryAsync = ref.watch(deliveryForOrderProvider(orderId));
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Delivery Tracking', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-          const SizedBox(height: 10),
-          Builder(
-            builder: (context) {
-              if (deliveryAsync.isLoading && !deliveryAsync.hasValue) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              final d = deliveryAsync.valueOrNull;
-              if (d == null) return const Text('No delivery assigned yet.', style: TextStyle(fontSize: 13));
-              final steps = [
-                ('Pending', d.status.index >= DeliveryStatus.pending.index),
-                ('Assigned', d.status.index >= DeliveryStatus.assigned.index),
-                ('In Transit', d.status.index >= DeliveryStatus.inTransit.index),
-                ('Delivered', d.status.index >= DeliveryStatus.delivered.index),
-              ];
-              return Column(
-                children: steps.map((s) {
-                  final done = s.$2;
-                  return Row(
-                    children: [
-                      Icon(done ? CupertinoIcons.check_mark_circled_solid : CupertinoIcons.circle,
-                          color: done ? Colors.green : theme.colorScheme.onSurfaceVariant, size: 20),
-                      const SizedBox(width: 10),
-                      Text(s.$1, style: TextStyle(
-                        fontWeight: done ? FontWeight.w600 : FontWeight.normal,
-                        color: done ? Colors.green : theme.colorScheme.onSurfaceVariant,
-                      )),
-                    ],
-                  );
-                }).toList(),
-              );
-            },
+          Row(
+            children: [
+              Icon(CupertinoIcons.money_dollar_circle, color: Colors.amber, size: 22),
+              const SizedBox(width: 8),
+              const Text('Send Delivery Quote', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+            ],
           ),
+          const SizedBox(height: 4),
+          Text(
+            'Review the delivery address below and enter a fee.',
+            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _feeController,
+            decoration: const InputDecoration(
+              labelText: 'Delivery fee',
+              border: OutlineInputBorder(),
+              prefixText: '\$ ',
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
+          const SizedBox(height: 12),
+          _busy
+              ? const Center(child: CircularProgressIndicator())
+              : SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _sendQuote,
+                    icon: const Icon(CupertinoIcons.paperplane, size: 18),
+                    label: const Text('Send Quote'),
+                  ),
+                ),
         ],
       ),
     );
   }
 }
+
+// ─── Shared widgets ───
 
 class _InfoRow extends StatelessWidget {
   const _InfoRow({required this.icon, required this.label, required this.value});
@@ -339,21 +540,34 @@ class _InfoRow extends StatelessWidget {
 }
 
 class _TotalRow extends StatelessWidget {
-  const _TotalRow({required this.label, required this.value, this.bold = false});
+  const _TotalRow({required this.label, required this.value, this.bold = false, this.muted = false});
   final String label;
   final double value;
   final bool bold;
+  final bool muted;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = muted ? theme.colorScheme.onSurfaceVariant : null;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: bold ? 15 : 13, fontWeight: bold ? FontWeight.w700 : FontWeight.normal)),
-          Text('\$${value.toStringAsFixed(2)}',
-              style: TextStyle(fontSize: bold ? 16 : 13, fontWeight: bold ? FontWeight.w800 : FontWeight.w500)),
+          Text(label, style: TextStyle(
+            fontSize: bold ? 15 : 13,
+            fontWeight: bold ? FontWeight.w700 : FontWeight.normal,
+            color: color,
+          )),
+          Text(
+            muted ? 'TBD' : '\$${value.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontSize: bold ? 16 : 13,
+              fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
+              color: bold ? theme.colorScheme.primary : color,
+            ),
+          ),
         ],
       ),
     );

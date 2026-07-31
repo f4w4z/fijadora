@@ -6,6 +6,7 @@ import '../../../../data/repositories/item_request_repository.dart';
 import '../../../../data/repositories/wallet_repository.dart';
 import '../../../../data/repositories/users_repository.dart';
 import '../../../../domain/models/order.dart';
+import '../../../../domain/models/delivery.dart';
 import '../../../../domain/models/item_request.dart';
 import '../../../../domain/models/wallet.dart';
 import '../../../../domain/models/app_user.dart';
@@ -106,16 +107,29 @@ class _StaffCommerceViewState extends ConsumerState<StaffCommerceView>
 
 // ───────────────────────── Orders ─────────────────────────
 
-class _OrdersTab extends ConsumerWidget {
+class _OrdersTab extends ConsumerStatefulWidget {
   const _OrdersTab();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_OrdersTab> createState() => _OrdersTabState();
+}
+
+class _OrdersTabState extends ConsumerState<_OrdersTab> {
+  bool _showCompleted = false;
+
+  @override
+  Widget build(BuildContext context) {
     final ordersAsync = ref.watch(allOrdersProvider);
     return ordersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Could not load orders: $e')),
       data: (orders) {
+        final active =
+            orders.where((o) => o.status.isActive && o.status != OrderStatus.delivered).toList();
+        final completed =
+            orders.where((o) => !o.status.isActive || o.status == OrderStatus.delivered).toList();
+        final shown = _showCompleted ? completed : active;
+
         if (orders.isEmpty) {
           return const EmptyStateWidget(
             icon: CupertinoIcons.bag,
@@ -123,19 +137,84 @@ class _OrdersTab extends ConsumerWidget {
             message: 'Customer purchases will appear here.',
           );
         }
+
         final customerIds = orders.map((o) => o.customerId).toSet().toList();
         final usersAsync = ref.watch(usersMapProvider(customerIds));
-        return ListView.separated(
-          padding: EdgeInsets.all(context.pagePad),
-          itemCount: orders.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (context, i) => usersAsync.when(
-            data: (users) => _OrderCard(order: orders[i], customer: users[orders[i].customerId]),
-            loading: () => _OrderCard(order: orders[i]),
-            error: (_, __) => _OrderCard(order: orders[i]),
-          ),
+
+        return Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(context.pagePad, 12, context.pagePad, 4),
+              child: Row(
+                children: [
+                  _FilterChip(
+                    label: 'Active (${active.length})',
+                    selected: !_showCompleted,
+                    onTap: () => setState(() => _showCompleted = false),
+                  ),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                    label: 'Completed (${completed.length})',
+                    selected: _showCompleted,
+                    onTap: () => setState(() => _showCompleted = true),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: shown.isEmpty
+                  ? const Center(
+                      child: Text('No orders',
+                          style: TextStyle(color: Colors.grey, fontSize: 14)))
+                  : ListView.separated(
+                      padding: EdgeInsets.all(context.pagePad),
+                      itemCount: shown.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, i) => usersAsync.when(
+                        data: (users) => _OrderCard(order: shown[i], customer: users[shown[i].customerId]),
+                        loading: () => _OrderCard(order: shown[i]),
+                        error: (_, __) => _OrderCard(order: shown[i]),
+                      ),
+                    ),
+            ),
+          ],
         );
       },
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({required this.label, required this.selected, required this.onTap});
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? theme.colorScheme.primary.withValues(alpha: 0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
+            width: 1.5,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            fontSize: 13,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -156,16 +235,29 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     final s = widget.order.status;
     if (s == OrderStatus.delivered) return Colors.green;
     if (s == OrderStatus.cancelled || s == OrderStatus.refunded) return Colors.red;
-    if (s == OrderStatus.paid || s == OrderStatus.shipped || s == OrderStatus.processing) {
-      return Colors.orange;
-    }
+    if (s == OrderStatus.quoteSent) return Colors.amber;
+    if (s == OrderStatus.preparing || s == OrderStatus.outForDelivery) return Colors.orange;
     return Theme.of(context).colorScheme.primary;
   }
 
-  Future<void> _updateStatus(OrderStatus status) async {
+  Future<void> _updateStatus(OrderStatus status, {String? trackingId, String? trackingCompany, String? reason}) async {
     setState(() => _busy = true);
     try {
-      await ref.read(orderRepositoryProvider).updateOrderStatus(widget.order.id, status);
+      final repo = ref.read(orderRepositoryProvider);
+      if (status == OrderStatus.cancelled) {
+        await repo.rejectOrder(widget.order.id, reason ?? 'No reason provided');
+        ref.invalidate(allOrdersProvider);
+        if (mounted) Navigator.of(context).pop();
+        return;
+      }
+      await repo.updateOrderStatus(widget.order.id, status);
+      if (status == OrderStatus.outForDelivery) {
+        final delivery = await repo.streamDeliveryForOrder(widget.order.id).first;
+        if (delivery != null) {
+          await repo.updateDeliveryStatus(delivery.id, DeliveryStatus.inTransit, trackingId: trackingId, trackingCompany: trackingCompany);
+        }
+      }
+      ref.invalidate(allOrdersProvider);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
@@ -174,35 +266,206 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     }
   }
 
+  void _showSendQuoteSheet() {
+    final controller = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (c) => Padding(
+        padding: EdgeInsets.only(
+          left: 16, right: 16, top: 16,
+          bottom: MediaQuery.of(c).viewInsets.bottom + 16,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text('Send Delivery Quote', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text('Subtotal: \$${widget.order.subtotal.toStringAsFixed(2)}',
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'Delivery fee',
+                border: OutlineInputBorder(),
+                prefixText: '\$ ',
+              ),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            _busy
+                ? const Center(child: CircularProgressIndicator())
+                : ElevatedButton(
+                    onPressed: () async {
+                      final fee = double.tryParse(controller.text.trim());
+                      if (fee == null || fee < 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Enter a valid delivery fee')));
+                        return;
+                      }
+                      setState(() => _busy = true);
+                      try {
+                        await ref.read(orderRepositoryProvider).sendDeliveryQuote(widget.order.id, fee);
+                        if (mounted) Navigator.of(context).pop();
+                      } catch (e) {
+                        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+                      } finally {
+                        if (mounted) setState(() => _busy = false);
+                      }
+                    },
+                    child: const Text('Send Quote'),
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showActions() {
+    final s = widget.order.status;
+    final trackingController = TextEditingController();
+
     showModalBottomSheet(
       context: context,
       builder: (c) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(CupertinoIcons.checkmark_seal),
-              title: const Text('Mark Paid'),
-              onTap: () { Navigator.of(c).pop(); _updateStatus(OrderStatus.paid); },
-            ),
-            ListTile(
-              leading: Icon(CupertinoIcons.car),
-              title: const Text('Mark Shipped'),
-              onTap: () { Navigator.of(c).pop(); _updateStatus(OrderStatus.shipped); },
-            ),
-            ListTile(
-              leading: const Icon(CupertinoIcons.checkmark_circle),
-              title: const Text('Mark Delivered'),
-              onTap: () { Navigator.of(c).pop(); _updateStatus(OrderStatus.delivered); },
-            ),
-            ListTile(
-              leading: const Icon(CupertinoIcons.xmark_circle),
-              title: const Text('Cancel Order'),
-              onTap: () { Navigator.of(c).pop(); _updateStatus(OrderStatus.cancelled); },
-            ),
+            if (s == OrderStatus.pending)
+              ListTile(
+                leading: const Icon(CupertinoIcons.money_dollar_circle),
+                title: const Text('Send Delivery Quote'),
+                onTap: () { Navigator.of(c).pop(); _showSendQuoteSheet(); },
+              ),
+            if (s == OrderStatus.quoteSent)
+              ListTile(
+                leading: const Icon(CupertinoIcons.money_dollar_circle),
+                title: const Text('Resend / Update Quote'),
+                onTap: () { Navigator.of(c).pop(); _showSendQuoteSheet(); },
+              ),
+            if (s == OrderStatus.preparing)
+              ListTile(
+                leading: const Icon(CupertinoIcons.car),
+                title: const Text('Mark Out for Delivery'),
+                onTap: () {
+                  Navigator.of(c).pop();
+                  _showTrackingDialog(trackingController);
+                },
+              ),
+            if (s == OrderStatus.outForDelivery)
+              ListTile(
+                leading: const Icon(CupertinoIcons.checkmark_circle),
+                title: const Text('Mark Delivered'),
+                onTap: () { Navigator.of(c).pop(); _updateStatus(OrderStatus.delivered); },
+              ),
+            if (s == OrderStatus.pending || s == OrderStatus.quoteSent || s == OrderStatus.preparing)
+              ListTile(
+                leading: const Icon(CupertinoIcons.xmark_circle),
+                title: const Text('Reject Order'),
+                onTap: () { Navigator.of(c).pop(); _showRejectDialog(); },
+              ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showTrackingDialog(TextEditingController trackingController) {
+    final companyController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Out for Delivery'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Mark this order as out for delivery?'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: trackingController,
+                decoration: const InputDecoration(
+                  labelText: 'Tracking ID (optional)',
+                  hintText: 'e.g. CP123456789',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: companyController,
+                decoration: const InputDecoration(
+                  labelText: 'Courier company (optional)',
+                  hintText: 'e.g. DHL, FedEx, UPS',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(c).pop(), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(c).pop();
+              final tid = trackingController.text.trim();
+              final company = companyController.text.trim();
+              _updateStatus(OrderStatus.outForDelivery, trackingId: tid.isNotEmpty ? tid : null, trackingCompany: company.isNotEmpty ? company : null);
+            },
+            child: const Text('Mark Out for Delivery'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRejectDialog() {
+    final reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Reject Order'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Provide a reason the customer can see:'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: reasonController,
+                decoration: const InputDecoration(
+                  labelText: 'Rejection reason',
+                  hintText: 'e.g. Address is outside delivery zone',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+                minLines: 2,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(c).pop(), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(c).pop();
+              final reason = reasonController.text.trim();
+              if (reason.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please provide a rejection reason')),
+                );
+                return;
+              }
+              _updateStatus(OrderStatus.cancelled, reason: reason);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            child: const Text('Reject Order'),
+          ),
+        ],
       ),
     );
   }
@@ -264,7 +527,11 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                 _SummaryRow(
                   icon: CupertinoIcons.car_detailed,
                   label: 'Delivery',
-                  value: order.deliveryFee == 0 ? 'Free' : '\$${order.deliveryFee.toStringAsFixed(2)}',
+                  value: order.status == OrderStatus.pending
+                      ? 'TBD'
+                      : order.deliveryFee == 0
+                          ? 'Free'
+                          : '\$${order.deliveryFee.toStringAsFixed(2)}',
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
@@ -292,20 +559,33 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: _busy
-                ? const Center(child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 6),
-                    child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                  ))
-                : FilledButton.tonalIcon(
-                    onPressed: _showActions,
-                    icon: const Icon(CupertinoIcons.arrow_2_circlepath, size: 18),
-                    label: const Text('Update Status'),
-                  ),
-          ),
+          if (order.status.isActive && order.status != OrderStatus.delivered) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: _busy
+                  ? const Center(child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 6),
+                      child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                    ))
+                  : FilledButton.tonalIcon(
+                      onPressed: _showActions,
+                      icon: Icon(
+                        order.status == OrderStatus.pending
+                            ? CupertinoIcons.money_dollar_circle
+                            : CupertinoIcons.arrow_2_circlepath,
+                        size: 18,
+                      ),
+                      label: Text(
+                        order.status == OrderStatus.pending
+                            ? 'Send Delivery Quote'
+                            : order.status == OrderStatus.quoteSent
+                                ? 'Quote Sent — View'
+                                : 'Update Status',
+                      ),
+                    ),
+            ),
+          ],
         ],
       ),
     );
@@ -401,16 +681,31 @@ class _ItemThumbStrip extends StatelessWidget {
 
 // ───────────────────────── Requests ─────────────────────────
 
-class _RequestsTab extends ConsumerWidget {
+class _RequestsTab extends ConsumerStatefulWidget {
   const _RequestsTab();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_RequestsTab> createState() => _RequestsTabState();
+}
+
+class _RequestsTabState extends ConsumerState<_RequestsTab> {
+  bool _showClosed = false;
+
+  @override
+  Widget build(BuildContext context) {
     final requestsAsync = ref.watch(allItemRequestsProvider);
     return requestsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Could not load requests: $e')),
       data: (requests) {
+        final open = requests
+            .where((r) => r.status == ItemRequestStatus.open || r.status == ItemRequestStatus.reviewing)
+            .toList();
+        final closed = requests
+            .where((r) => r.status == ItemRequestStatus.fulfilled || r.status == ItemRequestStatus.rejected || r.status == ItemRequestStatus.closed)
+            .toList();
+        final shown = _showClosed ? closed : open;
+
         if (requests.isEmpty) {
           return const EmptyStateWidget(
             icon: CupertinoIcons.search,
@@ -418,17 +713,47 @@ class _RequestsTab extends ConsumerWidget {
             message: "Customers haven't requested items yet.",
           );
         }
+
         final customerIds = requests.map((r) => r.customerId).toSet().toList();
         final usersAsync = ref.watch(usersMapProvider(customerIds));
-        return ListView.separated(
-          padding: EdgeInsets.all(context.pagePad),
-          itemCount: requests.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (context, i) => usersAsync.when(
-            data: (users) => _RequestCard(request: requests[i], customer: users[requests[i].customerId]),
-            loading: () => _RequestCard(request: requests[i]),
-            error: (_, __) => _RequestCard(request: requests[i]),
-          ),
+
+        return Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(context.pagePad, 12, context.pagePad, 4),
+              child: Row(
+                children: [
+                  _FilterChip(
+                    label: 'Open (${open.length})',
+                    selected: !_showClosed,
+                    onTap: () => setState(() => _showClosed = false),
+                  ),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                    label: 'Closed (${closed.length})',
+                    selected: _showClosed,
+                    onTap: () => setState(() => _showClosed = true),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: shown.isEmpty
+                  ? const Center(
+                      child: Text('No requests',
+                          style: TextStyle(color: Colors.grey, fontSize: 14)))
+                  : ListView.separated(
+                      padding: EdgeInsets.all(context.pagePad),
+                      itemCount: shown.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, i) => usersAsync.when(
+                        data: (users) => _RequestCard(request: shown[i], customer: users[shown[i].customerId]),
+                        loading: () => _RequestCard(request: shown[i]),
+                        error: (_, __) => _RequestCard(request: shown[i]),
+                      ),
+                    ),
+            ),
+          ],
         );
       },
     );
@@ -512,7 +837,7 @@ class _RequestCard extends ConsumerWidget {
               if (request.status == ItemRequestStatus.reviewing) ...[
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => ref.read(itemRequestRepositoryProvider).updateStatus(request.id, ItemRequestStatus.fulfilled),
+                    onPressed: () => ref.read(itemRequestRepositoryProvider).fulfillRequest(request.id),
                     child: const Text('Mark Fulfilled'),
                   ),
                 ),
@@ -847,30 +1172,78 @@ class _WorkerTileState extends ConsumerState<_WorkerTile> {
     final theme = Theme.of(context);
     final walletAsync = ref.watch(workerWalletProvider(widget.user.id));
     final balance = walletAsync.value?.balance ?? 0.0;
-    return AppCard(
-      child: Row(
-        children: [
-          InitialsAvatar(name: widget.user.name, size: 44),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(widget.user.name,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                const SizedBox(height: 2),
-                Text('Balance: \$${balance.toStringAsFixed(2)}',
-                    style: TextStyle(color: theme.colorScheme.primary, fontSize: 13, fontWeight: FontWeight.w600)),
-              ],
+    final walletStatus = walletAsync.value?.bankAccountNumber != null;
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InitialsAvatar(name: widget.user.name, size: 46),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.user.name,
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '\$${balance.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        walletStatus ? CupertinoIcons.creditcard : CupertinoIcons.creditcard_fill,
+                        size: 14,
+                        color: walletStatus
+                            ? Colors.green
+                            : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        walletStatus ? 'Bank set' : 'No bank',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: walletStatus
+                              ? Colors.green
+                              : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          _busy
-              ? const CircularProgressIndicator()
-              : ElevatedButton(
-                  onPressed: _showCreditSheet,
-                  child: const Text('Credit'),
-                ),
-        ],
+            const SizedBox(width: 12),
+            _busy
+                ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                : FilledButton.tonalIcon(
+                    onPressed: _showCreditSheet,
+                    icon: const Icon(CupertinoIcons.plus, size: 16),
+                    label: const Text('Credit', style: TextStyle(fontSize: 13)),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    ),
+                  ),
+          ],
+        ),
       ),
     );
   }

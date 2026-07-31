@@ -6,6 +6,7 @@ import '../../data/services/analytics_service.dart';
 import '../features/auth/view_models/auth_view_model.dart';
 import '../features/auth/views/login_view.dart';
 import '../features/auth/views/register_view.dart';
+import '../features/auth/views/onboarding_view.dart';
 import '../features/auth/views/access_denied_view.dart';
 import '../features/auth/views/forgot_password_view.dart';
 
@@ -110,6 +111,13 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (isAccessDenied) return null;
 
+      // Onboarding for new signups
+      if (authViewModel.showOnboarding) {
+        if (location != '/onboarding') return '/onboarding';
+        return null;
+      }
+      if (location == '/onboarding') return '/';
+
       // Role-based access control
       final user = authViewModel.user;
       if (user != null) {
@@ -150,6 +158,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/reset-password',
         pageBuilder: (context, state) => _fadePage(const ResetPasswordView(), state),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        pageBuilder: (context, state) => _fadePage(const OnboardingView(), state),
       ),
       GoRoute(
         path: '/pending-approval',
