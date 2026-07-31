@@ -12,6 +12,8 @@ abstract class CollectionsRepository {
   Stream<List<Collection>> streamFeaturedCollections();
   Future<void> toggleFollow(String collectionId, String userId);
   Future<void> toggleLike(String collectionId, String userId);
+  Future<bool> hasUserLiked(String collectionId, String userId);
+  Future<bool> hasUserFollowed(String collectionId, String userId);
   Future<Collection> createCollection(Collection collection);
   Future<Collection> updateCollection(Collection collection);
   Future<void> deleteCollection(String id);
@@ -101,6 +103,28 @@ class SupabaseCollectionsRepository implements CollectionsRepository {
       });
       await _client.rpc('increment_collection_follow', params: {'col_id': collectionId});
     }
+  }
+
+  @override
+  Future<bool> hasUserLiked(String collectionId, String userId) async {
+    final existing = await _client
+        .from('collection_likes')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('collection_id', collectionId)
+        .maybeSingle();
+    return existing != null;
+  }
+
+  @override
+  Future<bool> hasUserFollowed(String collectionId, String userId) async {
+    final existing = await _client
+        .from('collection_follows')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('collection_id', collectionId)
+        .maybeSingle();
+    return existing != null;
   }
 
   @override

@@ -18,6 +18,7 @@ abstract class ItemRequestRepository {
   Future<ItemRequest> getRequest(String id);
   Future<String> uploadRequestImage(String fileName, Uint8List fileBytes);
   Future<void> updateStatus(String id, ItemRequestStatus status, {String? linkedProductId});
+  Future<void> fulfillRequest(String id, {String? linkedProductId});
 }
 
 class SupabaseItemRequestRepository implements ItemRequestRepository {
@@ -96,6 +97,26 @@ class SupabaseItemRequestRepository implements ItemRequestRepository {
     final update = {'status': status.name};
     if (linkedProductId != null) update['linked_product_id'] = linkedProductId;
     await _client.from('item_requests').update(update).eq('id', id);
+  }
+
+  @override
+  Future<void> fulfillRequest(String id, {String? linkedProductId}) async {
+    final update = {'status': ItemRequestStatus.fulfilled.name};
+    if (linkedProductId != null) update['linked_product_id'] = linkedProductId;
+    await _client.from('item_requests').update(update).eq('id', id);
+
+    final req = await getRequest(id);
+    try {
+      await _client.functions.invoke(
+        'send-request-fulfilled',
+        body: {
+          'customerId': req.customerId,
+          'requestTitle': req.title,
+        },
+      );
+    } catch (e) {
+      // Don't fail the whole operation if email sending fails
+    }
   }
 }
 

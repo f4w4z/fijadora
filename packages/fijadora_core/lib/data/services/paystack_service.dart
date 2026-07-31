@@ -26,6 +26,9 @@ class PaystackService {
     required int amountKobo,
     required String reference,
     String? orderId,
+    String? jobId,
+    String? paymentKind,
+    String? changeOrderId,
     String? callbackUrl,
   }) async {
     return _invoke('initialize', {
@@ -33,13 +36,29 @@ class PaystackService {
       'amount': amountKobo,
       'reference': reference,
       'orderId': orderId,
+      'jobId': jobId,
+      'paymentKind': paymentKind,
+      'changeOrderId': changeOrderId,
+      'customerId': SupabaseService.instance.client.auth.currentUser?.id,
       if (callbackUrl != null) 'callbackUrl': callbackUrl,
     });
   }
 
   /// Verify a completed transaction by reference.
-  Future<Map<String, dynamic>> verifyTransaction(String reference) async {
-    return _invoke('verify', {'reference': reference});
+  Future<Map<String, dynamic>> verifyTransaction(
+    String reference, {
+    String? orderId,
+    String? jobId,
+    String? paymentKind,
+    String? changeOrderId,
+  }) async {
+    return _invoke('verify', {
+      'reference': reference,
+      'orderId': orderId,
+      'jobId': jobId,
+      'paymentKind': paymentKind,
+      'changeOrderId': changeOrderId,
+    });
   }
 
   /// Create a Paystack transfer recipient for a worker's bank account.

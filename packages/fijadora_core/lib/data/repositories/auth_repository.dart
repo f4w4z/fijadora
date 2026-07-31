@@ -12,7 +12,8 @@ abstract class AuthRepository {
   AppUser? get currentUser;
   Future<void> signUp({required String email, required String password, required String name, required UserRole role});
   Future<void> signIn({required String email, required String password});
-  Future<void> resendEmailVerification({required String email});
+  Future<void> verifyOtp({required String email, required String token});
+  Future<void> resendOtp({required String email});
   Future<void> updateWorkerStatus({required String userId, required String status});
   Future<void> sendPasswordResetEmail({required String email});
   Future<void> updatePassword({required String newPassword});
@@ -94,15 +95,25 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signUp({required String email, required String password, required String name, required UserRole role}) async {
-    await _client.auth.signUp(
-      email: email,
-      password: password,
-      data: {
-        'name': name,
-        'role': role.key,
-      },
-      emailRedirectTo: 'fijadora://app',
-    );
+    try {
+      await _client.auth.signUp(
+        email: email,
+        password: password,
+        data: {
+          'name': name,
+          'role': role.key,
+        },
+      );
+    } on sb.AuthException catch (e) {
+      if (e.message.contains('already registered') || e.message.contains('already been registered')) {
+        await _client.auth.resend(
+          type: sb.OtpType.signup,
+          email: email,
+        );
+      } else {
+        rethrow;
+      }
+    }
   }
 
   @override
@@ -114,11 +125,19 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> resendEmailVerification({required String email}) async {
+  Future<void> verifyOtp({required String email, required String token}) async {
+    await _client.auth.verifyOTP(
+      email: email,
+      token: token,
+      type: sb.OtpType.signup,
+    );
+  }
+
+  @override
+  Future<void> resendOtp({required String email}) async {
     await _client.auth.resend(
       type: sb.OtpType.signup,
       email: email,
-      emailRedirectTo: 'fijadora://app',
     );
   }
 

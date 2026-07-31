@@ -47,16 +47,39 @@ class OrderItem {
 
 enum OrderStatus {
   pending,
-  paid,
-  processing,
-  shipped,
+  quoteSent,
+  preparing,
+  outForDelivery,
   delivered,
   cancelled,
   refunded;
 
-  String get label => name[0].toUpperCase() + name.substring(1);
+  String get label => switch (this) {
+        OrderStatus.quoteSent => 'Quote Sent',
+        OrderStatus.outForDelivery => 'Out for Delivery',
+        _ => name[0].toUpperCase() + name.substring(1),
+      };
 
   bool get isActive => this != OrderStatus.cancelled && this != OrderStatus.refunded;
+
+  /// Whether the customer needs to take action (accept/pay the delivery quote).
+  bool get awaitingCustomerAction => this == OrderStatus.quoteSent;
+
+  /// Maps legacy DB values to the current enum for backward compatibility.
+  /// Maps this enum value to the database column value.
+  String get toDbName => name;
+
+  static OrderStatus fromDbName(String name) => switch (name) {
+        'paid' => OrderStatus.preparing,
+        'processing' => OrderStatus.preparing,
+        'shipped' => OrderStatus.outForDelivery,
+        'quote_sent' => OrderStatus.quoteSent,
+        'out_for_delivery' => OrderStatus.outForDelivery,
+        _ => OrderStatus.values.firstWhere(
+            (e) => e.name == name,
+            orElse: () => OrderStatus.pending,
+          ),
+      };
 }
 
 @immutable
@@ -72,6 +95,7 @@ class Order {
   final String? deliveryNote;
   final String? paystackReference;
   final DateTime? paystackPaidAt;
+  final String? rejectionReason;
   final DateTime createdAt;
   final DateTime updatedAt;
   final List<OrderItem> items;
@@ -88,6 +112,7 @@ class Order {
     this.deliveryNote,
     this.paystackReference,
     this.paystackPaidAt,
+    this.rejectionReason,
     required this.createdAt,
     required this.updatedAt,
     this.items = const [],
@@ -97,10 +122,7 @@ class Order {
     return Order(
       id: json['id'] as String,
       customerId: json['customer_id'] as String,
-      status: OrderStatus.values.firstWhere(
-        (e) => e.name == (json['status'] as String? ?? 'pending'),
-        orElse: () => OrderStatus.pending,
-      ),
+      status: OrderStatus.fromDbName(json['status'] as String? ?? 'pending'),
       subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
       deliveryFee: (json['delivery_fee'] as num?)?.toDouble() ?? 0.0,
       total: (json['total'] as num?)?.toDouble() ?? 0.0,
@@ -108,6 +130,7 @@ class Order {
       deliveryPhone: json['delivery_phone'] as String?,
       deliveryNote: json['delivery_note'] as String?,
       paystackReference: json['paystack_reference'] as String?,
+      rejectionReason: json['rejection_reason'] as String?,
       paystackPaidAt: json['paystack_paid_at'] != null
           ? DateTime.parse(json['paystack_paid_at'] as String)
           : null,
@@ -134,6 +157,7 @@ class Order {
       'delivery_note': deliveryNote,
       'paystack_reference': paystackReference,
       'paystack_paid_at': paystackPaidAt?.toIso8601String(),
+      'rejection_reason': rejectionReason,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };

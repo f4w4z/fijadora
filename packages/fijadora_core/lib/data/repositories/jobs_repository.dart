@@ -17,6 +17,10 @@ abstract class JobsRepository {
   Future<MaintenanceJob> completeJob({required String jobId, required String notes, required List<String> images});
   Future<List<MaintenanceJob>> fetchJobsForAsset({required String assetId});
   Future<MaintenanceJob> rejectJob({required String jobId});
+  Future<MaintenanceJob> sendJobQuote({required String jobId, required double amount, double? maxAmount});
+  Future<JobChangeOrder> submitChangeOrder({required String jobId, required String description, required double amount});
+  Future<void> approveChangeOrder({required String jobId, required String changeOrderId});
+  Future<MaintenanceJob> finalizeJob({required String jobId});
   void dispose();
 }
 
@@ -160,6 +164,53 @@ class SupabaseJobsRepository implements JobsRepository {
         .select()
         .single();
     return MaintenanceJob.fromJson(response);
+  }
+
+  @override
+  Future<MaintenanceJob> sendJobQuote({
+    required String jobId,
+    required double amount,
+    double? maxAmount,
+  }) async {
+    final response = await _client.rpc('send_job_quote', params: {
+      'p_job_id': jobId,
+      'p_amount': amount,
+      if (maxAmount != null) 'p_max_amount': maxAmount,
+    });
+    return MaintenanceJob.fromJson(response as Map<String, dynamic>);
+  }
+
+  @override
+  Future<JobChangeOrder> submitChangeOrder({
+    required String jobId,
+    required String description,
+    required double amount,
+  }) async {
+    final response = await _client.rpc('submit_change_order', params: {
+      'p_job_id': jobId,
+      'p_description': description,
+      'p_amount': amount,
+    });
+    return JobChangeOrder.fromJson(response as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> approveChangeOrder({
+    required String jobId,
+    required String changeOrderId,
+  }) async {
+    await _client.rpc('approve_change_order', params: {
+      'p_job_id': jobId,
+      'p_change_order_id': changeOrderId,
+    });
+  }
+
+  @override
+  Future<MaintenanceJob> finalizeJob({required String jobId}) async {
+    final response = await _client.rpc('finalize_job', params: {
+      'p_job_id': jobId,
+    });
+    return MaintenanceJob.fromJson(response as Map<String, dynamic>);
   }
 }
 

@@ -72,6 +72,12 @@ class DeepLinkService {
 
     final path = uri.path;
 
+    // Paystack payment callback — payment verified by foreground detection, just go home
+    if (path == '/paystack-callback') {
+      _navigate(router, '/');
+      return;
+    }
+
     // Check if this is a Supabase auth callback (recovery/verification)
     // Only process auth callbacks from the app's own scheme to prevent spoofing
     if (_isAuthCallback(uri)) {
@@ -120,6 +126,10 @@ class DeepLinkService {
         return;
       } else if (path == '/approvals') {
         ref.read(staffTabProvider.notifier).state = isAdmin ? 0 : 2; // For manager, approvals is index 2
+        _navigate(router, '/');
+        return;
+      } else if (path == '/orders') {
+        ref.read(staffTabProvider.notifier).state = 1; // Jobs tab (index 1)
         _navigate(router, '/');
         return;
       } else if (path == '/workers') {
