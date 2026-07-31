@@ -6,6 +6,7 @@ import '../../../../domain/models/wallet.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
 import '../../../shared/widgets/status_pill.dart';
 import '../../../core/utilities/responsive_helpers.dart';
+import '../../services/service_constants.dart';
 
 final myWalletProvider = StreamProvider<WorkerWallet?>((ref) {
   return ref.watch(walletRepositoryProvider).watchMyWallet();
@@ -118,7 +119,7 @@ class _BalanceCard extends StatelessWidget {
         children: [
           const Text('Available Balance', style: TextStyle(color: Colors.white70, fontSize: 13)),
           const SizedBox(height: 6),
-          Text('\$${balance.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+          Text(formatGhs(balance), style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           SizedBox(
             height: 44,
@@ -172,7 +173,7 @@ class _TxTile extends StatelessWidget {
               ],
             ),
           ),
-          Text('${isCredit ? '+' : '-'}\$${tx.amount.toStringAsFixed(2)}',
+          Text('${isCredit ? '+' : '-'}${formatGhs(tx.amount)}',
               style: TextStyle(color: amountColor, fontWeight: FontWeight.w700, fontSize: 14)),
         ],
       ),
@@ -211,7 +212,7 @@ class _PayoutTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('\$${payout.amount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                Text(formatGhs(payout.amount), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                 const SizedBox(height: 2),
                 Text(
                   payout.bankAccountNumber != null
@@ -292,7 +293,7 @@ class _WithdrawViewState extends ConsumerState<WithdrawView> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (wallet != null)
-              Text('Available: \$${wallet.balance.toStringAsFixed(2)}', style: theme.textTheme.titleMedium),
+              Text('Available: ${formatGhs(wallet.balance)}', style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
             TextField(
               controller: _amountController,

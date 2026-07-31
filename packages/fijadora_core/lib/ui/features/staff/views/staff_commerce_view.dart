@@ -8,6 +8,7 @@ import '../../../../data/repositories/users_repository.dart';
 import '../../../../domain/models/order.dart';
 import '../../../../domain/models/delivery.dart';
 import '../../../../domain/models/item_request.dart';
+import '../../services/service_constants.dart';
 import '../../../../domain/models/wallet.dart';
 import '../../../../domain/models/app_user.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
@@ -983,7 +984,7 @@ class _PayoutTileState extends ConsumerState<_PayoutTile> {
     final pin = await showPinKeypad(
       context: context,
       title: 'Approve Payout',
-      subtitle: 'Enter your approval PIN to release \$${widget.payout.amount.toStringAsFixed(2)}',
+      subtitle: 'Enter your approval PIN to release ${formatGhs(widget.payout.amount)}',
     );
     if (pin == null) return;
 
@@ -1048,7 +1049,7 @@ class _PayoutTileState extends ConsumerState<_PayoutTile> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('\$${widget.payout.amount.toStringAsFixed(2)}',
+              Text(formatGhs(widget.payout.amount),
                   style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
             ],
           ),
@@ -1197,7 +1198,7 @@ class _WorkerTileState extends ConsumerState<_WorkerTile> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      '\$${balance.toStringAsFixed(2)}',
+                      formatGhs(balance),
                       style: TextStyle(
                         color: theme.colorScheme.primary,
                         fontSize: 13,
