@@ -103,9 +103,9 @@ INSERT INTO collection_items (collection_id, item_type, reference_id, label, sub
 ON CONFLICT DO NOTHING;
 
 -- 9. Seed jobs
-INSERT INTO jobs (id, customer_id, worker_id, description, trade_type, status, schedule_date_time, address) VALUES
-  ('00000000-0000-0000-0000-000000000030', '00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000003', 'Kitchen sink leaking under pressure', 'plumbing', 'assigned', NOW() + INTERVAL '1 day', '742 Evergreen Terrace, Springfield'),
-  ('00000000-0000-0000-0000-000000000031', '00000000-0000-0000-0000-000000000004', NULL, 'Living room light switch not working', 'electrical', 'pending', NOW() + INTERVAL '3 days', 'Apartment 4B, Oakwood Heights')
+INSERT INTO jobs (id, customer_id, worker_id, description, trade_type, status, schedule_date_time, address, contact_phone, access_notes) VALUES
+  ('00000000-0000-0000-0000-000000000030', '00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000003', 'Kitchen sink leaking under pressure', 'plumbing', 'assigned', NOW() + INTERVAL '1 day', '742 Evergreen Terrace, Springfield', '+1-555-0100', 'Gate code: 7421'),
+  ('00000000-0000-0000-0000-000000000031', '00000000-0000-0000-0000-000000000004', NULL, 'Living room light switch not working', 'electrical', 'pending', NOW() + INTERVAL '3 days', 'Apartment 4B, Oakwood Heights', '+1-555-0101', '')
 ON CONFLICT (id) DO NOTHING;
 
 -- 10. Update seed.sql to match for future local resets

@@ -73,6 +73,8 @@ CREATE TABLE IF NOT EXISTS jobs (
   schedule_date_time TIMESTAMPTZ,
   address TEXT NOT NULL DEFAULT '',
   images JSONB NOT NULL DEFAULT '[]',
+  contact_phone TEXT NOT NULL DEFAULT '',
+  access_notes TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
