@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+﻿import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/repositories/order_repository.dart';
@@ -106,7 +106,7 @@ class _StaffCommerceViewState extends ConsumerState<StaffCommerceView>
   }
 }
 
-// ───────────────────────── Orders ─────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Orders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _OrdersTab extends ConsumerStatefulWidget {
   const _OrdersTab();
@@ -283,7 +283,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
           children: [
             const Text('Send Delivery Quote', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
-            Text('Subtotal: \$${widget.order.subtotal.toStringAsFixed(2)}',
+            Text('Subtotal: ${formatGhs(widget.order.subtotal)}',
                 style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13)),
             const SizedBox(height: 12),
             TextField(
@@ -291,7 +291,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               decoration: const InputDecoration(
                 labelText: 'Delivery fee',
                 border: OutlineInputBorder(),
-                prefixText: '\$ ',
+                prefixText: 'GHu{20B5} ',
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               autofocus: true,
@@ -497,7 +497,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                     const SizedBox(height: 2),
-                    Text('#${order.id.substring(0, 8).toUpperCase()} · ${order.createdAt.formattedShort}',
+                    Text('#${order.id.substring(0, 8).toUpperCase()} Â· ${order.createdAt.formattedShort}',
                         style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12.5)),
                   ],
                 ),
@@ -522,7 +522,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                 _SummaryRow(
                   icon: CupertinoIcons.cube_box,
                   label: '$itemCount ${itemCount == 1 ? 'item' : 'items'}',
-                  value: '\$${order.subtotal.toStringAsFixed(2)}',
+                  value: formatGhs(order.subtotal),
                 ),
                 const SizedBox(height: 6),
                 _SummaryRow(
@@ -532,7 +532,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                       ? 'TBD'
                       : order.deliveryFee == 0
                           ? 'Free'
-                          : '\$${order.deliveryFee.toStringAsFixed(2)}',
+                          : formatGhs(order.deliveryFee),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
@@ -541,7 +541,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                 _SummaryRow(
                   icon: CupertinoIcons.money_dollar_circle,
                   label: 'Total',
-                  value: '\$${order.total.toStringAsFixed(2)}',
+                  value: formatGhs(order.total),
                   emphasize: true,
                 ),
               ],
@@ -581,7 +581,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                         order.status == OrderStatus.pending
                             ? 'Send Delivery Quote'
                             : order.status == OrderStatus.quoteSent
-                                ? 'Quote Sent — View'
+                                ? 'Quote Sent â€” View'
                                 : 'Update Status',
                       ),
                     ),
@@ -680,7 +680,7 @@ class _ItemThumbStrip extends StatelessWidget {
   }
 }
 
-// ───────────────────────── Requests ─────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Requests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _RequestsTab extends ConsumerStatefulWidget {
   const _RequestsTab();
@@ -858,7 +858,7 @@ class _RequestCard extends ConsumerWidget {
   }
 }
 
-// ───────────────────────── Payouts ─────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Payouts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _PayoutsTab extends ConsumerWidget {
   const _PayoutsTab();
@@ -1070,7 +1070,7 @@ class _PayoutTileState extends ConsumerState<_PayoutTile> {
   }
 }
 
-// ───────────────────────── Workers ─────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Workers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _WorkersTab extends ConsumerWidget {
   const _WorkersTab();

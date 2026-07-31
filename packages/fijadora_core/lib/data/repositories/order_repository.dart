@@ -197,7 +197,7 @@ class SupabaseOrderRepository implements OrderRepository {
     PushNotificationService.sendNotification(
       userId: order.customerId,
       title: 'Delivery Quote Ready',
-      body: 'Your order #${orderId.substring(0, 8).toUpperCase()} has a delivery fee of \$${deliveryFee.toStringAsFixed(0)}. Open the app to review and pay.',
+      body: 'Your order #${orderId.substring(0, 8).toUpperCase()} has a delivery fee of GH₵${deliveryFee.toStringAsFixed(0)}. Open the app to review and pay.',
     );
   }
 

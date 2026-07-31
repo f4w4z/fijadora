@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+﻿import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -10,6 +10,7 @@ import '../../../shared/widgets/status_pill.dart';
 import '../../../shared/widgets/avatar.dart';
 import '../../../shared/widgets/order_timeline.dart';
 import '../../../core/utilities/responsive_helpers.dart';
+import '../../services/service_constants.dart';
 
 class CustomerOrderDetailView extends ConsumerStatefulWidget {
   const CustomerOrderDetailView({required this.orderId, super.key});
@@ -333,12 +334,12 @@ class _Body extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(it.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                                Text('Qty: ${it.quantity}  ·  \$${it.unitPrice.toStringAsFixed(2)} each',
+                                Text('Qty: ${it.quantity}  Â·  ${formatGhs(it.unitPrice)} each',
                                     style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
                               ],
                             ),
                           ),
-                          Text('\$${(it.unitPrice * it.quantity).toStringAsFixed(2)}',
+                          Text(formatGhs((it.unitPrice * it.quantity)),
                               style: const TextStyle(fontWeight: FontWeight.w700)),
                         ],
                       ),
@@ -409,7 +410,7 @@ class _Body extends ConsumerWidget {
   }
 }
 
-// ─── Shared widgets ───
+// â”€â”€â”€ Shared widgets â”€â”€â”€
 
 class _InfoRow extends StatelessWidget {
   const _InfoRow({required this.icon, required this.label, required this.value});
@@ -465,7 +466,7 @@ class _TotalRow extends StatelessWidget {
             color: color,
           )),
           Text(
-            muted ? 'TBD' : '\$${value.toStringAsFixed(2)}',
+            muted ? 'TBD' : formatGhs(value),
             style: TextStyle(
               fontSize: bold ? 16 : 13,
               fontWeight: bold ? FontWeight.w800 : FontWeight.w500,

@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+﻿import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -20,6 +20,7 @@ import '../../../../ui/shared/widgets/shimmer_loading.dart';
 import '../../../shared/utils/notification_helper.dart';
 import '../../../core/theme.dart';
 import 'widgets/shop_the_look_carousel.dart';
+import '../../services/service_constants.dart';
 
 
 class ShopTabView extends ConsumerStatefulWidget {
@@ -127,7 +128,7 @@ class _ShopTabViewState extends ConsumerState<ShopTabView> with AutomaticKeepAli
   }
 }
 
-// ─── Shop content (separate widget = independent build scope) ──────────────
+// â”€â”€â”€ Shop content (separate widget = independent build scope) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _ShopContent extends ConsumerWidget {
   const _ShopContent({
     required this.products,
@@ -382,7 +383,7 @@ class _ShopContent extends ConsumerWidget {
                           ),
                           const SizedBox(height: 4.0),
                           Text(
-                            '\$${product.price.toStringAsFixed(0)}',
+                            formatGhs(product.price),
                             style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12, color: theme.colorScheme.primary),
                           ),
                         ],
@@ -416,12 +417,12 @@ class _AiConciergeBanner extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // ── Background image ──────────────────────────────────
+              // â”€â”€ Background image â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               Image.asset(
                 'packages/fijadora_core/assets/images/ai_concierge_banner_bg.png',
                 fit: BoxFit.cover,
               ),
-              // ── Dark gradient overlay ─────────────────────────────
+              // â”€â”€ Dark gradient overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -434,7 +435,7 @@ class _AiConciergeBanner extends StatelessWidget {
                   ),
                 ),
               ),
-              // ── Content ───────────────────────────────────────────
+              // â”€â”€ Content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                 child: Row(

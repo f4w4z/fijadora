@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+﻿import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/repositories/order_repository.dart';
@@ -9,6 +9,7 @@ import '../../../shared/widgets/error_state_widget.dart';
 import '../../../shared/widgets/avatar.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 import 'customer_order_detail_view.dart';
+import '../../services/service_constants.dart';
 
 final customerOrdersProvider = StreamProvider<List<Order>>((ref) {
   return ref.watch(orderRepositoryProvider).streamCustomerOrders();
@@ -153,7 +154,7 @@ class _OrderTile extends ConsumerWidget {
                             ),
                           ),
                         const Spacer(),
-                        Text('\$${order.total.toStringAsFixed(0)}',
+                        Text(formatGhs(order.total),
                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: theme.colorScheme.primary)),
                       ],
                     ),
@@ -164,7 +165,7 @@ class _OrderTile extends ConsumerWidget {
                     order.status == OrderStatus.pending
                         ? 'Awaiting delivery quote'
                         : order.status == OrderStatus.quoteSent
-                            ? 'Delivery fee: \$${order.deliveryFee.toStringAsFixed(0)}'
+                            ? 'Delivery fee: ${formatGhs(order.deliveryFee)}'
                             : order.deliveryAddress,
                     style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
                     maxLines: 1,

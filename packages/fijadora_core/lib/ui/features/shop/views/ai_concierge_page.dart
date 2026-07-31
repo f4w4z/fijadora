@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+﻿import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -7,6 +7,7 @@ import '../../../../data/services/gemini_service.dart';
 import '../../../../domain/models/product.dart';
 import '../../../../ui/shared/widgets/animated_tap_scale.dart';
 import 'product_detail_view.dart';
+import '../../services/service_constants.dart';
 
 class AiConciergePage extends ConsumerWidget {
   const AiConciergePage({super.key, required this.catalog});
@@ -219,7 +220,7 @@ class _AiConciergeBodyState extends State<_AiConciergeBody> {
                           children: [
                             Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                             const SizedBox(height: 4),
-                            Text('\$${product.price.toStringAsFixed(0)}', style: TextStyle(color: theme.colorScheme.primary, fontSize: 11, fontWeight: FontWeight.bold)),
+                            Text(formatGhs(product.price), style: TextStyle(color: theme.colorScheme.primary, fontSize: 11, fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ),

@@ -88,7 +88,7 @@ class GeminiService {
     final imageBase64 = imageBytes != null ? await compute(_encodeBase64, imageBytes) : null;
 
     final catalogText = catalog.asMap().entries.map((e) =>
-      '[${e.key}] ${e.value.name} — \$${e.value.price.toStringAsFixed(0)} — ${e.value.category}'
+      '[${e.key}] ${e.value.name} — GH₵${e.value.price.toStringAsFixed(0)} — ${e.value.category}'
     ).join('\n');
 
     final messages = [

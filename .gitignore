@@ -13,6 +13,7 @@
 migrate_working_dir/
 flutter_01.png
 .env*
+!.env.example
 *.env
 
 # IntelliJ related

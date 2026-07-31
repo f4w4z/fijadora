@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +14,7 @@ import '../../../shared/widgets/app_animations.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../shop/view_models/products_provider.dart';
 import '../../staff/view_models/admin_collections_view_model.dart';
+import '../../services/service_constants.dart';
 
 class CollectionFormPage extends ConsumerStatefulWidget {
   const CollectionFormPage({super.key, this.collection});
@@ -381,7 +382,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage> {
                                               TextFormField(
                                                 key: ValueKey('subtitle_$idx'),
                                                 initialValue: entry.subtitle,
-                                                decoration: _inputDecoration('Brief description (e.g. \$49.00)', theme),
+                                                decoration: _inputDecoration('Brief description (e.g. GH₵49.00)', theme),
                                                 onChanged: (v) => entry.subtitle = v,
                                                 textCapitalization: TextCapitalization.sentences,
                                               ),
@@ -550,7 +551,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage> {
                 setState(() {
                   _items[itemIndex].referenceId = product.id;
                   _items[itemIndex].label = product.name;
-                  _items[itemIndex].subtitle = '\$${product.price.toStringAsFixed(2)}';
+                  _items[itemIndex].subtitle = formatGhs(product.price);
                   if (_items[itemIndex].imageUrl.isEmpty) {
                     _items[itemIndex].imageUrl = product.imageUrl;
                   }
@@ -606,7 +607,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '\$${product.price.toStringAsFixed(2)}',
+                            formatGhs(product.price),
                             style: TextStyle(
                               fontSize: 10,
                               color: isSelected

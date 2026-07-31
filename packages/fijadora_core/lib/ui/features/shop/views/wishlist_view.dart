@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+﻿import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -12,6 +12,7 @@ import '../../../shared/widgets/error_state_widget.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 
 import '../../../shared/widgets/shimmer_loading.dart';
+import '../../services/service_constants.dart';
 
 class WishlistView extends ConsumerWidget {
   const WishlistView({super.key});
@@ -111,7 +112,7 @@ class WishlistView extends ConsumerWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '\$${product.price.toStringAsFixed(0)}',
+                              formatGhs(product.price),
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: theme.colorScheme.primary,

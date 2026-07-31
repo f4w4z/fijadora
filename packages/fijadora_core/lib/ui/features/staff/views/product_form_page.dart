@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,8 +10,9 @@ import '../../../core/utilities/responsive_helpers.dart';
 import '../../../shared/utils/notification_helper.dart';
 import '../view_models/admin_products_view_model.dart';
 import 'admin_products_view.dart';
+import '../../services/service_constants.dart';
 
-// ─── Interactive Product Upload & Editing Page ──────────────────────────────
+// â”€â”€â”€ Interactive Product Upload & Editing Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class ProductFormPage extends ConsumerStatefulWidget {
   const ProductFormPage({super.key, this.product});
 
@@ -536,7 +537,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
             ),
             const SizedBox(height: 4.0),
             Text(
-              '\$${price.toStringAsFixed(0)}',
+              formatGhs(price),
               style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12, color: theme.colorScheme.primary),
             ),
           ],

@@ -1,7 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
+﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../../domain/models/product.dart';
+import '../../services/service_constants.dart';
 
 class ProductListCard extends StatelessWidget {
   const ProductListCard({
@@ -95,7 +96,7 @@ class ProductListCard extends StatelessWidget {
                           ),
                           const Spacer(),
                           Text(
-                            '\$${product.price.toStringAsFixed(2)}',
+                            formatGhs(product.price),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,

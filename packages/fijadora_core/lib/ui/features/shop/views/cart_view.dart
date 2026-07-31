@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+﻿import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -6,6 +6,7 @@ import '../view_models/cart_view_model.dart';
 import 'checkout_view.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
 import '../../../core/utilities/responsive_helpers.dart';
+import '../../services/service_constants.dart';
 
 class CartView extends ConsumerWidget {
   const CartView({super.key});
@@ -114,7 +115,7 @@ class CartView extends ConsumerWidget {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      '\$${product.price.toStringAsFixed(0)}',
+                                      formatGhs(product.price),
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: theme.colorScheme.primary,
@@ -175,7 +176,7 @@ class CartView extends ConsumerWidget {
                               style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                             ),
                             Text(
-                              '\$${cartNotifier.totalPrice.toStringAsFixed(0)}',
+                              formatGhs(cartNotifier.totalPrice),
                               style: const TextStyle(fontWeight: FontWeight.w500),
                             ),
                           ],
@@ -193,7 +194,7 @@ class CartView extends ConsumerWidget {
                               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                             ),
                             Text(
-                              '\$${cartNotifier.totalPrice.toStringAsFixed(0)}',
+                              formatGhs(cartNotifier.totalPrice),
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,

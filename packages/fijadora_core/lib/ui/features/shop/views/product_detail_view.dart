@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+﻿import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/repositories/shop_repository.dart';
@@ -14,6 +14,7 @@ import 'widgets/product_detail_bottom_bar.dart';
 import 'widgets/product_detail_info_widgets.dart';
 import '../../../core/utilities/responsive_helpers.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
+import '../../services/service_constants.dart';
 
 class ProductDetailView extends ConsumerStatefulWidget {
   const ProductDetailView({
@@ -113,7 +114,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '\$${widget.product.price.toStringAsFixed(0)}',
+                            formatGhs(widget.product.price),
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.onSurface,

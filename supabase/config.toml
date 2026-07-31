@@ -217,7 +217,7 @@ enabled = true
 host = "smtp.resend.com"
 port = 465
 user = "resend"
-pass = ""
+pass = "env(RESEND_API_KEY)"
 admin_email = "admin@fijadora.com"
 # Uncomment to customize email template
 # [auth.email.template.invite]

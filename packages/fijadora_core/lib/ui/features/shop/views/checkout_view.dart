@@ -1,10 +1,11 @@
-import 'package:flutter/cupertino.dart';
+﻿import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../view_models/cart_view_model.dart';
 import '../view_models/checkout_view_model.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
 import '../../../core/utilities/responsive_helpers.dart';
+import '../../services/service_constants.dart';
 
 class CheckoutView extends ConsumerStatefulWidget {
   const CheckoutView({super.key});
@@ -100,8 +101,8 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Expanded(child: Text('${e.key.name} × ${e.value}')),
-                            Text('\$${(e.key.price * e.value).toStringAsFixed(0)}'),
+                            Expanded(child: Text('${e.key.name} Ã— ${e.value}')),
+                            Text(formatGhs((e.key.price * e.value))),
                           ],
                         ),
                       )),
@@ -110,7 +111,7 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Subtotal'),
-                      Text('\$${subtotal.toStringAsFixed(0)}'),
+                      Text(formatGhs(subtotal)),
                     ],
                   ),
                   const SizedBox(height: 6),
