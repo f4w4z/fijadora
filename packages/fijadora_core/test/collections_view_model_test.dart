@@ -9,6 +9,10 @@ import 'package:fijadora_core/domain/models/user_role.dart';
 import 'package:fijadora_core/ui/features/collections/view_models/collections_view_model.dart';
 
 class StubCollectionsRepository implements CollectionsRepository {
+  @override
+  Future<bool> hasUserLiked(String collectionId, String userId) async => false;
+  @override
+  Future<bool> hasUserFollowed(String collectionId, String userId) async => false;
   final _controller = StreamController<List<Collection>>.broadcast();
   final List<String> followed = [];
   final List<String> liked = [];
@@ -65,8 +69,11 @@ class StubAuthRepository implements AuthRepository {
   Future<void> signUp({required String email, required String password, required String name, required UserRole role}) async {}
   @override
   Future<void> signIn({required String email, required String password}) async {}
-  @override
   Future<void> resendEmailVerification({required String email}) async {}
+  @override
+  Future<void> verifyOtp({required String email, required String token}) async {}
+  @override
+  Future<void> resendOtp({required String email}) async {}
   @override
   Future<void> updateWorkerStatus({required String userId, required String status}) async {}
   @override

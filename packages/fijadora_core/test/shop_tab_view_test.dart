@@ -51,6 +51,10 @@ class StubShopRepository implements ShopRepository {
 }
 
 class StubCollectionsRepository implements CollectionsRepository {
+  @override
+  Future<bool> hasUserLiked(String collectionId, String userId) async => false;
+  @override
+  Future<bool> hasUserFollowed(String collectionId, String userId) async => false;
   final _featuredController = StreamController<List<Collection>>.broadcast();
 
   void emitFeatured(List<Collection> collections) => _featuredController.add(collections);

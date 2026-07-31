@@ -35,8 +35,11 @@ class _StubAuthRepository implements AuthRepository {
   Future<void> signUp({required String email, required String password, required String name, required UserRole role}) async {}
   @override
   Future<void> signIn({required String email, required String password}) async {}
-  @override
   Future<void> resendEmailVerification({required String email}) async {}
+  @override
+  Future<void> verifyOtp({required String email, required String token}) async {}
+  @override
+  Future<void> resendOtp({required String email}) async {}
   @override
   Future<void> updateWorkerStatus({required String userId, required String status}) async {}
   @override
@@ -81,6 +84,14 @@ class _StubJobsRepository implements JobsRepository {
   Future<List<MaintenanceJob>> fetchJobsForAsset({required String assetId}) async => throw UnimplementedError();
   @override
   Future<MaintenanceJob> rejectJob({required String jobId}) async => throw UnimplementedError();
+  @override
+  Future<MaintenanceJob> sendJobQuote({required String jobId, required double amount, double? maxAmount}) async => throw UnimplementedError();
+  @override
+  Future<JobChangeOrder> submitChangeOrder({required String jobId, required String description, required double amount}) async => throw UnimplementedError();
+  @override
+  Future<void> approveChangeOrder({required String jobId, required String changeOrderId}) async => throw UnimplementedError();
+  @override
+  Future<MaintenanceJob> finalizeJob({required String jobId}) async => throw UnimplementedError();
   @override
   void dispose() => _controller.close();
 }

@@ -97,6 +97,81 @@ class StubJobsRepository implements JobsRepository {
   }
 
   @override
+  Future<MaintenanceJob> sendJobQuote({
+    required String jobId,
+    required double amount,
+    double? maxAmount,
+  }) async {
+    final idx = _jobs.indexWhere((j) => j.id == jobId);
+    if (idx == -1) throw Exception('Job not found');
+    final updated = _jobs[idx].copyWith(
+      status: JobStatus.quoted,
+      quoteAmount: amount,
+      maxAmount: maxAmount ?? amount,
+      depositAmount: amount * 0.3 + 20,
+    );
+    _jobs[idx] = updated;
+    return updated;
+  }
+
+  @override
+  Future<JobChangeOrder> submitChangeOrder({
+    required String jobId,
+    required String description,
+    required double amount,
+  }) async {
+    final co = JobChangeOrder(
+      id: 'co-${_jobs.length}',
+      description: description,
+      amount: amount,
+      status: 'pending',
+      createdAt: DateTime.now(),
+    );
+    final idx = _jobs.indexWhere((j) => j.id == jobId);
+    if (idx != -1) {
+      _jobs[idx] = _jobs[idx].copyWith(
+        status: JobStatus.onHold,
+        changeOrders: [..._jobs[idx].changeOrders, co],
+      );
+    }
+    return co;
+  }
+
+  @override
+  Future<void> approveChangeOrder({
+    required String jobId,
+    required String changeOrderId,
+  }) async {
+    final idx = _jobs.indexWhere((j) => j.id == jobId);
+    if (idx == -1) throw Exception('Job not found');
+    final orders = _jobs[idx].changeOrders.map((c) {
+      if (c.id == changeOrderId) {
+        return JobChangeOrder(
+          id: c.id,
+          description: c.description,
+          amount: c.amount,
+          status: 'approved',
+          createdAt: c.createdAt,
+        );
+      }
+      return c;
+    }).toList();
+    _jobs[idx] = _jobs[idx].copyWith(status: JobStatus.inProgress, changeOrders: orders);
+  }
+
+  @override
+  Future<MaintenanceJob> finalizeJob({required String jobId}) async {
+    final idx = _jobs.indexWhere((j) => j.id == jobId);
+    if (idx == -1) throw Exception('Job not found');
+    final updated = _jobs[idx].copyWith(
+      status: JobStatus.completed,
+      paymentStatus: JobPaymentStatus.balanceDue,
+    );
+    _jobs[idx] = updated;
+    return updated;
+  }
+
+  @override
   void dispose() {}
 }
 

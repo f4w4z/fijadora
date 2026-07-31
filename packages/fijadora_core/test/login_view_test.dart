@@ -44,13 +44,18 @@ class StubAuthRepository implements AuthRepository {
     }
   }
 
-  @override
   Future<void> resendEmailVerification({required String email}) async {
     if (failNextResend) {
       failNextResend = false;
       throw Exception('Failed to resend');
     }
   }
+
+  @override
+  Future<void> verifyOtp({required String email, required String token}) async {}
+
+  @override
+  Future<void> resendOtp({required String email}) async {}
 
   @override
   Future<void> signOut() async {
